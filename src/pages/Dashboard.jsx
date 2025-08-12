@@ -39,7 +39,6 @@ const Dashboard = ({ user, onSignOut }) => {
     const [courseToGrade, setCourseToGrade] = useState(null);
 
     const [currentPage, setCurrentPage] = useState('attendance');
-    const [expandedSemesters, setExpandedSemesters] = useState(new Set());
     const [confirmationModal, setConfirmationModal] = useState({ isOpen: false, message: '', onConfirm: () => {} });
 
     useEffect(() => {
@@ -66,13 +65,6 @@ const Dashboard = ({ user, onSignOut }) => {
 
         return () => { unsubCourses(); unsubProfile(); unsubSchedule(); unsubDeadlines(); unsubExamMarks(); };
     }, [user]);
-    
-    useEffect(() => {
-        if (allCourses.length > 0 && expandedSemesters.size === 0) {
-            const maxSemester = Math.max(...allCourses.map(c => c.semester).filter(Boolean), 0);
-            if (maxSemester > 0) setExpandedSemesters(new Set([maxSemester]));
-        }
-    }, [allCourses, expandedSemesters.size]);
 
     const performanceData = useMemo(() => {
         const gradedCourses = allCourses.filter(c => c.grade && c.credits > 0);
@@ -242,9 +234,16 @@ const Dashboard = ({ user, onSignOut }) => {
         }
     };
 
-    const handleDeleteCourse = async (courseId) => {
-        if (!user) return;
-        await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/courses`, courseId));
+    const handleDeleteCourse = (courseId, courseName) => {
+        setConfirmationModal({
+            isOpen: true,
+            message: `Are you sure you want to delete all data for "${courseName}"?`,
+            onConfirm: async () => {
+                if (!user) return;
+                await deleteDoc(doc(db, `artifacts/${appId}/users/${user.uid}/courses`, courseId));
+                setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} });
+            }
+        });
     };
     
     const handleDeleteDeadline = async (deadlineId) => {
@@ -287,73 +286,65 @@ const Dashboard = ({ user, onSignOut }) => {
     const handleAddExamMarksClick = () => { setMarkToEdit(null); setIsAddMarksModalOpen(true); };
     const handleEditExamMarkClick = (mark) => { setMarkToEdit(mark); setIsAddMarksModalOpen(true); };
 
-    const toggleSemester = (semester) => {
-        setExpandedSemesters(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(semester)) newSet.delete(semester);
-            else newSet.add(semester);
-            return newSet;
-        });
-    };
-
     const navItems = ['attendance', 'performance', 'calendar', 'profile'];
 
     return (
         <>
-            <div className="min-h-screen bg-black text-white font-sans">
-                <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pb-40">
-                    <header className="flex justify-between items-center mb-8">
-                        <div className="flex items-center gap-4">
-                            <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCurrentPage('profile')} className="group">
-                                {profileData.imageUrl ? (
-                                    <img src={profileData.imageUrl} alt="Profile" className="w-12 h-12 rounded-full object-cover border-2 border-white/20 group-hover:border-cyan-400 transition-colors" onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/64x64/111827/9ca3af?text=${profileData.name ? profileData.name.charAt(0).toUpperCase() : 'P'}`}} />
-                                ) : (
-                                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border-2 border-white/20 group-hover:border-cyan-400 transition-colors"><UserCircle2 className="w-8 h-8 text-slate-400" /></div>
-                                )}
-                            </motion.button>
-                            <div>
-                                <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome, {profileData.name || 'User'}</h1>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-2 text-yellow-400 bg-black/20 px-3 py-2 rounded-lg border border-white/20">
-                                <Coins size={20} />
-                                <span className="font-bold text-lg">{profileData.coins || 0}</span>
-                            </div>
-                            <motion.button whileTap={{ scale: 0.95 }} onClick={handleAddNewCourse} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
-                                <Plus size={18} /> <span className="hidden sm:inline">Add Course</span>
-                            </motion.button>
-                        </div>
-                    </header>
-                    
-                    <main>
-                        <AnimatePresence mode="wait">
-                            <motion.div key={currentPage}>
-                                {currentPage === 'attendance' && <AttendancePage allCourses={allCourses} onUpdate={handleUpdateAttendance} onAddNew={handleAddNewCourse} onMarkAttendance={handleMarkAttendance} onTotalChange={handleTotalChange} onDecrementAttendance={handleDecrementAttendance} onDeleteCourse={handleDeleteCourse} performanceData={performanceData} />}
-                                {currentPage === 'performance' && <PerformancePage performanceData={performanceData} allCourses={allCourses} examMarks={examMarks} onDeleteCourse={handleDeleteCourse} onEditGrade={handleEditGradeClick} onAddExamMarks={handleAddExamMarksClick} onEditExamMark={handleEditExamMarkClick} onDeleteExamMark={handleDeleteExamMark} expandedSemesters={expandedSemesters} toggleSemester={toggleSemester} />}
-                                {currentPage === 'calendar' && <CalendarPage schedule={schedule} deadlines={deadlines} onAddClass={() => setIsAddClassModalOpen(true)} onAddDeadline={handleAddDeadlineClick} onDeleteDeadline={handleDeleteDeadline} onEditDeadline={handleEditDeadlineClick} courses={allCourses} />}
-                                {currentPage === 'profile' && <ProfilePage profileData={profileData} onEditProfile={handleEditProfileClick} onResetData={() => setIsResetModalOpen(true)} onSignOut={onSignOut} />}
-                            </motion.div>
-                        </AnimatePresence>
-                    </main>
-                </div>
-
-                {/* Bottom Navigation */}
-                <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-sm h-16 bg-black/50 saturate-150 backdrop-blur-xl border border-white/20 rounded-2xl flex justify-around items-center z-40">
+            <div className="min-h-screen bg-black text-white font-sans flex">
+                {/* Vertical Navigation */}
+                <div className="fixed left-4 top-1/2 -translate-y-1/2 w-20 bg-black/50 saturate-150 backdrop-blur-xl border border-white/20 rounded-full flex flex-col justify-center items-center gap-4 p-4 z-40">
                     <LayoutGroup>
                         {navItems.map(item => (
-                            <motion.button key={item} onClick={() => setCurrentPage(item)} className={`relative flex flex-col items-center justify-center gap-1 transition-colors w-full h-full rounded-lg ${currentPage === item ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}>
-                                {item === 'attendance' && <ClipboardList size={22} />}
-                                {item === 'performance' && <GraduationCap size={22} />}
-                                {item === 'calendar' && <Calendar size={22} />}
-                                {item === 'profile' && <UserCircle2 size={22} />}
-                                <span className="text-xs font-medium capitalize">{item}</span>
+                            <motion.button key={item} onClick={() => setCurrentPage(item)} className={`relative flex flex-col items-center justify-center gap-1 transition-colors w-14 h-14 rounded-full ${currentPage === item ? 'text-cyan-400' : 'text-slate-400 hover:text-white'}`}>
+                                {item === 'attendance' && <ClipboardList size={24} />}
+                                {item === 'performance' && <GraduationCap size={24} />}
+                                {item === 'calendar' && <Calendar size={24} />}
+                                {item === 'profile' && <UserCircle2 size={24} />}
                                 {currentPage === item && (
-                                    <motion.div className="absolute inset-0 bg-cyan-400/10 rounded-lg" layoutId="underline" />
+                                    <motion.div className="absolute inset-0 bg-cyan-400/10 rounded-full" layoutId="underline" />
                                 )}
                             </motion.button>
                         ))}
                     </LayoutGroup>
+                </div>
+
+                <div className="flex-1 pl-28">
+                    <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 pb-10">
+                        <header className="flex justify-between items-center mb-8">
+                            <div className="flex items-center gap-4">
+                                <motion.button whileTap={{ scale: 0.9 }} onClick={() => setCurrentPage('profile')} className="group">
+                                    {profileData.imageUrl ? (
+                                        <img src={profileData.imageUrl} alt="Profile" className="w-12 h-12 rounded-full object-cover border-2 border-white/20 group-hover:border-cyan-400 transition-colors" onError={(e) => { e.target.onerror = null; e.target.src=`https://placehold.co/64x64/111827/9ca3af?text=${profileData.name ? profileData.name.charAt(0).toUpperCase() : 'P'}`}} />
+                                    ) : (
+                                        <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center border-2 border-white/20 group-hover:border-cyan-400 transition-colors"><UserCircle2 className="w-8 h-8 text-slate-400" /></div>
+                                    )}
+                                </motion.button>
+                                <div>
+                                    <h1 className="text-xl sm:text-2xl font-bold text-white">Welcome, {profileData.name || 'User'}</h1>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-2 text-yellow-400 bg-black/20 px-3 py-2 rounded-lg border border-white/20">
+                                    <Coins size={20} />
+                                    <span className="font-bold text-lg">{profileData.coins || 0}</span>
+                                </div>
+                                <motion.button whileTap={{ scale: 0.95 }} onClick={handleAddNewCourse} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
+                                    <Plus size={18} /> <span className="hidden sm:inline">Add Course</span>
+                                </motion.button>
+                            </div>
+                        </header>
+                        
+                        <main>
+                            <AnimatePresence mode="wait">
+                                <motion.div key={currentPage}>
+                                    {currentPage === 'attendance' && <AttendancePage allCourses={allCourses} onUpdate={handleUpdateAttendance} onAddNew={handleAddNewCourse} onMarkAttendance={handleMarkAttendance} onTotalChange={handleTotalChange} onDecrementAttendance={handleDecrementAttendance} onDeleteCourse={handleDeleteCourse} performanceData={performanceData} />}
+                                    {currentPage === 'performance' && <PerformancePage performanceData={performanceData} allCourses={allCourses} examMarks={examMarks} onDeleteCourse={handleDeleteCourse} onEditGrade={handleEditGradeClick} onAddExamMarks={handleAddExamMarksClick} onEditExamMark={handleEditExamMarkClick} onDeleteExamMark={handleDeleteExamMark} />}
+                                    {currentPage === 'calendar' && <CalendarPage schedule={schedule} deadlines={deadlines} onAddClass={() => setIsAddClassModalOpen(true)} onAddDeadline={handleAddDeadlineClick} onDeleteDeadline={handleDeleteDeadline} onEditDeadline={handleEditDeadlineClick} courses={allCourses} />}
+                                    {currentPage === 'profile' && <ProfilePage profileData={profileData} onEditProfile={handleEditProfileClick} onResetData={() => setIsResetModalOpen(true)} onSignOut={onSignOut} />}
+                                </motion.div>
+                            </AnimatePresence>
+                        </main>
+                    </div>
                 </div>
             </div>
             <AddCourseModal isOpen={isCourseModalOpen} onClose={() => setIsCourseModalOpen(false)} onSave={handleSaveCourse} />

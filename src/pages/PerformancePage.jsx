@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GraduationCap, Plus, ChevronDown, Trash2, Edit, HelpCircle } from 'lucide-react';
 
 const ExamMarkCircle = ({ mark, onEdit, onDelete }) => {
     const percentage = (mark.marksSecured / mark.maxMarks) * 100;
-    const strokeDashoffset = 283 - (283 * percentage) / 100; // 283 is circumference of circle with r=45
+    const strokeDashoffset = 283 - (283 * percentage) / 100;
 
     return (
         <div className="flex flex-col items-center gap-2 group">
@@ -89,9 +89,25 @@ const TotalMarkCircle = ({ total }) => {
     );
 };
 
-const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCourse, onAddGrade, onAddExamMarks, onEditExamMark, onDeleteExamMark, expandedSemesters, toggleSemester }) => {
+const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCourse, onEditGrade, onAddExamMarks, onEditExamMark, onDeleteExamMark }) => {
     const { cpi, semesters } = performanceData;
     const [isTooltipVisible, setIsTooltipVisible] = useState(false);
+    const [expandedSemesters, setExpandedSemesters] = useState(new Set());
+
+    useEffect(() => {
+        if (semesters.length > 0 && expandedSemesters.size === 0) {
+            setExpandedSemesters(new Set([semesters[0].semester]));
+        }
+    }, [semesters, expandedSemesters.size]);
+
+    const toggleSemester = (semester) => {
+        setExpandedSemesters(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(semester)) newSet.delete(semester);
+            else newSet.add(semester);
+            return newSet;
+        });
+    };
 
     const marksByCourse = useMemo(() => {
         return examMarks.reduce((acc, mark) => {
@@ -141,7 +157,7 @@ const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCours
                                 )}
                             </AnimatePresence>
                         </div>
-                        <motion.button whileTap={{ scale: 0.95 }} onClick={onAddGrade} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => onEditGrade(null)} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
                             <Plus size={18} /> Add Grades
                         </motion.button>
                     </div>
@@ -165,9 +181,10 @@ const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCours
                                                     {sem.courses.map(course => (
                                                         <div key={course.id} className="bg-black/20 p-3 rounded-lg grid grid-cols-12 items-center gap-4">
                                                             <p className="col-span-6 font-semibold text-white text-lg truncate">{course.name}</p>
-                                                            <p className="col-span-3 text-center text-sm text-slate-400">{course.credits} Credits</p>
-                                                            <p className="col-span-1 text-lg font-mono text-cyan-300 text-center">{course.grade || '-'}</p>
-                                                            <div className="col-span-2 flex justify-end">
+                                                            <p className="col-span-2 text-center text-sm text-slate-400">{course.credits} Credits</p>
+                                                            <p className="col-span-2 text-lg font-mono text-cyan-300 text-center">{course.grade || 'N/A'}</p>
+                                                            <div className="col-span-2 flex justify-end gap-3">
+                                                                <button onClick={() => onEditGrade(course)} className="text-slate-400 hover:text-cyan-300 transition-colors"><Edit size={16} /></button>
                                                                 <button onClick={() => onDeleteCourse(course.id)} className="text-slate-400 hover:text-red-400 transition-colors"><Trash2 size={16} /></button>
                                                             </div>
                                                         </div>
@@ -192,9 +209,9 @@ const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCours
                     <div className="space-y-4">
                         {Object.keys(marksByCourse).map(courseId => (
                             <div key={courseId} className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
-                                <h3 className="text-xl font-bold text-white mb-4">{getCourseName(courseId)}</h3>
+                                <h3 className="text-xl font-bold text-white mb-6">{getCourseName(courseId)}</h3>
                                 <div className="flex justify-between items-center">
-                                    <div className="flex gap-6 overflow-x-auto no-scrollbar pb-2">
+                                    <div className="flex flex-1 gap-6 overflow-x-auto no-scrollbar pb-2">
                                         {marksByCourse[courseId]
                                             .sort((a, b) => b.weightage - a.weightage)
                                             .map(mark => (
@@ -206,7 +223,7 @@ const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCours
                                                 />
                                         ))}
                                     </div>
-                                    <div className="pl-6 border-l border-white/10">
+                                    <div className="pl-6 ml-6 border-l border-white/10">
                                         <TotalMarkCircle total={calculateTotalMarks(courseId)} />
                                     </div>
                                 </div>
