@@ -9,14 +9,14 @@ const GlassyModal = ({ isOpen, onClose, children, title, customClasses = "" }) =
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50"
+                className="fixed inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-50 p-4"
             >
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className={`bg-gradient-to-br from-white/20 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-2xl shadow-2xl w-full max-w-md mx-4 text-white ${customClasses}`}
+                    className={`bg-gradient-to-br from-white/20 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-2xl shadow-2xl text-white ${customClasses}`}
                 >
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold">{title}</h2>

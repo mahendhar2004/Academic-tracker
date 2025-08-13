@@ -1,12 +1,9 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Plus, Clock, Bell, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Plus, Clock, Bell, Edit } from 'lucide-react';
 import DeadlineCard from '../components/calendar/DeadlineCard';
 
-const CalendarPage = ({ schedule, deadlines, onAddClass, onAddDeadline, onDeleteDeadline, onEditDeadline, courses }) => {
-    const [isTimetableVisible, setIsTimetableVisible] = useState(false);
-    
-    const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onAddDeadline, onDeleteDeadline, onEditDeadline, courses }) => {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
     const getCourseName = (courseId) => {
@@ -22,7 +19,7 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onAddDeadline, onDelete
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            <div className="space-y-8">
+            <div className="space-y-12">
                 {/* Today's Schedule Section */}
                 <div>
                     <div className="flex justify-between items-center mb-4">
@@ -34,44 +31,16 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onAddDeadline, onDelete
                     <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
                         <div className="space-y-2">
                             {todaysSchedule.length > 0 ? todaysSchedule.map(item => (
-                                <div key={item.id} className="bg-black/20 p-3 rounded-lg flex justify-between items-center">
+                                <div key={item.id} className="bg-black/20 p-3 rounded-lg flex justify-between items-center group">
                                     <p className="font-semibold text-white">{getCourseName(item.courseId)}</p>
-                                    <p className="text-sm text-slate-300">{item.startTime} - {item.endTime}</p>
+                                    <div className="flex items-center gap-4">
+                                        <p className="text-sm text-slate-300">{item.startTime} - {item.endTime}</p>
+                                        <button onClick={() => onEditClass(item)} className="text-slate-500 hover:text-cyan-400 transition-opacity opacity-0 group-hover:opacity-100"><Edit size={16} /></button>
+                                    </div>
                                 </div>
                             )) : <p className="text-slate-300 text-center py-4">No classes scheduled for today.</p>}
                         </div>
                     </div>
-                </div>
-
-                {/* Full Timetable Section */}
-                <div>
-                     <div className="flex justify-between items-center mb-4 cursor-pointer hover:bg-black/20 p-2 rounded-lg transition-colors" onClick={() => setIsTimetableVisible(!isTimetableVisible)}>
-                        <h2 className="text-xl font-bold text-white flex items-center gap-3">Full Timetable</h2>
-                        <ChevronDown size={24} className={`text-slate-300 transition-transform duration-300 ${isTimetableVisible ? 'rotate-180' : ''}`} />
-                    </div>
-                    <AnimatePresence>
-                    {isTimetableVisible && (
-                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
-                            <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
-                                <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                                    {daysOfWeek.map(day => (
-                                        <div key={day}>
-                                            <h3 className="font-bold text-lg mb-2 text-center">{day}</h3>
-                                            <div className="space-y-2">
-                                                {schedule.filter(s => s.day === day).sort((a,b) => a.startTime.localeCompare(b.startTime)).map(item => (
-                                                    <div key={item.id} className="bg-black/20 p-2 rounded-lg text-center">
-                                                        <p className="font-semibold text-sm truncate">{getCourseName(item.courseId)}</p>
-                                                        <p className="text-xs text-slate-400">{item.startTime} - {item.endTime}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                    </AnimatePresence>
                 </div>
 
                 {/* Deadlines Section */}

@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 
 const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
 const GRADES = Object.keys(GRADE_POINTS);
 
-const AddCourseModal = ({ isOpen, onClose, onSave }) => {
+const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester }) => {
     const [course, setCourse] = useState({ name: '', credits: '', semester: '', grade: 'Not Published' });
+    const nameInputRef = useRef(null);
 
     useEffect(() => {
         if (isOpen) {
-            setCourse({ name: '', credits: '', semester: '', grade: 'Not Published' });
+            // Auto-populate the semester and reset other fields
+            setCourse({ name: '', credits: '', semester: currentSemester || '', grade: 'Not Published' });
+            
+            // Auto-focus the name input field
+            setTimeout(() => {
+                nameInputRef.current?.focus();
+            }, 100); // Small delay to ensure modal is rendered
         }
-    }, [isOpen]);
+    }, [isOpen, currentSemester]);
 
     const handleChange = (field, value) => setCourse(prev => ({ ...prev, [field]: value }));
 
@@ -29,7 +36,7 @@ const AddCourseModal = ({ isOpen, onClose, onSave }) => {
     return (
         <GlassyModal isOpen={isOpen} onClose={onClose} title="Add New Course">
             <form onSubmit={handleSubmit} className="space-y-4">
-                <input type="text" value={course.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="Course Name" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400" required />
+                <input ref={nameInputRef} type="text" value={course.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="Course Name" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400" required />
                 <div className="flex gap-4">
                     <input type="number" value={course.semester} onChange={(e) => handleChange('semester', e.target.value)} placeholder="Semester" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400" required min="1" />
                     <input type="number" value={course.credits} onChange={(e) => handleChange('credits', e.target.value)} placeholder="Credits" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400" required min="0.5" step="0.5" />

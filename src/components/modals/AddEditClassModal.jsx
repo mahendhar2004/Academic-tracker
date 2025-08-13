@@ -2,27 +2,32 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 
-const AddClassModal = ({ isOpen, onClose, onSave, currentCourses }) => {
+const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdit }) => {
     const [schedule, setSchedule] = useState({ courseId: '', day: '', startTime: '', endTime: '' });
+    const isNew = !classToEdit;
 
     useEffect(() => {
         if (isOpen) {
-            setSchedule({ courseId: '', day: 'Monday', startTime: '09:00', endTime: '10:00' });
+            if (classToEdit) {
+                setSchedule(classToEdit);
+            } else {
+                setSchedule({ courseId: '', day: 'Monday', startTime: '09:00', endTime: '10:00' });
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, classToEdit]);
 
     const handleChange = (field, value) => setSchedule(prev => ({ ...prev, [field]: value }));
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (schedule.courseId && schedule.day && schedule.startTime && schedule.endTime) {
-            onSave(schedule);
+            onSave(schedule, classToEdit?.id || null);
             onClose();
         }
     };
 
     return (
-        <GlassyModal isOpen={isOpen} onClose={onClose} title="Add Class to Schedule">
+        <GlassyModal isOpen={isOpen} onClose={onClose} title={isNew ? "Add Class to Schedule" : "Edit Class Schedule"}>
             <form onSubmit={handleSubmit} className="space-y-4">
                 <select value={schedule.courseId} onChange={(e) => handleChange('courseId', e.target.value)} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
                     <option value="">Select Course</option>
@@ -43,4 +48,4 @@ const AddClassModal = ({ isOpen, onClose, onSave, currentCourses }) => {
     );
 };
 
-export default AddClassModal;
+export default AddEditClassModal;
