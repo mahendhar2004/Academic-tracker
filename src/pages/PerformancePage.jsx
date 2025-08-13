@@ -156,7 +156,7 @@ const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCours
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            <div className="flex flex-col lg:flex-row gap-16 lg:items-start">
+            <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
                 <div className="flex-1 space-y-8">
                     {/* Exam Marks Section */}
                     <div>

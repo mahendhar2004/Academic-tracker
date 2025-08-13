@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, UserCircle2, Coins, CalendarDays } from 'lucide-react';
+import { Plus, Coins, CalendarDays } from 'lucide-react';
 
 const Header = ({ currentPage, profileData, onAddNewCourse, onSetCurrentPage, onOpenTimetable }) => {
     return (

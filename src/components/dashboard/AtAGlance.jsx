@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Bell, AlertTriangle, CheckCircle2, Search } from 'lucide-react';
+import { Clock, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
-const AtAGlance = ({ schedule, deadlines, tasks, courses }) => {
+const AtAGlance = ({ schedule = [], deadlines = [], tasks = [], courses = [] }) => {
     const today = new Date().toLocaleDateString('en-US', { weekday: 'long' });
 
     const getCourseName = (courseId) => {
@@ -17,7 +17,7 @@ const AtAGlance = ({ schedule, deadlines, tasks, courses }) => {
     const upcomingDeadlines = deadlines
         .filter(d => new Date(d.date) >= new Date(new Date().toDateString()))
         .sort((a, b) => new Date(a.date) - new Date(b.date))
-        .slice(0, 3); // Show top 3
+        .slice(0, 3);
 
     const todaysTasks = tasks
         .filter(t => !t.isCompleted && t.type === 'Short-term')
@@ -30,13 +30,11 @@ const AtAGlance = ({ schedule, deadlines, tasks, courses }) => {
     });
 
     return (
-        <div className="w-full flex-shrink-0 space-y-8 pt-20">
-            <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3"><Search className="text-cyan-400" />At a Glance</h2>
-            
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Attendance Warnings (Prioritized) */}
             {attendanceWarnings.length > 0 && (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}>
-                    <div className="bg-gradient-to-br from-red-500/20 to-red-500/0 bg-red-900/10 saturate-150 backdrop-blur-2xl border border-red-500/50 p-6 rounded-xl shadow-lg">
+                    <div className="bg-gradient-to-br from-red-500/20 to-red-500/0 bg-red-900/10 saturate-150 backdrop-blur-2xl border border-red-500/50 p-6 rounded-xl shadow-lg h-full">
                         <h3 className="font-bold text-white mb-4 flex items-center gap-2"><AlertTriangle size={18} className="text-red-400" /> Attendance Warnings</h3>
                         <div className="space-y-3">
                             {attendanceWarnings.map(course => (
@@ -49,10 +47,10 @@ const AtAGlance = ({ schedule, deadlines, tasks, courses }) => {
                     </div>
                 </motion.div>
             )}
-
+            
             {/* Today's Schedule */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}>
-                <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
+                <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg h-full">
                     <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Clock size={18} className="text-cyan-400" /> Today's Schedule</h3>
                     <div className="space-y-3">
                         {todaysSchedule.length > 0 ? todaysSchedule.map(item => (
@@ -67,7 +65,7 @@ const AtAGlance = ({ schedule, deadlines, tasks, courses }) => {
 
             {/* Upcoming Deadlines */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3 }}>
-                <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
+                <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg h-full">
                     <h3 className="font-bold text-white mb-4 flex items-center gap-2"><Bell size={18} className="text-cyan-400" /> Upcoming Deadlines</h3>
                     <div className="space-y-3">
                         {upcomingDeadlines.length > 0 ? upcomingDeadlines.map(deadline => (
@@ -82,7 +80,7 @@ const AtAGlance = ({ schedule, deadlines, tasks, courses }) => {
 
              {/* Today's Plans */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
-                <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
+                <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg h-full">
                     <h3 className="font-bold text-white mb-4 flex items-center gap-2"><CheckCircle2 size={18} className="text-cyan-400" /> Today's Plans</h3>
                     <div className="space-y-3">
                         {todaysTasks.length > 0 ? todaysTasks.map(task => (

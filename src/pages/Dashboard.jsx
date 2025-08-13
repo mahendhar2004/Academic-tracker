@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { doc, onSnapshot, setDoc, collection, addDoc, query, deleteDoc, updateDoc, writeBatch, getDocs, Timestamp } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
-import { Plus, UserCircle2, ClipboardList, GraduationCap, Coins, Calendar, BookOpen, CalendarDays, Home } from 'lucide-react';
-import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 import SideNav from '../components/dashboard/SideNav';
 import Header from '../components/dashboard/Header';
@@ -12,14 +11,13 @@ import ProfilePage from './ProfilePage';
 import CalendarPage from './CalendarPage';
 import StudyPage from './StudyPage';
 import HomePage from './HomePage';
-import AtAGlance from '../components/dashboard/AtAGlance';
+import FloatingAddButton from '../components/dashboard/FloatingAddButton';
 import AddCourseModal from '../components/modals/AddCourseModal';
 import AddGradeModal from '../components/modals/AddGradeModal';
 import ConfirmationModal from '../components/common/ConfirmationModal';
 import ResetConfirmationModal from '../components/common/ResetConfirmationModal';
 import AddEditClassModal from '../components/modals/AddEditClassModal';
 import AddEditDeadlineModal from '../components/modals/AddEditDeadlineModal';
-import EditProfileModal from '../components/modals/EditProfileModal';
 import AddEditMarksModal from '../components/modals/AddEditMarksModal';
 import AddEditTaskModal from '../components/modals/AddEditTaskModal';
 import TimetableModal from '../components/modals/TimetableModal';
@@ -28,7 +26,7 @@ const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+':
 
 const Dashboard = ({ user, onSignOut }) => {
     const [allCourses, setAllCourses] = useState([]);
-    const [profileData, setProfileData] = useState({ name: '', imageUrl: '', coins: 0 });
+    const [profileData, setProfileData] = useState({ name: '', imageUrl: '' });
     const [schedule, setSchedule] = useState([]);
     const [deadlines, setDeadlines] = useState([]);
     const [examMarks, setExamMarks] = useState([]);
@@ -39,7 +37,6 @@ const Dashboard = ({ user, onSignOut }) => {
     const [isResetModalOpen, setIsResetModalOpen] = useState(false);
     const [isAddClassModalOpen, setIsAddClassModalOpen] = useState(false);
     const [isAddDeadlineModalOpen, setIsAddDeadlineModalOpen] = useState(false);
-    const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
     const [isAddMarksModalOpen, setIsAddMarksModalOpen] = useState(false);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [isTimetableModalOpen, setIsTimetableModalOpen] = useState(false);
@@ -68,7 +65,7 @@ const Dashboard = ({ user, onSignOut }) => {
             if (doc.exists()) {
                 setProfileData(doc.data());
             } else { 
-                setDoc(doc.ref, { name: user.displayName || 'User', imageUrl: user.photoURL || '', coins: 0 });
+                setDoc(doc.ref, { name: user.displayName || 'User', email: user.email || '', imageUrl: user.photoURL || '' });
             }
         });
         const unsubSchedule = onSnapshot(query(collection(db, `artifacts/${appId}/users/${user.uid}/schedule`)), (snapshot) => {
@@ -128,7 +125,6 @@ const Dashboard = ({ user, onSignOut }) => {
         const dataToSave = { 
             ...restOfCourseData, 
             grade: grade === "Not Published" ? null : grade,
-            streak: 0, 
             lastAttended: null, 
             attended: 0, 
             total: 0, 
@@ -216,21 +212,10 @@ const Dashboard = ({ user, onSignOut }) => {
 
     const handleDecrementAttendance = async (course) => {
         if (!user || (course.attended || 0) <= 0) return;
-
-        const today = new Date().toISOString().split('T')[0];
-        const attendanceCountToday = course.lastAttended === today ? (course.attendanceCountToday || 0) : 0;
-
-        const updateData = {
-            attended: (course.attended || 0) - 1,
-            attendanceCountToday: attendanceCountToday > 0 ? attendanceCountToday - 1 : 0
-        };
-
-        if (attendanceCountToday === 1) {
-            updateData.streak = (course.streak || 0) > 0 ? (course.streak || 0) - 1 : 0;
-        }
-
         const courseRef = doc(db, `artifacts/${appId}/users/${user.uid}/courses`, course.id);
-        await updateDoc(courseRef, updateData);
+        await updateDoc(courseRef, {
+            attended: (course.attended || 0) - 1,
+        });
     };
 
     const handleTotalChange = (course, change) => {
@@ -240,57 +225,12 @@ const Dashboard = ({ user, onSignOut }) => {
     };
 
     const handleMarkAttendance = (course) => {
-        if (!user) return 0;
-        const today = new Date().toISOString().split('T')[0];
-        const attendanceCountToday = course.lastAttended === today ? (course.attendanceCountToday || 0) : 0;
-
-        if (attendanceCountToday >= 2) return 0;
-
-        const performUpdate = () => {
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            const yesterdayString = yesterday.toISOString().split('T')[0];
-
-            const currentStreak = course.streak || 0;
-            let newStreak = 1;
-            if (attendanceCountToday === 0 && course.lastAttended === yesterdayString) {
-                newStreak = currentStreak + 1;
-            } else if (attendanceCountToday > 0) {
-                newStreak = currentStreak;
-            }
-            
-            const coinsToAdd = 10;
-
-            const courseRef = doc(db, `artifacts/${appId}/users/${user.uid}/courses`, course.id);
-            updateDoc(courseRef, {
-                attended: (course.attended || 0) + 1,
-                total: (course.total || 0) + 1,
-                streak: newStreak,
-                lastAttended: today,
-                attendanceCountToday: attendanceCountToday + 1
-            });
-
-            const profileRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/data`);
-            updateDoc(profileRef, {
-                coins: (profileData.coins || 0) + coinsToAdd
-            });
-
-            return coinsToAdd;
-        };
-
-        if (attendanceCountToday === 1) {
-            setConfirmationModal({
-                isOpen: true,
-                message: "Did you attend the class twice today?",
-                onConfirm: () => {
-                    performUpdate();
-                    setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} });
-                }
-            });
-            return 0;
-        } else {
-            return performUpdate();
-        }
+        if (!user) return;
+        const courseRef = doc(db, `artifacts/${appId}/users/${user.uid}/courses`, course.id);
+        updateDoc(courseRef, {
+            attended: (course.attended || 0) + 1,
+            total: (course.total || 0) + 1,
+        });
     };
 
     const handleDeleteCourse = (courseId, courseName) => {
@@ -350,7 +290,6 @@ const Dashboard = ({ user, onSignOut }) => {
         setIsGradeModalOpen(true); 
     };
     const handleAddNewCourse = () => { setIsCourseModalOpen(true); };
-    const handleEditProfileClick = () => { setIsEditProfileModalOpen(true); };
     const handleAddDeadlineClick = () => { setDeadlineToEdit(null); setIsAddDeadlineModalOpen(true); };
     const handleEditDeadlineClick = (deadline) => { setDeadlineToEdit(deadline); setIsAddDeadlineModalOpen(true); };
     const handleAddExamMarksClick = () => { setMarkToEdit(null); setIsAddMarksModalOpen(true); };
@@ -396,8 +335,8 @@ const Dashboard = ({ user, onSignOut }) => {
                                     variants={pageVariants}
                                     transition={pageTransition}
                                 >
-                                    {currentPage === 'home' && <HomePage schedule={schedule} deadlines={deadlines} tasks={tasks} courses={allCourses} profileData={profileData} />}
-                                    {currentPage === 'attendance' && <AttendancePage allCourses={allCourses} onUpdate={handleUpdateAttendance} onAddNew={handleAddNewCourse} onMarkAttendance={handleMarkAttendance} onTotalChange={handleTotalChange} onDecrementAttendance={handleDecrementAttendance} onDeleteCourse={handleDeleteCourse} onToggleVisibility={handleToggleCourseVisibility} performanceData={performanceData} isCpiVisible={isCpiVisible} onToggleCpiVisibility={handleToggleCpiVisibility} />}
+                                    {currentPage === 'home' && <HomePage profileData={profileData} schedule={schedule} deadlines={deadlines} tasks={tasks} courses={allCourses} />}
+                                    {currentPage === 'attendance' && <AttendancePage allCourses={allCourses} onAddNew={handleAddNewCourse} onMarkAttendance={handleMarkAttendance} onTotalChange={handleTotalChange} onDecrementAttendance={handleDecrementAttendance} onDeleteCourse={handleDeleteCourse} onToggleVisibility={handleToggleCourseVisibility} performanceData={performanceData} isCpiVisible={isCpiVisible} onToggleCpiVisibility={handleToggleCpiVisibility} />}
                                     {currentPage === 'performance' && <PerformancePage performanceData={performanceData} allCourses={allCourses} examMarks={examMarks} onDeleteCourse={handleDeleteCourse} onEditGrade={handleEditGradeClick} onAddExamMarks={handleAddExamMarksClick} onEditExamMark={handleEditExamMarkClick} onDeleteExamMark={handleDeleteExamMark} />}
                                     {currentPage === 'calendar' && <CalendarPage schedule={schedule} deadlines={deadlines} onAddClass={handleAddClassClick} onEditClass={handleEditClassClick} onAddDeadline={handleAddDeadlineClick} onDeleteDeadline={handleDeleteDeadline} onEditDeadline={handleEditDeadlineClick} courses={allCourses} />}
                                     {currentPage === 'study' && <StudyPage tasks={tasks} onAddTask={handleAddTaskClick} onEditTask={handleEditTaskClick} onDeleteTask={handleDeleteTask} onToggleComplete={handleToggleTaskComplete} />}
@@ -408,6 +347,16 @@ const Dashboard = ({ user, onSignOut }) => {
                     </div>
                 </div>
             </div>
+            {currentPage !== 'profile' && (
+                <FloatingAddButton 
+                    onAddCourse={handleAddNewCourse}
+                    onAddExamMarks={handleAddExamMarksClick}
+                    onAddGrade={() => setIsGradeModalOpen(true)}
+                    onAddDeadline={handleAddDeadlineClick}
+                    onAddTask={handleAddTaskClick}
+                />
+            )}
+            {/* All modals are rendered here, passing necessary props */}
             <AddCourseModal isOpen={isCourseModalOpen} onClose={() => setIsCourseModalOpen(false)} onSave={handleSaveCourse} currentSemester={currentSemester} />
             <AddGradeModal isOpen={isGradeModalOpen} onClose={() => setIsGradeModalOpen(false)} onSave={handleSaveGrade} allCourses={allCourses} courseToEdit={courseToGrade} />
             <AddEditClassModal isOpen={isAddClassModalOpen} onClose={() => setIsAddClassModalOpen(false)} onSave={handleSaveClass} currentCourses={currentSemesterCourses} classToEdit={classToEdit} />

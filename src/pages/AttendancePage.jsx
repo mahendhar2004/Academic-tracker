@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ClipboardList, PackageOpen, Plus, ChevronDown, Eye, EyeOff } from 'lucide-react';
 import AttendanceCard from '../components/attendance/AttendanceCard';
 
-const AttendancePage = ({ allCourses, onUpdate, onAddNew, onMarkAttendance, onTotalChange, onDecrementAttendance, onDeleteCourse, onToggleVisibility, performanceData, isCpiVisible, onToggleCpiVisibility }) => {
+const AttendancePage = ({ allCourses = [], onUpdate, onAddNew, onMarkAttendance, onTotalChange, onDecrementAttendance, onDeleteCourse, onToggleVisibility, performanceData = {}, isCpiVisible, onToggleCpiVisibility }) => {
     const [isHiddenVisible, setIsHiddenVisible] = useState(false);
     const [isPreviousVisible, setIsPreviousVisible] = useState(false);
 
@@ -63,7 +63,7 @@ const AttendancePage = ({ allCourses, onUpdate, onAddNew, onMarkAttendance, onTo
             </div>
 
             {visibleCourses.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {visibleCourses.map(course => <AttendanceCard key={course.id} course={course} onUpdate={onUpdate} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={true} />)}
                 </div>
             ) : (
@@ -83,7 +83,7 @@ const AttendancePage = ({ allCourses, onUpdate, onAddNew, onMarkAttendance, onTo
                     <AnimatePresence>
                     {isHiddenVisible && (
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {hiddenCourses.map(course => <AttendanceCard key={course.id} course={course} onUpdate={onUpdate} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={true} />)}
                             </div>
                         </motion.div>
@@ -113,7 +113,7 @@ const AttendancePage = ({ allCourses, onUpdate, onAddNew, onMarkAttendance, onTo
                                             <AnimatePresence initial={false}>
                                                 {isExpanded && (
                                                     <motion.section key="content" initial="collapsed" animate="open" exit="collapsed" variants={{ open: { opacity: 1, height: "auto" }, collapsed: { opacity: 0, height: 0 } }} transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}>
-                                                        <div className="p-3 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-white/10">
+                                                        <div className="p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 border-t border-white/10">
                                                             {courses.map(course => <AttendanceCard key={course.id} course={course} onUpdate={onUpdate} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={false} />)}
                                                         </div>
                                                     </motion.section>

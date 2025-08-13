@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import { Edit, Check, X } from 'lucide-react';
 
 const EditableField = ({ label, value, onSave }) => {
