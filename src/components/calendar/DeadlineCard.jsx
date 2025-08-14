@@ -41,26 +41,28 @@ const DeadlineCard = ({ deadline, getCourseName, onDelete, onEdit }) => {
         };
 
         calculateTimeLeft();
-        const interval = setInterval(calculateTimeLeft, 60000); // Update every minute
+        const interval = setInterval(calculateTimeLeft, 60000);
 
         return () => clearInterval(interval);
     }, [deadline]);
 
-    const formattedDate = new Date(deadline.date).toLocaleDateString('en-GB'); // DD/MM/YYYY format
+    const formattedDate = new Date(deadline.date).toLocaleDateString('en-GB');
 
     return (
-        <div className={`bg-gradient-to-br ${cardUrgencyClass} bg-white/10 saturate-150 backdrop-blur-2xl border p-4 rounded-xl shadow-lg flex flex-col justify-between`}>
+        // FIX: Added 'group' class to enable group-hover functionality
+        <div className={`group bg-gradient-to-br ${cardUrgencyClass} bg-white/10 saturate-150 backdrop-blur-2xl border p-6 rounded-xl shadow-lg flex flex-col justify-between`}>
             <div className="flex justify-between items-start">
-                <p className="font-bold text-white text-lg mb-1 truncate pr-4">{getCourseName(deadline.courseId)}</p>
-                <div className="flex items-center gap-3">
+                <p className="font-bold text-white text-xl mb-1 truncate pr-4">{getCourseName(deadline.courseId)}</p>
+                {/* FIX: Made these buttons visible only on hover of the parent card */}
+                <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                     <motion.button whileTap={{scale: 0.9}} onClick={() => onEdit(deadline)} className="text-slate-500 hover:text-cyan-400 transition-colors flex-shrink-0"><Edit size={16} /></motion.button>
                     <motion.button whileTap={{scale: 0.9}} onClick={() => onDelete(deadline.id)} className="text-slate-500 hover:text-red-400 transition-colors flex-shrink-0"><Trash2 size={16} /></motion.button>
                 </div>
             </div>
             
-            <div className="flex justify-between items-end mt-2">
+            <div className="flex justify-between items-end mt-4">
                 <div>
-                    <p className="text-xl text-slate-200 truncate font-semibold">{deadline.title}</p>
+                    <p className="text-lg text-slate-200 truncate font-semibold">{deadline.title}</p>
                     <p className="text-base text-slate-400 mt-1">{formattedDate} {deadline.time}</p>
                 </div>
                 <p className={`font-bold text-lg ${urgencyColor}`}>{timeLeftText}</p>

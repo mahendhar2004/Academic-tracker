@@ -36,34 +36,40 @@ const StudyPage = ({ tasks, onAddTask, onEditTask, onDeleteTask, onToggleComplet
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
             <div className="flex justify-between items-center mb-4">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-3"><BookOpen className="text-cyan-400" />Study Planner</h2>
-                <motion.button whileTap={{ scale: 0.95 }} onClick={onAddTask} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
-                    <Plus size={18} /> Add Plan
+                {/* FIX: Changed button to be icon-only */}
+                <motion.button 
+                    whileTap={{ scale: 0.95 }} 
+                    onClick={onAddTask}
+                    title="Add Plan"
+                    className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"
+                >
+                    <Plus size={20} />
                 </motion.button>
             </div>
             
             <div className="space-y-8">
-                <div>
-                    <h3 className="text-xl font-semibold text-white mb-4">Short-term Plans</h3>
-                    <div className="space-y-4">
-                        <AnimatePresence>
-                            {shortTermTasks.length > 0 ? shortTermTasks.map(task => (
-                                <TaskCard key={task.id} task={task} onToggleComplete={onToggleComplete} onEdit={onEditTask} onDelete={onDeleteTask} />
-                            )) : <p className="text-slate-400 text-center py-8">No short-term plans for today.</p>}
-                        </AnimatePresence>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 className="text-xl font-semibold text-white mb-4">Short-term Plans</h3>
+                        <div className="space-y-4">
+                            <AnimatePresence>
+                                {shortTermTasks.length > 0 ? shortTermTasks.map(task => (
+                                    <TaskCard key={task.id} task={task} onToggleComplete={onToggleComplete} onEdit={onEditTask} onDelete={onDeleteTask} />
+                                )) : <p className="text-slate-400 text-center py-8">No short-term plans for today.</p>}
+                            </AnimatePresence>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-semibold text-white mb-4">Long-term Plans</h3>
+                        <div className="space-y-4">
+                            <AnimatePresence>
+                                {longTermTasks.length > 0 ? longTermTasks.map(task => (
+                                    <TaskCard key={task.id} task={task} onToggleComplete={onToggleComplete} onEdit={onEditTask} onDelete={onDeleteTask} />
+                                )) : <p className="text-slate-400 text-center py-8">No long-term plans active.</p>}
+                            </AnimatePresence>
+                        </div>
                     </div>
                 </div>
-
-                <div>
-                    <h3 className="text-xl font-semibold text-white mb-4">Long-term Plans</h3>
-                    <div className="space-y-4">
-                        <AnimatePresence>
-                            {longTermTasks.length > 0 ? longTermTasks.map(task => (
-                                <TaskCard key={task.id} task={task} onToggleComplete={onToggleComplete} onEdit={onEditTask} onDelete={onDeleteTask} />
-                            )) : <p className="text-slate-400 text-center py-8">No long-term plans active.</p>}
-                        </AnimatePresence>
-                    </div>
-                </div>
-
                 {completedTasks.length > 0 && (
                     <div>
                         <div className="flex justify-between items-center mb-4 cursor-pointer hover:bg-black/20 p-2 rounded-lg transition-colors" onClick={() => setIsCompletedVisible(!isCompletedVisible)}>

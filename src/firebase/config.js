@@ -4,14 +4,14 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from "firebase/storage";
 
 // Your provided Firebase credentials
+// This config now safely reads from your .env.local file
 const firebaseConfig = {
-    apiKey: "AIzaSyDb026Tf_OjFwg1hVCkWCRpjUJ8CJ84y5o",
-    authDomain: "my-academic-tracker.firebaseapp.com",
-    projectId: "my-academic-tracker",
-    storageBucket: "my-academic-tracker.appspot.com",
-    messagingSenderId: "665502100040",
-    appId: "1:665502100040:web:b0d05cfa35887baf88c67d",
-    measurementId: "G-SF32Q4KGHX"
+    apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+    authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
+    storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
 
 // Initialize Firebase

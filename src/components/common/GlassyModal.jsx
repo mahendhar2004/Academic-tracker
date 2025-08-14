@@ -9,7 +9,8 @@ const GlassyModal = ({ isOpen, onClose, children, title, customClasses = "" }) =
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-50 p-4"
+                // FIX: Changed bg-black/80 to bg-black/60 for a less dark backdrop
+                className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4"
             >
                 <motion.div
                     initial={{ scale: 0.95, opacity: 0 }}

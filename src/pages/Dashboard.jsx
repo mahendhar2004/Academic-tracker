@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { doc, onSnapshot, setDoc, collection, addDoc, query, deleteDoc, updateDoc, writeBatch, getDocs, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, collection, addDoc, query, deleteDoc, updateDoc, writeBatch, getDocs, Timestamp, increment } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
 import { motion, AnimatePresence } from 'framer-motion';
 
+// FIX: Added missing component imports
 import SideNav from '../components/dashboard/SideNav';
 import Header from '../components/dashboard/Header';
 import AttendancePage from './AttendancePage';
@@ -21,8 +22,18 @@ import AddEditDeadlineModal from '../components/modals/AddEditDeadlineModal';
 import AddEditMarksModal from '../components/modals/AddEditMarksModal';
 import AddEditTaskModal from '../components/modals/AddEditTaskModal';
 import TimetableModal from '../components/modals/TimetableModal';
+import PomodoroModal from '../components/modals/PomodoroModal';
+import PomodoroTimer from '../components/pomodoro/PomodoroTimer';
 
 const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
+
+const COIN_VALUES = {
+    MARK_ATTENDANCE: 5,
+    DECREMENT_ATTENDANCE: -5,
+    COMPLETE_TASK: 10,
+    UNCOMPLETE_TASK: -10,
+    FINISH_POMODORO: 25,
+};
 
 const Dashboard = ({ user, onSignOut }) => {
     const [allCourses, setAllCourses] = useState([]);
@@ -40,6 +51,7 @@ const Dashboard = ({ user, onSignOut }) => {
     const [isAddMarksModalOpen, setIsAddMarksModalOpen] = useState(false);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [isTimetableModalOpen, setIsTimetableModalOpen] = useState(false);
+    const [isPomodoroModalOpen, setIsPomodoroModalOpen] = useState(false);
     
     const [deadlineToEdit, setDeadlineToEdit] = useState(null);
     const [markToEdit, setMarkToEdit] = useState(null);
@@ -50,6 +62,7 @@ const Dashboard = ({ user, onSignOut }) => {
     const [currentPage, setCurrentPage] = useState('home');
     const [confirmationModal, setConfirmationModal] = useState({ isOpen: false, message: '', onConfirm: () => {} });
     const [isCpiVisible, setIsCpiVisible] = useState(true);
+    const [pomodoroConfig, setPomodoroConfig] = useState({ isActive: false, duration: 0 });
 
     useEffect(() => {
         const savedCpiVisibility = localStorage.getItem('cpiVisible');
@@ -65,7 +78,7 @@ const Dashboard = ({ user, onSignOut }) => {
             if (doc.exists()) {
                 setProfileData(doc.data());
             } else { 
-                setDoc(doc.ref, { name: user.displayName || 'User', email: user.email || '', imageUrl: user.photoURL || '' });
+                setDoc(doc.ref, { name: user.displayName || 'User', email: user.email || '', imageUrl: user.photoURL || '', coins: 0 });
             }
         });
         const unsubSchedule = onSnapshot(query(collection(db, `artifacts/${appId}/users/${user.uid}/schedule`)), (snapshot) => {
@@ -117,6 +130,14 @@ const Dashboard = ({ user, onSignOut }) => {
         if (allCourses.length === 0) return [];
         return allCourses.filter(c => c.semester === currentSemester);
     }, [allCourses, currentSemester]);
+
+    const updateCoins = async (amount) => {
+        if (!user || amount === 0) return;
+        const profileRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/data`);
+        await updateDoc(profileRef, {
+            coins: increment(amount)
+        });
+    };
 
     const handleSaveCourse = async (courseData) => {
         if (!user) return;
@@ -181,7 +202,7 @@ const Dashboard = ({ user, onSignOut }) => {
         const path = `artifacts/${appId}/users/${user.uid}/tasks`;
         const dataToSave = { ...taskData };
         if (taskData.type === 'Short-term') {
-            dataToSave.dueDate = null; // Ensure short-term tasks don't have a due date
+            dataToSave.dueDate = null;
         }
         if (taskId) {
             await updateDoc(doc(db, path, taskId), dataToSave);
@@ -197,6 +218,7 @@ const Dashboard = ({ user, onSignOut }) => {
             isCompleted,
             completedAt: isCompleted ? Timestamp.now() : null
         });
+        updateCoins(isCompleted ? COIN_VALUES.COMPLETE_TASK : COIN_VALUES.UNCOMPLETE_TASK);
     };
 
     const handleUpdateAttendance = async (courseId, updatedData) => {
@@ -214,8 +236,9 @@ const Dashboard = ({ user, onSignOut }) => {
         if (!user || (course.attended || 0) <= 0) return;
         const courseRef = doc(db, `artifacts/${appId}/users/${user.uid}/courses`, course.id);
         await updateDoc(courseRef, {
-            attended: (course.attended || 0) - 1,
+            attended: increment(-1),
         });
+        updateCoins(COIN_VALUES.DECREMENT_ATTENDANCE);
     };
 
     const handleTotalChange = (course, change) => {
@@ -228,9 +251,10 @@ const Dashboard = ({ user, onSignOut }) => {
         if (!user) return;
         const courseRef = doc(db, `artifacts/${appId}/users/${user.uid}/courses`, course.id);
         updateDoc(courseRef, {
-            attended: (course.attended || 0) + 1,
-            total: (course.total || 0) + 1,
+            attended: increment(1),
+            total: increment(1),
         });
+        updateCoins(COIN_VALUES.MARK_ATTENDANCE);
     };
 
     const handleDeleteCourse = (courseId, courseName) => {
@@ -285,6 +309,18 @@ const Dashboard = ({ user, onSignOut }) => {
         localStorage.setItem('cpiVisible', JSON.stringify(newVisibility));
     };
 
+    const handleStartPomodoro = (duration) => {
+        setIsPomodoroModalOpen(false);
+        setPomodoroConfig({ isActive: true, duration });
+    };
+
+    const handleClosePomodoro = ({ completed }) => {
+        setPomodoroConfig({ isActive: false, duration: 0 });
+        if (completed) {
+            updateCoins(COIN_VALUES.FINISH_POMODORO);
+        }
+    };
+
     const handleEditGradeClick = (course) => { 
         setCourseToGrade(course);
         setIsGradeModalOpen(true); 
@@ -292,8 +328,22 @@ const Dashboard = ({ user, onSignOut }) => {
     const handleAddNewCourse = () => { setIsCourseModalOpen(true); };
     const handleAddDeadlineClick = () => { setDeadlineToEdit(null); setIsAddDeadlineModalOpen(true); };
     const handleEditDeadlineClick = (deadline) => { setDeadlineToEdit(deadline); setIsAddDeadlineModalOpen(true); };
-    const handleAddExamMarksClick = () => { setMarkToEdit(null); setIsAddMarksModalOpen(true); };
-    const handleEditExamMarkClick = (mark) => { setMarkToEdit(mark); setIsAddMarksModalOpen(true); };
+    
+    const handleAddExamMarksClick = () => { 
+        setMarkToEdit(null); 
+        setIsAddMarksModalOpen(true); 
+    };
+
+    const handleEditExamMarkClick = (mark) => { 
+        setMarkToEdit(mark); 
+        setIsAddMarksModalOpen(true); 
+    };
+
+    const handleAddMarksForCourseClick = (course) => {
+        setMarkToEdit({ courseId: course.id });
+        setIsAddMarksModalOpen(true);
+    };
+
     const handleAddTaskClick = () => { setTaskToEdit(null); setIsAddTaskModalOpen(true); };
     const handleEditTaskClick = (task) => { setTaskToEdit(task); setIsAddTaskModalOpen(true); };
     const handleAddClassClick = () => { setClassToEdit(null); setIsAddClassModalOpen(true); };
@@ -308,14 +358,13 @@ const Dashboard = ({ user, onSignOut }) => {
     const pageTransition = {
         type: 'tween',
         ease: 'linear',
-        duration: 0.2,
+        duration: 0.1,
     };
 
     return (
         <>
             <div className="min-h-screen bg-black text-white font-sans flex">
                 <SideNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
-
                 <div className="flex-1 pl-28">
                     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-10">
                         <Header 
@@ -323,8 +372,8 @@ const Dashboard = ({ user, onSignOut }) => {
                             profileData={profileData} 
                             onAddNewCourse={handleAddNewCourse} 
                             onOpenTimetable={() => setIsTimetableModalOpen(true)}
+                            onOpenPomodoro={() => setIsPomodoroModalOpen(true)}
                         />
-                        
                         <main>
                             <AnimatePresence mode="wait">
                                 <motion.div 
@@ -335,18 +384,54 @@ const Dashboard = ({ user, onSignOut }) => {
                                     variants={pageVariants}
                                     transition={pageTransition}
                                 >
-                                    {currentPage === 'home' && <HomePage profileData={profileData} schedule={schedule} deadlines={deadlines} tasks={tasks} courses={allCourses} />}
-                                    {currentPage === 'attendance' && <AttendancePage allCourses={allCourses} onAddNew={handleAddNewCourse} onMarkAttendance={handleMarkAttendance} onTotalChange={handleTotalChange} onDecrementAttendance={handleDecrementAttendance} onDeleteCourse={handleDeleteCourse} onToggleVisibility={handleToggleCourseVisibility} performanceData={performanceData} isCpiVisible={isCpiVisible} onToggleCpiVisibility={handleToggleCpiVisibility} />}
-                                    {currentPage === 'performance' && <PerformancePage performanceData={performanceData} allCourses={allCourses} examMarks={examMarks} onDeleteCourse={handleDeleteCourse} onEditGrade={handleEditGradeClick} onAddExamMarks={handleAddExamMarksClick} onEditExamMark={handleEditExamMarkClick} onDeleteExamMark={handleDeleteExamMark} />}
+                                    {currentPage === 'home' && <HomePage 
+                                        profileData={profileData} 
+                                        schedule={schedule} 
+                                        deadlines={deadlines} 
+                                        tasks={tasks} 
+                                        courses={allCourses}
+                                        performanceData={performanceData}
+                                        isCpiVisible={isCpiVisible}
+                                        onToggleCpiVisibility={handleToggleCpiVisibility}
+                                    />}
+                                    {currentPage === 'attendance' && <AttendancePage 
+                                        allCourses={allCourses} 
+                                        onAddNew={handleAddNewCourse} 
+                                        onMarkAttendance={handleMarkAttendance} 
+                                        onTotalChange={handleTotalChange} 
+                                        onDecrementAttendance={handleDecrementAttendance} 
+                                        onDeleteCourse={handleDeleteCourse} 
+                                        onToggleVisibility={handleToggleCourseVisibility}
+                                    />}
+                                    {currentPage === 'performance' && <PerformancePage 
+                                        performanceData={performanceData} 
+                                        allCourses={allCourses} 
+                                        examMarks={examMarks} 
+                                        onDeleteCourse={handleDeleteCourse} 
+                                        onEditGrade={handleEditGradeClick} 
+                                        onAddExamMarks={handleAddExamMarksClick} 
+                                        onEditExamMark={handleEditExamMarkClick} 
+                                        onDeleteExamMark={handleDeleteExamMark} 
+                                        onAddMarksForCourse={handleAddMarksForCourseClick}
+                                    />}
                                     {currentPage === 'calendar' && <CalendarPage schedule={schedule} deadlines={deadlines} onAddClass={handleAddClassClick} onEditClass={handleEditClassClick} onAddDeadline={handleAddDeadlineClick} onDeleteDeadline={handleDeleteDeadline} onEditDeadline={handleEditDeadlineClick} courses={allCourses} />}
                                     {currentPage === 'study' && <StudyPage tasks={tasks} onAddTask={handleAddTaskClick} onEditTask={handleEditTaskClick} onDeleteTask={handleDeleteTask} onToggleComplete={handleToggleTaskComplete} />}
-                                    {currentPage === 'profile' && <ProfilePage profileData={profileData} onSaveField={handleSaveProfileField} onResetData={() => setIsResetModalOpen(true)} onSignOut={onSignOut} />}
+                                    {currentPage === 'profile' && <ProfilePage 
+                                        profileData={profileData} 
+                                        onSaveField={handleSaveProfileField} 
+                                        onResetData={() => setIsResetModalOpen(true)} 
+                                        onSignOut={onSignOut} 
+                                        currentSemester={currentSemester}
+                                        currentSemesterCourses={currentSemesterCourses}
+                                        onAddNewCourse={handleAddNewCourse}
+                                    />}
                                 </motion.div>
                             </AnimatePresence>
                         </main>
                     </div>
                 </div>
             </div>
+            
             {currentPage !== 'profile' && (
                 <FloatingAddButton 
                     onAddCourse={handleAddNewCourse}
@@ -356,12 +441,12 @@ const Dashboard = ({ user, onSignOut }) => {
                     onAddTask={handleAddTaskClick}
                 />
             )}
-            {/* All modals are rendered here, passing necessary props */}
+            
             <AddCourseModal isOpen={isCourseModalOpen} onClose={() => setIsCourseModalOpen(false)} onSave={handleSaveCourse} currentSemester={currentSemester} />
             <AddGradeModal isOpen={isGradeModalOpen} onClose={() => setIsGradeModalOpen(false)} onSave={handleSaveGrade} allCourses={allCourses} courseToEdit={courseToGrade} />
             <AddEditClassModal isOpen={isAddClassModalOpen} onClose={() => setIsAddClassModalOpen(false)} onSave={handleSaveClass} currentCourses={currentSemesterCourses} classToEdit={classToEdit} />
             <AddEditDeadlineModal isOpen={isAddDeadlineModalOpen} onClose={() => setIsAddDeadlineModalOpen(false)} onSave={handleSaveDeadline} currentCourses={currentSemesterCourses} deadlineToEdit={deadlineToEdit} />
-            <AddEditMarksModal isOpen={isAddMarksModalOpen} onClose={() => setIsAddMarksModalOpen(false)} onSave={handleSaveExamMark} allCourses={allCourses} markToEdit={markToEdit} />
+            <AddEditMarksModal isOpen={isAddMarksModalOpen} onClose={() => setIsAddMarksModalOpen(false)} onSave={handleSaveExamMark} allCourses={allCourses} markToEdit={markToEdit} currentSemester={currentSemester} />
             <AddEditTaskModal isOpen={isAddTaskModalOpen} onClose={() => setIsAddTaskModalOpen(false)} onSave={handleSaveTask} taskToEdit={taskToEdit} />
             <TimetableModal isOpen={isTimetableModalOpen} onClose={() => setIsTimetableModalOpen(false)} schedule={schedule} courses={allCourses} />
             <ConfirmationModal 
@@ -375,6 +460,19 @@ const Dashboard = ({ user, onSignOut }) => {
                 onClose={() => setIsResetModalOpen(false)}
                 onConfirm={handleResetData}
             />
+            <PomodoroModal 
+                isOpen={isPomodoroModalOpen} 
+                onClose={() => setIsPomodoroModalOpen(false)} 
+                onStart={handleStartPomodoro} 
+            />
+            <AnimatePresence>
+                {pomodoroConfig.isActive && (
+                    <PomodoroTimer 
+                        duration={pomodoroConfig.duration} 
+                        onClose={handleClosePomodoro} 
+                    />
+                )}
+            </AnimatePresence>
         </>
     );
 };

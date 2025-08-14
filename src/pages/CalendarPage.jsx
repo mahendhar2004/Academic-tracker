@@ -19,13 +19,19 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onAddDeadl
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            <div className="space-y-12">
-                {/* Today's Schedule Section */}
-                <div>
+            <div className="grid grid-cols-1 lg:grid-cols-5 lg:gap-16">
+                
+                <div className="lg:col-span-3">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Clock className="text-cyan-400" />Today's Schedule</h2>
-                        <motion.button whileTap={{ scale: 0.95 }} onClick={onAddClass} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
-                            <Plus size={18} /> Add Class
+                        {/* FIX: Changed button to be icon-only */}
+                        <motion.button 
+                            whileTap={{ scale: 0.95 }} 
+                            onClick={onAddClass}
+                            title="Add Class"
+                            className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"
+                        >
+                            <Plus size={20} />
                         </motion.button>
                     </div>
                     <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
@@ -43,18 +49,23 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onAddDeadl
                     </div>
                 </div>
 
-                {/* Deadlines Section */}
-                <div>
+                <div className="lg:col-span-2">
                     <div className="flex justify-between items-center mb-4">
                         <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Bell className="text-cyan-400" />Upcoming Deadlines</h2>
-                        <motion.button whileTap={{ scale: 0.95 }} onClick={onAddDeadline} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
-                            <Plus size={18} /> Add Deadline
+                        {/* FIX: Changed button to be icon-only */}
+                        <motion.button 
+                            whileTap={{ scale: 0.95 }} 
+                            onClick={onAddDeadline}
+                            title="Add Deadline"
+                            className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"
+                        >
+                            <Plus size={20} />
                         </motion.button>
                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
                         {upcomingDeadlines.length > 0 ? upcomingDeadlines.map(deadline => (
                             <DeadlineCard key={deadline.id} deadline={deadline} getCourseName={getCourseName} onDelete={onDeleteDeadline} onEdit={onEditDeadline} />
-                        )) : <p className="text-slate-300 text-center py-4 md:col-span-2">No upcoming deadlines.</p>}
+                        )) : <p className="text-slate-300 text-center py-4">No upcoming deadlines.</p>}
                     </div>
                 </div>
             </div>

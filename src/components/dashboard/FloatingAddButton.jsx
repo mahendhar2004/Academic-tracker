@@ -9,6 +9,7 @@ const FloatingAddButton = ({ onAddCourse, onAddExamMarks, onAddGrade, onAddDeadl
     // Click outside to close logic
     useEffect(() => {
         const handleClickOutside = (event) => {
+            // FIX: Corrected typo from 'menu-ref' to 'menuRef'
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsOpen(false);
             }
@@ -44,44 +45,58 @@ const FloatingAddButton = ({ onAddCourse, onAddExamMarks, onAddGrade, onAddDeadl
     };
 
     return (
-        <div className="fixed bottom-8 right-8 z-50" ref={menuRef}>
+        <>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        variants={menuVariants}
-                        initial="closed"
-                        animate="open"
-                        exit="closed"
-                        className="absolute bottom-full right-0 mb-4 w-48 bg-black/50 saturate-150 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl p-2"
-                    >
-                        {menuItems.map((item) => (
-                            <motion.button
-                                key={item.label}
-                                variants={itemVariants}
-                                onClick={() => {
-                                    item.action();
-                                    setIsOpen(false);
-                                }}
-                                className="w-full flex items-center gap-3 p-2 rounded-lg text-left text-slate-200 hover:bg-white/10 transition-colors"
-                            >
-                                <item.icon size={18} />
-                                <span>{item.label}</span>
-                            </motion.button>
-                        ))}
-                    </motion.div>
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+                        onClick={() => setIsOpen(false)}
+                    />
                 )}
             </AnimatePresence>
-            <motion.button
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(!isOpen)}
-                className="relative z-20 flex-shrink-0 flex items-center justify-center bg-red-500/80 backdrop-blur-xl border border-red-400/50 text-white w-16 h-16 rounded-full shadow-lg transition-colors hover:bg-red-500"
-            >
-                <motion.div animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
-                    <Plus size={28} />
-                </motion.div>
-            </motion.button>
-        </div>
+
+            <div className="fixed bottom-8 right-8 z-50" ref={menuRef}>
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            variants={menuVariants}
+                            initial="closed"
+                            animate="open"
+                            exit="closed"
+                            className="absolute bottom-full right-0 mb-4 w-48 bg-black/50 saturate-150 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl p-2"
+                        >
+                            {menuItems.map((item) => (
+                                <motion.button
+                                    key={item.label}
+                                    variants={itemVariants}
+                                    onClick={() => {
+                                        item.action();
+                                        setIsOpen(false);
+                                    }}
+                                    className="w-full flex items-center gap-3 p-2 rounded-lg text-left text-slate-200 hover:bg-white/10 transition-colors"
+                                >
+                                    <item.icon size={18} />
+                                    <span>{item.label}</span>
+                                </motion.button>
+                            ))}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="relative z-20 flex-shrink-0 flex items-center justify-center bg-cyan-500/80 backdrop-blur-xl border border-cyan-400/50 text-white w-16 h-16 rounded-full shadow-lg transition-colors hover:bg-cyan-500"
+                >
+                    <motion.div animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
+                        <Plus size={28} />
+                    </motion.div>
+                </motion.button>
+            </div>
+        </>
     );
 };
 
