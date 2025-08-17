@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, X, Trash2, Check } from 'lucide-react';
 
-const EditableList = ({ label, icon: Icon, items = [], onSave, placeholder, renderItem }) => {
+const EditableList = ({ label, icon: Icon, items = [], onSave, placeholder }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [newItem, setNewItem] = useState('');
 
@@ -21,54 +21,62 @@ const EditableList = ({ label, icon: Icon, items = [], onSave, placeholder, rend
     };
 
     return (
-        <div className="mt-6">
-            <div className="flex justify-between items-center mb-2">
-                <h4 className="font-bold text-white flex items-center gap-2">
+        <div className="space-y-3">
+            <div className="flex justify-between items-center">
+                <h3 className="font-bold text-lg text-white flex items-center gap-3">
                     <Icon size={18} className="text-cyan-400" />
                     {label}
-                </h4>
+                </h3>
                 {!isAdding && (
-                    <motion.button whileTap={{scale:0.95}} onClick={() => setIsAdding(true)} className="flex items-center gap-1 text-sm text-slate-300 hover:text-white">
-                        <Plus size={16} /> Add
+                    <motion.button 
+                        whileTap={{scale:0.95}} 
+                        onClick={() => setIsAdding(true)} 
+                        className="flex items-center gap-1 text-sm font-semibold text-cyan-400 hover:text-white transition-colors"
+                    >
+                        <Plus size={16} /> Add New
                     </motion.button>
                 )}
             </div>
             
             <div className="space-y-2">
                 <AnimatePresence>
-                    {items.map((item, index) => (
+                    {items.length > 0 ? items.map((item, index) => (
                         <motion.div 
                             key={index}
                             layout
                             initial={{ opacity: 0, y: -10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, x: -20 }}
-                            className="group flex items-center justify-between bg-black/20 p-2 rounded-lg"
+                            className="group flex items-center justify-between bg-black/30 p-3 rounded-lg hover:bg-black/50 transition-colors"
                         >
-                            {/* FIX: Use the custom renderItem function if provided, otherwise default to a span */}
-                            {renderItem ? renderItem(item, index) : <span className="text-slate-200 truncate">{item}</span>}
-                            
+                            <span className="text-slate-200 truncate pr-4">{item}</span>
                             <button onClick={() => handleDeleteItem(index)} className="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-400 transition-opacity">
                                 <Trash2 size={16} />
                             </button>
                         </motion.div>
-                    ))}
+                    )) : !isAdding && (
+                        <p className="text-slate-500 text-sm py-2">No {label.toLowerCase()} added yet.</p>
+                    )}
                 </AnimatePresence>
 
                 {isAdding && (
-                    <div className="flex gap-2 items-center">
+                    <motion.div 
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex gap-2 items-center"
+                    >
                         <input
                             type="text"
                             value={newItem}
                             onChange={(e) => setNewItem(e.target.value)}
                             placeholder={placeholder}
-                            className="flex-1 bg-black/40 border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                            className="flex-1 bg-slate-700/50 border border-cyan-500 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
                             autoFocus
                             onKeyDown={(e) => e.key === 'Enter' && handleAddItem()}
                         />
-                        <button onClick={handleAddItem} className="bg-cyan-500/50 p-2 rounded-lg"><Check size={18} /></button>
-                        <button onClick={() => setIsAdding(false)} className="bg-red-500/50 p-2 rounded-lg"><X size={18} /></button>
-                    </div>
+                        <button onClick={handleAddItem} className="p-2 rounded-lg text-slate-400 hover:text-green-400"><Check size={18} /></button>
+                        <button onClick={() => setIsAdding(false)} className="p-2 rounded-lg text-slate-400 hover:text-red-400"><X size={18} /></button>
+                    </motion.div>
                 )}
             </div>
         </div>

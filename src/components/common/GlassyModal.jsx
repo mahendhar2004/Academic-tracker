@@ -9,7 +9,6 @@ const GlassyModal = ({ isOpen, onClose, children, title, customClasses = "" }) =
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                // FIX: Changed bg-black/80 to bg-black/60 for a less dark backdrop
                 className="fixed inset-0 bg-black/60 backdrop-blur-md flex justify-center items-center z-50 p-4"
             >
                 <motion.div
@@ -17,7 +16,8 @@ const GlassyModal = ({ isOpen, onClose, children, title, customClasses = "" }) =
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.95, opacity: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className={`bg-gradient-to-br from-white/20 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-2xl shadow-2xl text-white ${customClasses}`}
+                    // FIX: Replaced the old gradient with the new, darker glass background
+                    className={`bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl text-white ${customClasses}`}
                 >
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold">{title}</h2>

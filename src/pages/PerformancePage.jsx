@@ -1,175 +1,239 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Plus, ChevronDown, Trash2, Edit, HelpCircle, PackageOpen, BrainCircuit } from 'lucide-react';
-import WhatIfCalculator from '../components/performance/WhatIfCalculator';
+import { GraduationCap, Plus, Trash2, Edit, BrainCircuit, ChevronLeft, ChevronRight } from 'lucide-react';
 import CpiGraph from '../components/performance/CpiGraph';
 import SpiGraph from '../components/performance/SpiGraph';
+import WhatIfModal from '../components/modals/WhatIfModal';
+import { useStore } from '../store/useStore';
+import { usePerformanceGraphs } from '../hooks/usePerformanceGraphs';
 
-// ... ExamMarkCircle and TotalMarkCircle components remain unchanged ...
-const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
-const ExamMarkCircle = ({ mark, onEdit, onDelete }) => {
-    const percentage = (mark.marksSecured / mark.maxMarks) * 100;
-    const strokeDashoffset = 283 - (283 * percentage) / 100;
+// --- Reusable Child Components for the New Design ---
+
+const ExamMarkCard = ({ mark, onEdit, onDelete }) => {
     return (
-        <div className="flex flex-col items-center gap-2">
-            <div className="relative w-24 h-24 group/item">
-                <svg className="w-full h-full" viewBox="0 0 100 100"><circle className="text-black/20" strokeWidth="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" /><motion.circle className="text-cyan-400" strokeWidth="10" strokeDasharray="283" strokeDashoffset={strokeDashoffset} strokeLinecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" transform="rotate(-90 50 50)" initial={{ strokeDashoffset: 283 }} animate={{ strokeDashoffset }} transition={{ duration: 1, ease: "easeInOut" }} /></svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-2xl font-bold text-white">{mark.marksSecured}</span><span className="text-sm text-slate-400">/ {mark.maxMarks}</span></div>
-                <div className="absolute inset-0 flex items-center justify-center gap-4 bg-black/70 rounded-full opacity-0 group-hover/item:opacity-100 transition-opacity duration-300">
-                    <button onClick={onEdit} className="text-slate-300 hover:text-cyan-300 p-2 rounded-full hover:bg-white/10"><Edit size={20}/></button>
-                    <button onClick={onDelete} className="text-slate-300 hover:text-red-400 p-2 rounded-full hover:bg-white/10"><Trash2 size={20}/></button>
+        <div className="bg-black/30 p-3 rounded-lg flex items-center gap-4 group">
+            <div className="flex-1">
+                <p className="font-semibold text-white truncate">{mark.examName}</p>
+                <p className="text-xs text-slate-400">{mark.weightage}% Weightage</p>
+            </div>
+            <div className="flex items-center gap-3">
+                <p className="font-mono text-lg text-cyan-300">{mark.marksSecured}<span className="text-sm text-slate-500">/{mark.maxMarks}</span></p>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-cyan-300"><Edit size={14} /></button>
+                    <button onClick={onDelete} className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-red-400"><Trash2 size={14} /></button>
                 </div>
             </div>
-            <p className="font-semibold text-sm text-center truncate w-24 mt-2">{mark.examName}</p>
-            <p className="text-xs text-slate-400">{mark.weightage}%</p>
-        </div>
-    );
-};
-const TotalMarkCircle = ({ total }) => {
-    const percentage = parseFloat(total);
-    const strokeDashoffset = 283 - (283 * percentage) / 100;
-    let colorClass = 'text-green-500';
-    if (percentage < 30) { colorClass = 'text-red-500'; } else if (percentage < 50) { colorClass = 'text-orange-500'; } else if (percentage < 75) { colorClass = 'text-yellow-500'; }
-    return (
-        <div className="flex flex-col items-center gap-2">
-            <div className="relative w-24 h-24 flex-shrink-0">
-                <svg className="w-full h-full" viewBox="0 0 100 100"><circle className="text-black/20" strokeWidth="10" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" /><motion.circle className={colorClass} strokeWidth="10" strokeDasharray="283" strokeDashoffset={strokeDashoffset} strokeLinecap="round" stroke="currentColor" fill="transparent" r="45" cx="50" cy="50" transform="rotate(-90 50 50)" initial={{ strokeDashoffset: 283 }} animate={{ strokeDashoffset }} transition={{ duration: 1, ease: "easeInOut" }} /></svg>
-                <div className="absolute inset-0 flex flex-col items-center justify-center"><span className="text-2xl font-bold text-white">{total}</span><span className="text-sm text-slate-400">/ 100</span></div>
-            </div>
-            <p className="font-semibold text-sm text-center truncate w-24 mt-2">Total Marks</p>
         </div>
     );
 };
 
+// --- Main Performance Page Component ---
 
-const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCourse, onEditGrade, onAddExamMarks, onEditExamMark, onDeleteExamMark, onAddMarksForCourse }) => {
+const PerformancePage = ({ performanceData, allCourses, examMarks, onDeleteCourse, onEditGrade, onAddGrade, onAddExamMarks, onEditExamMark, onDeleteExamMark }) => {
     const { cpi, semesters } = performanceData;
-    const [isTooltipVisible, setIsTooltipVisible] = useState(false);
-    const [expandedSemesters, setExpandedSemesters] = useState(new Set());
+    const { profileData } = useStore();
+    
+    const [selectedSemester, setSelectedSemester] = useState(null);
+    const [isWhatIfModalOpen, setIsWhatIfModalOpen] = useState(false);
+    
+    const timelineRef = useRef(null);
+    const [canScrollLeft, setCanScrollLeft] = useState(false);
+    const [canScrollRight, setCanScrollRight] = useState(true);
+
+    const { cpiGraphData, spiGraphData } = usePerformanceGraphs(semesters);
+
+    const maxSemester = useMemo(() => {
+        const highestCourseSem = allCourses.length > 0 ? Math.max(...allCourses.map(c => c.semester)) : 0;
+        const profileSem = profileData.academic?.currentSemester || 0;
+        return Math.max(highestCourseSem, profileSem, 1);
+    }, [allCourses, profileData]);
+
+    const allSemesterNumbers = useMemo(() => Array.from({ length: maxSemester }, (_, i) => i + 1), [maxSemester]);
+
     useEffect(() => {
-        if (semesters.length > 0 && expandedSemesters.size === 0) {
-            setExpandedSemesters(new Set([semesters[0].semester]));
+        if (semesters.length > 0 && !selectedSemester) {
+            setSelectedSemester(semesters[0]);
+        } else if (semesters.length === 0 && allSemesterNumbers.length > 0) {
+            setSelectedSemester({ semester: allSemesterNumbers[allSemesterNumbers.length - 1], spi: "N/A" });
         }
-    }, [semesters, expandedSemesters.size]);
-    const toggleSemester = (semester) => {
-        setExpandedSemesters(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(semester)) newSet.delete(semester);
-            else newSet.add(semester);
-            return newSet;
-        });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [semesters, allSemesterNumbers]); 
+
+    const semesterDetails = useMemo(() => {
+        if (!selectedSemester) return { courses: [], marks: [] };
+        const courses = allCourses.filter(c => c.semester === selectedSemester.semester);
+        const courseIds = courses.map(c => c.id);
+        const marks = examMarks.filter(m => courseIds.includes(m.courseId));
+        return { courses, marks };
+    }, [selectedSemester, allCourses, examMarks]);
+    
+    const handleScroll = () => {
+        if (timelineRef.current) {
+            const { scrollLeft, scrollWidth, clientWidth } = timelineRef.current;
+            setCanScrollLeft(scrollLeft > 5);
+            setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 5);
+        }
     };
-    const marksByCourse = useMemo(() => {
-        return examMarks.reduce((acc, mark) => {
-            (acc[mark.courseId] = acc[mark.courseId] || []).push(mark);
-            return acc;
-        }, {});
-    }, [examMarks]);
-    const getCourseName = (courseId) => {
-        const course = allCourses.find(c => c.id === courseId);
-        return course ? course.name : 'Unknown Course';
-    };
-    const calculateTotalMarks = (courseId) => {
-        const marks = marksByCourse[courseId] || [];
-        const total = marks.reduce((acc, mark) => {
-            return acc + (mark.marksSecured / mark.maxMarks) * mark.weightage;
-        }, 0);
-        return total.toFixed(1);
-    };
-    const cpiGraphData = useMemo(() => {
-        let cumulativeWeightedPoints = 0;
-        let cumulativeCredits = 0;
-        return semesters
-            .sort((a, b) => a.semester - b.semester)
-            .map(sem => {
-                let semWeightedPoints = 0;
-                let semCredits = 0;
-                sem.courses.forEach(course => {
-                    semWeightedPoints += course.credits * (GRADE_POINTS[course.grade] || 0);
-                    semCredits += course.credits;
-                });
-                cumulativeWeightedPoints += semWeightedPoints;
-                cumulativeCredits += semCredits;
-                return {
-                    semester: sem.semester,
-                    cpi: (cumulativeCredits > 0 ? cumulativeWeightedPoints / cumulativeCredits : 0).toFixed(2)
-                };
+
+    const scroll = (direction) => {
+        if (timelineRef.current) {
+            const scrollAmount = timelineRef.current.clientWidth * 0.8;
+            timelineRef.current.scrollBy({
+                left: direction === 'left' ? -scrollAmount : scrollAmount,
+                behavior: 'smooth'
             });
-    }, [semesters]);
-    const spiGraphData = useMemo(() => {
-        return semesters
-            .map(sem => ({ semester: sem.semester, spi: parseFloat(sem.spi) }))
-            .sort((a, b) => a.semester - b.semester);
-    }, [semesters]);
+        }
+    };
+    
+    useEffect(() => {
+        const timeline = timelineRef.current;
+        if (timeline) {
+            handleScroll();
+            timeline.addEventListener('scroll', handleScroll);
+            window.addEventListener('resize', handleScroll);
+            return () => {
+                timeline.removeEventListener('scroll', handleScroll);
+                window.removeEventListener('resize', handleScroll);
+            };
+        }
+    }, [allSemesterNumbers]);
+
+    const cardStyles = "relative overflow-hidden bg-black/50 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl";
+
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
-                <div className="flex-1 space-y-8">
+        <>
+            <WhatIfModal isOpen={isWhatIfModalOpen} onClose={() => setIsWhatIfModalOpen(false)} allCourses={allCourses} />
+
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="space-y-8">
+                
+                <div className={`${cardStyles} flex flex-col md:flex-row items-center justify-between gap-6`}>
+                    <div className="absolute -top-1 -left-1 w-48 h-48 bg-cyan-500/10 rounded-full blur-[100px]"></div>
                     <div>
-                        <div className="flex justify-between items-center mb-4">
-                            <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Edit className="text-cyan-400" />Exam Marks</h2>
-                            {/* FIX: Changed button to be icon-only */}
-                            <motion.button 
-                                whileTap={{ scale: 0.95 }} 
-                                onClick={onAddExamMarks} 
-                                title="Add Marks"
-                                className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"
-                            >
-                                <Plus size={20} />
-                            </motion.button>
-                        </div>
-                        <div className="space-y-4">
-                            {Object.keys(marksByCourse).length > 0 ? (
-                                Object.keys(marksByCourse).map(courseId => {
-                                    const courseObject = allCourses.find(c => c.id === courseId);
-                                    return (
-                                    <div key={courseId} className="group/card bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h3 className="text-xl font-bold text-white">{getCourseName(courseId)}</h3>
-                                            <button onClick={() => onAddMarksForCourse(courseObject)} className="opacity-0 group-hover/card:opacity-100 transition-opacity text-slate-400 hover:text-cyan-300" title="Add marks for this subject"><Plus size={22} /></button>
-                                        </div>
-                                        <motion.div layout className="flex flex-wrap gap-8 items-start">
-                                            {marksByCourse[courseId].sort((a, b) => b.weightage - a.weightage).map(mark => (<ExamMarkCircle key={mark.id} mark={mark} onEdit={() => onEditExamMark(mark)} onDelete={() => onDeleteExamMark(mark.id)}/>))}
-                                            <div className="pl-8 border-l border-white/10"><TotalMarkCircle total={calculateTotalMarks(courseId)} /></div>
-                                        </motion.div>
-                                    </div>
-                                )})
-                            ) : (
-                                <div className="text-center py-16 bg-white/10 saturate-150 backdrop-blur-xl rounded-xl border border-white/20 flex flex-col items-center justify-center">
-                                    <PackageOpen size={48} className="text-slate-400 mb-4" />
-                                    <h3 className="text-lg font-semibold text-slate-200">No Exam Marks Found</h3>
-                                    <p className="text-slate-300">Add marks to see your performance breakdown.</p>
-                                </div>
+                        <p className="text-slate-300">Overall Cumulative Performance</p>
+                        <h1 className="text-6xl font-bold text-white tracking-tighter">{cpi} <span className="text-4xl text-slate-400">CPI</span></h1>
+                    </div>
+                    <div className="flex gap-2">
+                        <motion.button whileTap={{scale:0.95}} onClick={() => setIsWhatIfModalOpen(true)} className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-white/20">
+                            <BrainCircuit size={18} /> What If?
+                        </motion.button>
+                        <motion.button whileTap={{scale:0.95}} onClick={onAddGrade} className="flex items-center gap-2 bg-cyan-500/80 backdrop-blur-xl border border-cyan-400/50 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-cyan-500">
+                            <Plus size={18} /> Add Grade
+                        </motion.button>
+                    </div>
+                </div>
+
+                <div className="relative pt-8">
+                    <div className="absolute inset-x-0 top-0 h-full bg-radial-gradient(ellipse_at_top,_var(--tw-gradient-stops)) from-slate-900/80 via-black to-black pointer-events-none"></div>
+                    <h2 className="text-xl font-bold text-white mb-4 px-4 lg:px-0">Your Academic Journey</h2>
+                    
+                    <div className="relative group">
+                        <AnimatePresence>
+                            {canScrollLeft && (
+                                <motion.button 
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    onClick={() => scroll('left')} 
+                                    className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-r-lg text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <ChevronLeft size={24} className="mx-auto" />
+                                </motion.button>
                             )}
+                        </AnimatePresence>
+                        <div ref={timelineRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-4 lg:px-0">
+                            {allSemesterNumbers.map(semNum => {
+                                const semData = semesters.find(s => s.semester === semNum);
+                                const hasData = !!semData;
+                                return (
+                                    <motion.div
+                                        key={semNum}
+                                        onClick={() => setSelectedSemester(semData || { semester: semNum, spi: "N/A" })}
+                                        className={`relative cursor-pointer flex-shrink-0 w-48 p-4 rounded-xl border transition-all duration-300 ${selectedSemester?.semester === semNum ? 'border-cyan-400/80 bg-cyan-900/40' : (hasData ? 'border-white/10 bg-black/30 hover:bg-white/5' : 'border-dashed border-slate-700 bg-transparent hover:bg-slate-800/50')}`}
+                                        layoutId={`semester-card-${semNum}`}
+                                    >
+                                        <p className="text-sm text-slate-400">Semester {semNum}</p>
+                                        {hasData ? (
+                                            <p className="text-3xl font-bold text-white">{semData.spi} <span className="text-xl text-slate-300">SPI</span></p>
+                                        ) : (
+                                            <p className="text-lg font-semibold text-slate-600 mt-2">No Data</p>
+                                        )}
+                                        {selectedSemester?.semester === semNum && (
+                                            <motion.div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full" layoutId="active-semester-indicator"></motion.div>
+                                        )}
+                                    </motion.div>
+                                );
+                            })}
                         </div>
+                        <AnimatePresence>
+                            {canScrollRight && (
+                                 <motion.button 
+                                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                    onClick={() => scroll('right')} 
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                    <ChevronRight size={24} className="mx-auto" />
+                                </motion.button>
+                            )}
+                        </AnimatePresence>
                     </div>
-                    <div>
-                        <div className="flex justify-between items-center mb-4"><h2 className="text-2xl font-bold text-white flex items-center gap-3"><BrainCircuit className="text-cyan-400" />What If? Calculator</h2></div>
-                        <WhatIfCalculator allCourses={allCourses} />
-                    </div>
-                    <div>
-                        <div className="flex justify-between items-center mb-4"><div className="relative flex items-center gap-2" onMouseEnter={() => setIsTooltipVisible(true)} onMouseLeave={() => setIsTooltipVisible(false)}><h2 className="text-2xl font-bold text-white flex items-center gap-3"><GraduationCap className="text-cyan-400" />Academic Performance</h2><HelpCircle size={18} className="text-slate-400 cursor-pointer" /><AnimatePresence>{isTooltipVisible && (<motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }} className="absolute top-full left-0 mt-2 w-64 bg-black/50 saturate-150 backdrop-blur-xl border border-white/20 p-3 rounded-lg shadow-lg z-10"><p className="font-bold text-white">SPI Calculation:</p><p className="text-xs text-slate-300">Sum of (Course Credits × Grade Points) / Total Credits in a semester.</p><p className="font-bold text-white mt-2">CPI Calculation:</p><p className="text-xs text-slate-300">Sum of (All SPIs × Semester Credits) / Total Credits of all semesters.</p></motion.div>)}</AnimatePresence></div></div>
-                        <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg">
-                            <div className="flex justify-between items-center bg-black/20 p-4 rounded-lg mb-4"><p className="text-slate-200">Overall CPI</p><p className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-400">{cpi}</p></div>
-                            <div className="space-y-4 max-h-[60vh] overflow-y-auto no-scrollbar">
-                                {semesters.map(sem => {
-                                    const isExpanded = expandedSemesters.has(sem.semester);
-                                    return (
-                                    <div key={sem.semester} className="bg-black/20 rounded-md overflow-hidden">
-                                        <div className="flex justify-between items-center p-3 cursor-pointer hover:bg-black/30 transition-colors" onClick={() => toggleSemester(sem.semester)}><p className="text-slate-200 font-medium">Semester {sem.semester}</p><div className="flex items-center gap-3"><p className="text-white font-semibold">{sem.spi} SPI</p><ChevronDown size={20} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} /></div></div>
-                                        <AnimatePresence initial={false}>{isExpanded && (<motion.section key="content" initial="collapsed" animate="open" exit="collapsed" variants={{ open: { opacity: 1, height: "auto" }, collapsed: { opacity: 0, height: 0 } }} transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}><div className="p-3 space-y-2 border-t border-white/10">{sem.courses.map(course => (<div key={course.id} className="bg-black/20 p-3 rounded-lg grid grid-cols-12 items-center gap-4"><p className="col-span-6 font-semibold text-white text-lg truncate">{course.name}</p><p className="col-span-2 text-center text-sm text-slate-400">{course.credits} Credits</p><p className="col-span-2 text-lg font-mono text-cyan-300 text-center">{course.grade || 'N/A'}</p><div className="col-span-2 flex justify-end gap-3"><button onClick={() => onEditGrade(course)} className="text-slate-400 hover:text-cyan-300 transition-colors"><Edit size={16} /></button><button onClick={() => onDeleteCourse(course.id)} className="text-slate-400 hover:text-red-400 transition-colors"><Trash2 size={16} /></button></div></div>))}</div></motion.section>)}</AnimatePresence>
+                </div>
+                
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={selectedSemester ? selectedSemester.semester : 'empty'}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        {selectedSemester && (
+                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div className={`${cardStyles}`}>
+                                    <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2"><GraduationCap size={20} className="text-cyan-400"/> Courses & Grades</h3>
+                                    <div className="space-y-2">
+                                        {semesterDetails.courses.length > 0 ? semesterDetails.courses.map(course => (
+                                            <div key={course.id} className="bg-black/30 p-3 rounded-lg flex justify-between items-center group">
+                                                <div>
+                                                    <p className="font-semibold text-white truncate">{course.name}</p>
+                                                    <p className="text-xs text-slate-400">{course.credits} Credits</p>
+                                                </div>
+                                                <div className="flex items-center gap-3">
+                                                    <p className="font-mono text-xl text-cyan-300">{course.grade || 'N/A'}</p>
+                                                    <button onClick={() => onEditGrade(course)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} /></button>
+                                                </div>
+                                            </div>
+                                        )) : <p className="text-slate-500 text-center py-8">No courses with grades found for this semester.</p>}
                                     </div>
-                                )})}
+                                </div>
+                                <div className={`${cardStyles}`}>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-bold text-white text-lg flex items-center gap-2"><Edit size={20} className="text-cyan-400"/> Exam Marks</h3>
+                                        <motion.button whileTap={{scale:0.95}} onClick={onAddExamMarks} className="text-sm flex items-center gap-1 text-slate-400 hover:text-white"><Plus size={14}/> Add Mark</motion.button>
+                                    </div>
+                                    <div className="space-y-2 max-h-64 overflow-y-auto no-scrollbar pr-2">
+                                        {semesterDetails.marks.length > 0 ? semesterDetails.marks.map(mark => (
+                                            <ExamMarkCard key={mark.id} mark={mark} onEdit={() => onEditExamMark(mark)} onDelete={() => onDeleteExamMark(mark.id)} />
+                                        )) : <p className="text-slate-500 text-center py-8">No marks added for this semester.</p>}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+
+                {/* UPDATED: Conditionally render graphs or an empty state message */}
+                {cpiGraphData && cpiGraphData.length > 0 ? (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-white/10">
+                        <CpiGraph data={cpiGraphData} />
+                        <SpiGraph data={spiGraphData} />
                     </div>
-                </div>
-                <div className="w-96 flex-shrink-0 flex flex-col gap-8 pt-14">
-                    <CpiGraph data={cpiGraphData} />
-                    <SpiGraph data={spiGraphData} />
-                </div>
-            </div>
-        </motion.div>
+                ) : (
+                    <div className="pt-8 border-t border-white/10 text-center">
+                        <p className="text-slate-400 mt-8 py-16">
+                            Add grades for at least one semester to see your performance trends.
+                        </p>
+                    </div>
+                )}
+            </motion.div>
+        </>
     );
 };
 export default PerformancePage;

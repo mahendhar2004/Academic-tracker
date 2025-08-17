@@ -5,7 +5,7 @@ import GlassyModal from '../common/GlassyModal';
 const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
 const GRADES = Object.keys(GRADE_POINTS);
 
-const AddGradeModal = ({ isOpen, onClose, onSave, allCourses }) => {
+const AddGradeModal = ({ isOpen, onClose, onSave, allCourses, courseToEdit, currentSemester }) => {
     const [selectedSemester, setSelectedSemester] = useState('');
     const [selectedCourseId, setSelectedCourseId] = useState('');
     const [selectedGrade, setSelectedGrade] = useState('A+');
@@ -15,15 +15,26 @@ const AddGradeModal = ({ isOpen, onClose, onSave, allCourses }) => {
 
     useEffect(() => {
         if(isOpen) {
-            setSelectedSemester('');
-            setSelectedCourseId('');
-            setSelectedGrade('A+');
+            if (courseToEdit) {
+                const course = allCourses.find(c => c.id === courseToEdit.id);
+                setSelectedSemester(course?.semester || '');
+                setSelectedCourseId(courseToEdit.id);
+                setSelectedGrade(courseToEdit.grade || 'A+');
+            } else {
+                // FIX: Default to the current semester when adding a new grade
+                setSelectedSemester(currentSemester || '');
+                setSelectedCourseId('');
+                setSelectedGrade('A+');
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, courseToEdit, allCourses, currentSemester]);
     
     useEffect(() => {
-        setSelectedCourseId('');
-    }, [selectedSemester]);
+        // Reset course selection if semester changes, but not if we are editing
+        if (!courseToEdit) {
+            setSelectedCourseId('');
+        }
+    }, [selectedSemester, courseToEdit]);
 
     const handleSave = () => {
         if (selectedCourseId && selectedGrade) {
@@ -33,8 +44,8 @@ const AddGradeModal = ({ isOpen, onClose, onSave, allCourses }) => {
     };
 
     return (
-        <GlassyModal isOpen={isOpen} onClose={onClose} title="Add/Update Grade">
-            <div className="space-y-4">
+        <GlassyModal isOpen={isOpen} onClose={onClose} title={courseToEdit ? "Edit Grade" : "Add Grade"}>
+            <div className="space-y-4 w-80">
                 <select value={selectedSemester} onChange={(e) => setSelectedSemester(e.target.value)} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
                     <option value="">Select Semester</option>
                     {semesters.map(s => <option key={s} value={s} className="bg-slate-800">Semester {s}</option>)}
@@ -60,4 +71,3 @@ const AddGradeModal = ({ isOpen, onClose, onSave, allCourses }) => {
 };
 
 export default AddGradeModal;
-

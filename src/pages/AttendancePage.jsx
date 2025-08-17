@@ -1,39 +1,15 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ClipboardList, PackageOpen, Plus, ChevronDown } from 'lucide-react';
 import AttendanceCard from '../components/attendance/AttendanceCard';
+import { useAttendanceData } from '../hooks/useAttendanceData'; // Import the hook
 
-// Removed performanceData, isCpiVisible, and onToggleCpiVisibility from props
 const AttendancePage = ({ allCourses = [], onAddNew, onMarkAttendance, onTotalChange, onDecrementAttendance, onDeleteCourse, onToggleVisibility }) => {
     const [isHiddenVisible, setIsHiddenVisible] = useState(false);
     const [isPreviousVisible, setIsPreviousVisible] = useState(false);
-
-    const { currentSemester, visibleCourses, hiddenCourses, previousSemesters } = useMemo(() => {
-        if (allCourses.length === 0) {
-            return { currentSemester: null, visibleCourses: [], hiddenCourses: [], previousSemesters: [] };
-        }
-        const maxSemester = Math.max(...allCourses.map(c => c.semester).filter(Boolean), 0);
-        
-        const currentCourses = allCourses.filter(c => c.semester === maxSemester);
-        const visible = currentCourses.filter(c => !c.isHidden);
-        const hidden = currentCourses.filter(c => c.isHidden);
-
-        const groupedBySem = allCourses.reduce((acc, course) => {
-            if (course.semester !== maxSemester) {
-                (acc[course.semester] = acc[course.semester] || []).push(course);
-            }
-            return acc;
-        }, {});
-
-        const previous = Object.entries(groupedBySem).sort(([a], [b]) => b - a);
-
-        return {
-            currentSemester: maxSemester || null,
-            visibleCourses: visible,
-            hiddenCourses: hidden,
-            previousSemesters: previous,
-        };
-    }, [allCourses]);
+    
+    // The complex useMemo is replaced with our clean custom hook
+    const { currentSemester, visibleCourses, hiddenCourses, previousSemesters } = useAttendanceData(allCourses);
 
     const [expandedSemesters, setExpandedSemesters] = useState(new Set());
     const toggleSemester = (semester) => {
@@ -52,7 +28,6 @@ const AttendancePage = ({ allCourses = [], onAddNew, onMarkAttendance, onTotalCh
                     <ClipboardList className="text-cyan-400" />
                     Current Semester ({currentSemester || 'N/A'})
                 </h2>
-                {/* CPI Display has been removed from here */}
             </div>
 
             {visibleCourses.length > 0 ? (
@@ -67,20 +42,19 @@ const AttendancePage = ({ allCourses = [], onAddNew, onMarkAttendance, onTotalCh
                 </div>
             )}
 
-            {/* ... rest of the component remains the same ... */}
             {hiddenCourses.length > 0 && (
                  <div className="mt-8">
-                      <div className="flex justify-between items-center mb-4 cursor-pointer hover:bg-black/20 p-2 rounded-lg transition-colors" onClick={() => setIsHiddenVisible(!isHiddenVisible)}>
-                           <h2 className="text-xl font-bold text-white flex items-center gap-3">Hidden Subjects</h2>
-                           <ChevronDown size={24} className={`text-slate-300 transition-transform duration-300 ${isHiddenVisible ? 'rotate-180' : ''}`} />
-                      </div>
+                      <button className="w-full flex justify-between items-center text-left mb-4 hover:bg-black/20 p-2 rounded-lg transition-colors" onClick={() => setIsHiddenVisible(!isHiddenVisible)} aria-expanded={isHiddenVisible}>
+                          <h2 className="text-xl font-bold text-white flex items-center gap-3">Hidden Subjects</h2>
+                          <ChevronDown size={24} className={`text-slate-300 transition-transform duration-300 ${isHiddenVisible ? 'rotate-180' : ''}`} />
+                      </button>
                       <AnimatePresence>
                       {isHiddenVisible && (
-                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                     {hiddenCourses.map(course => <AttendanceCard key={course.id} course={course} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={true} />)}
-                                </div>
-                           </motion.div>
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
+                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                  {hiddenCourses.map(course => <AttendanceCard key={course.id} course={course} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={true} />)}
+                              </div>
+                          </motion.div>
                       )}
                       </AnimatePresence>
                  </div>
@@ -88,36 +62,36 @@ const AttendancePage = ({ allCourses = [], onAddNew, onMarkAttendance, onTotalCh
 
             {previousSemesters.length > 0 && (
                  <div className="mt-12">
-                      <div className="flex justify-between items-center mb-4 cursor-pointer hover:bg-black/20 p-2 rounded-lg transition-colors" onClick={() => setIsPreviousVisible(!isPreviousVisible)}>
-                           <h2 className="text-xl font-bold text-white flex items-center gap-3">Previous Semesters</h2>
-                           <ChevronDown size={24} className={`text-slate-300 transition-transform duration-300 ${isPreviousVisible ? 'rotate-180' : ''}`} />
-                      </div>
+                      <button className="w-full flex justify-between items-center text-left mb-4 hover:bg-black/20 p-2 rounded-lg transition-colors" onClick={() => setIsPreviousVisible(!isPreviousVisible)} aria-expanded={isPreviousVisible}>
+                          <h2 className="text-xl font-bold text-white flex items-center gap-3">Previous Semesters</h2>
+                          <ChevronDown size={24} className={`text-slate-300 transition-transform duration-300 ${isPreviousVisible ? 'rotate-180' : ''}`} />
+                      </button>
                       <AnimatePresence>
                       {isPreviousVisible && (
-                           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
-                                <div className="space-y-4">
-                                     {previousSemesters.map(([sem, courses]) => {
-                                         const isExpanded = expandedSemesters.has(sem);
-                                         return (
-                                             <div key={sem} className="bg-black/20 rounded-md overflow-hidden">
-                                                  <div className="flex justify-between items-center p-3 cursor-pointer hover:bg-black/30 transition-colors" onClick={() => toggleSemester(sem)}>
-                                                       <p className="text-slate-200 font-medium">Semester {sem}</p>
-                                                       <ChevronDown size={20} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
-                                                  </div>
-                                                  <AnimatePresence initial={false}>
-                                                       {isExpanded && (
-                                                            <motion.section key="content" initial="collapsed" animate="open" exit="collapsed" variants={{ open: { opacity: 1, height: "auto" }, collapsed: { opacity: 0, height: 0 } }} transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}>
-                                                                 <div className="p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 border-t border-white/10">
-                                                                      {courses.map(course => <AttendanceCard key={course.id} course={course} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={false} />)}
-                                                                 </div>
-                                                            </motion.section>
-                                                       )}
-                                                  </AnimatePresence>
-                                             </div>
-                                         )
-                                     })}
-                                </div>
-                           </motion.div>
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4, ease: "easeInOut" }}>
+                              <div className="space-y-4">
+                                  {previousSemesters.map(([sem, courses]) => {
+                                      const isExpanded = expandedSemesters.has(sem);
+                                      return (
+                                          <div key={sem} className="bg-black/20 rounded-md overflow-hidden">
+                                                <button className="w-full flex justify-between items-center p-3 text-left hover:bg-black/30 transition-colors" onClick={() => toggleSemester(sem)}>
+                                                    <p className="text-slate-200 font-medium">Semester {sem}</p>
+                                                    <ChevronDown size={20} className={`text-slate-300 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
+                                                </button>
+                                              <AnimatePresence initial={false}>
+                                                  {isExpanded && (
+                                                      <motion.section key="content" initial="collapsed" animate="open" exit="collapsed" variants={{ open: { opacity: 1, height: "auto" }, collapsed: { opacity: 0, height: 0 } }} transition={{ duration: 0.4, ease: [0.04, 0.62, 0.23, 0.98] }}>
+                                                          <div className="p-3 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 border-t border-white/10">
+                                                              {courses.map(course => <AttendanceCard key={course.id} course={course} onMarkAttendance={onMarkAttendance} onTotalChange={onTotalChange} onDecrementAttendance={onDecrementAttendance} onDelete={() => onDeleteCourse(course.id, course.name)} onToggleVisibility={onToggleVisibility} isCurrentSemester={false} />)}
+                                                          </div>
+                                                      </motion.section>
+                                                  )}
+                                              </AnimatePresence>
+                                            </div>
+                                      )
+                                  })}
+                              </div>
+                          </motion.div>
                       )}
                       </AnimatePresence>
                  </div>

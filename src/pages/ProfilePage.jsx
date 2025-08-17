@@ -1,162 +1,125 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
+// Regular UI icons are still from lucide-react
 import { 
-    UserCircle2, LogOut, AlertTriangle, GraduationCap, BookCopy, Users, Award, 
-    Link as LinkIcon, Plus, Linkedin, Github, Instagram, Facebook, Twitter 
+    LogOut, AlertTriangle, Link as LinkIcon, Briefcase, Trophy, Code, Award, BookOpen
 } from 'lucide-react';
+// Import brand icons from the new library, react-icons
+import { FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaTwitter, FaWhatsapp, FaTelegramPlane, FaDiscord, FaYoutube, FaTwitch, FaReddit } from 'react-icons/fa';
+import { SiLeetcode, SiCodeforces } from 'react-icons/si';
+
 import EditableField from '../components/profile/EditableField';
 import EditableList from '../components/profile/EditableList';
 
-// Helper function to get the correct icon based on the URL
+
+// UPDATED: A much more comprehensive icon function using React Icons
 const getSocialIcon = (url) => {
     const lowerUrl = url.toLowerCase();
-    if (lowerUrl.includes('linkedin')) return <Linkedin size={16} className="text-blue-400 flex-shrink-0" />;
-    if (lowerUrl.includes('github')) return <Github size={16} className="text-slate-300 flex-shrink-0" />;
-    if (lowerUrl.includes('instagram')) return <Instagram size={16} className="text-pink-500 flex-shrink-0" />;
-    if (lowerUrl.includes('facebook')) return <Facebook size={16} className="text-blue-600 flex-shrink-0" />;
-    if (lowerUrl.includes('twitter') || lowerUrl.includes('x.com')) return <Twitter size={16} className="text-sky-500 flex-shrink-0" />;
-    return <LinkIcon size={16} className="text-slate-400 flex-shrink-0" />;
+    const props = { size: 20, className: "text-slate-400 hover:text-white transition-colors" };
+  
+    if (lowerUrl.includes('linkedin')) return <FaLinkedin {...props} />;
+    if (lowerUrl.includes('github')) return <FaGithub {...props} />;
+    if (lowerUrl.includes('leetcode')) return <SiLeetcode {...props} />;
+    if (lowerUrl.includes('codeforces')) return <SiCodeforces {...props} />;
+    if (lowerUrl.includes('wa.me') || lowerUrl.includes('whatsapp')) return <FaWhatsapp {...props} />;
+    if (lowerUrl.includes('t.me') || lowerUrl.includes('telegram')) return <FaTelegramPlane {...props} />;
+    if (lowerUrl.includes('discord')) return <FaDiscord {...props} />;
+    if (lowerUrl.includes('youtube')) return <FaYoutube {...props} />;
+    if (lowerUrl.includes('twitter') || lowerUrl.includes('x.com')) return <FaTwitter {...props} />;
+    if (lowerUrl.includes('instagram')) return <FaInstagram {...props} />;
+    if (lowerUrl.includes('facebook')) return <FaFacebook {...props} />;
+    if (lowerUrl.includes('twitch')) return <FaTwitch {...props} />;
+    if (lowerUrl.includes('reddit')) return <FaReddit {...props} />;
+    if (lowerUrl.includes('medium') || lowerUrl.includes('substack')) return <BookOpen {...props} />;
+
+    return <LinkIcon {...props} />; // Default fallback icon
 };
 
-const ProfilePage = ({ profileData, onSaveField, onResetData, onSignOut, currentSemester, currentSemesterCourses, onAddNewCourse }) => {
-    const personal = profileData.personal || {};
-    const academic = profileData.academic || {};
-    const social = profileData.social || {};
 
-    // ... defaultCurrentYear and yearOptions logic remains the same ...
-    const defaultCurrentYear = useMemo(() => {
-        if (!currentSemester) return '';
-        const year = Math.ceil(currentSemester / 2);
-        switch(year) {
-            case 1: return 'First Year/Freshman';
-            case 2: return 'Second Year/Sophomore';
-            case 3: return 'Third Year/Junior';
-            case 4: return 'Fourth Year/Senior/Final Year';
-            default: return '';
-        }
-    }, [currentSemester]);
-    
-    const yearOptions = [
-        'First Year/Freshman',
-        'Second Year/Sophomore',
-        'Third Year/Junior',
-        'Fourth Year/Senior/Final Year'
-    ];
+const ProfilePage = ({ profileData, onSaveField, onResetData, onSignOut }) => {
+    const cardStyles = "bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl";
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+    };
 
-    const cardStyles = "bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg";
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: { y: 0, opacity: 1 }
+    };
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -20 }} 
-            transition={{ duration: 0.4 }}
-            className="flex justify-center"
+        <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start"
         >
-            <div className="max-w-7xl w-full">
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
-                    {/* Card 1: Personal Details */}
-                    <div className={cardStyles}>
-                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3"><UserCircle2 className="text-cyan-400" />Personal Details</h3>
-                        <EditableField label="Name" value={profileData.name} onSave={(val) => onSaveField('name', val)} />
-                        <EditableField label="Personal Email" value={profileData.email} onSave={(val) => onSaveField('email', val)} />
-                        <EditableField label="Phone Number" value={personal.phone} onSave={(val) => onSaveField('personal.phone', val)} />
-                        <EditableField label="Age" value={personal.age} onSave={(val) => onSaveField('personal.age', val)} />
-                        <EditableField 
-                            label="Gender" 
-                            value={personal.gender} 
-                            onSave={(val) => onSaveField('personal.gender', val)}
-                            inputType="select"
-                            options={['Prefer not to say', 'Male', 'Female']}
-                        />
+            {/* --- LEFT COLUMN --- */}
+            <motion.div variants={itemVariants} className="lg:col-span-1 space-y-8">
+                {/* --- Main Profile Card --- */}
+                <div className={`${cardStyles} p-6 text-center space-y-4`}>
+                    <img 
+                        src={profileData.imageUrl || `https://ui-avatars.com/api/?name=${profileData.name}&background=0d1117&color=fff&bold=true`} 
+                        alt="Profile" 
+                        className="w-32 h-32 rounded-full border-4 border-slate-700 object-cover mx-auto"
+                    />
+                    <div className="space-y-2">
+                        <EditableField label="Name" value={profileData.name} onSave={(val) => onSaveField('name', val)} large={true} />
+                        <EditableField label="Branch" value={profileData.academic?.branch} onSave={(val) => onSaveField('academic.branch', val)} />
                     </div>
-
-                    {/* Card 2: Academic Details */}
-                    <div className={cardStyles}>
-                        <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-3"><GraduationCap className="text-cyan-400" />Academic Details</h3>
-                        <EditableField label="Roll No." value={academic.rollNo} onSave={(val) => onSaveField('academic.rollNo', val)} />
-                        <EditableField label="Current Year" value={academic.currentYear || defaultCurrentYear} onSave={(val) => onSaveField('academic.currentYear', val)} inputType="select" options={yearOptions} />
-                        <EditableField label="Current Semester" value={academic.currentSemester || currentSemester} onSave={(val) => onSaveField('academic.currentSemester', val)} />
-                        <EditableField label="College Name" value={personal.collegeName} onSave={(val) => onSaveField('personal.collegeName', val)} />
-                        <EditableField label="College Email" value={personal.collegeEmail} onSave={(val) => onSaveField('personal.collegeEmail',val)} />
-                        <EditableField label="Branch" value={academic.branch} onSave={(val) => onSaveField('academic.branch', val)} />
-                    </div>
-
-                    {/* Card 3: Current Courses */}
-                    <div className={cardStyles}>
-                        <div className="flex justify-between items-center mb-4">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-3"><BookCopy className="text-cyan-400" />Current Courses</h3>
-                            <motion.button whileTap={{scale:0.95}} onClick={onAddNewCourse} className="flex items-center gap-2 bg-white/15 text-white font-bold py-1 px-3 rounded-lg text-sm transition-colors hover:bg-white/25">
-                                <Plus size={16} /> Add
-                            </motion.button>
-                        </div>
-                        <div className="space-y-2 max-h-[340px] overflow-y-auto no-scrollbar pr-2">
-                            {currentSemesterCourses && currentSemesterCourses.length > 0 ? (
-                                currentSemesterCourses.map(course => (
-                                    <div key={course.id} className="bg-black/20 p-3 rounded-lg flex justify-between items-center">
-                                        <p className="font-semibold text-white truncate pr-4">{course.name}</p>
-                                        <p className="text-sm text-slate-400 flex-shrink-0">{course.credits} Cr</p>
-                                    </div>
-                                ))
-                            ) : (
-                                <p className="text-slate-400 text-center py-8">No courses found for the current semester.</p>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Card 4: Societies or Clubs */}
-                    <div className={cardStyles}>
-                        <EditableList 
-                            label="Societies or Clubs"
-                            icon={Users}
-                            items={personal.clubs || []}
-                            onSave={(items) => onSaveField('personal.clubs', items)}
-                            placeholder="e.g., Robotics Club"
-                        />
-                    </div>
-
-                    {/* Card 5: Skills */}
-                    <div className={cardStyles}>
-                        <EditableList 
-                            label="Skills"
-                            icon={Award}
-                            items={academic.skills || []}
-                            onSave={(items) => onSaveField('academic.skills', items)}
-                            placeholder="e.g., React, Python"
-                        />
-                    </div>
-
-                    {/* Card 6: Social Links */}
-                    <div className={cardStyles}>
-                        <EditableList 
-                            label="Social Links"
-                            icon={LinkIcon}
-                            items={social.links || []}
-                            onSave={(items) => onSaveField('social.links', items)}
-                            placeholder="e.g., https://linkedin.com/in/..."
-                            // FIX: Pass the new renderItem prop to display icons and links
-                            renderItem={(link) => (
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                    {getSocialIcon(link)}
-                                    <a href={link} target="_blank" rel="noopener noreferrer" className="text-slate-200 truncate hover:text-cyan-400 hover:underline">
-                                        {link.replace(/^(https?:\/\/)?(www\.)?/, '')}
-                                    </a>
-                                </div>
-                            )}
-                        />
+                    <div className="flex justify-center flex-wrap gap-4 pt-2">
+                        {(profileData.social?.links || []).map((link, index) => (
+                            <a key={index} href={link} target="_blank" rel="noopener noreferrer" className="transition-transform hover:scale-110">
+                                {getSocialIcon(link)}
+                            </a>
+                        ))}
                     </div>
                 </div>
 
-                <div className="mt-8 flex flex-col items-center gap-4">
-                       <motion.button whileTap={{ scale: 0.95 }} onClick={onSignOut} className="w-full max-w-sm flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold py-2 px-4 rounded-lg transition-colors">
-                           <LogOut size={18} /> Sign Out
-                       </motion.button>
-                       <motion.button whileTap={{ scale: 0.95 }} onClick={onResetData} className="w-full max-w-sm flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 font-bold py-2 px-4 rounded-lg transition-colors">
-                           <AlertTriangle size={18} /> Reset All Data
-                       </motion.button>
+                {/* --- Danger Zone --- */}
+                <div className={`${cardStyles} p-6 border-red-500/30`}>
+                    <h3 className="font-bold text-xl text-red-400 mb-4">Danger Zone</h3>
+                    <div className="flex flex-col gap-4">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={onSignOut} className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            <LogOut size={18} /> Sign Out
+                        </motion.button>
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={onResetData} className="w-full flex items-center justify-center gap-2 bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 font-bold py-2 px-4 rounded-lg transition-colors">
+                            <AlertTriangle size={18} /> Reset All Data
+                        </motion.button>
+                    </div>
                 </div>
-            </div>
+            </motion.div>
+
+            {/* --- RIGHT COLUMN --- */}
+            <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
+                {/* --- Academic Card --- */}
+                <div className={`${cardStyles} p-6 space-y-6`}>
+                     <EditableField label="College Name" value={profileData.personal?.collegeName} onSave={(val) => onSaveField('personal.collegeName', val)} />
+                     <EditableField label="Roll No." value={profileData.academic?.rollNo} onSave={(val) => onSaveField('academic.rollNo', val)} />
+                     <hr className="border-slate-800" />
+                     <EditableList icon={Code} label="Projects" items={profileData.academic?.projects || []} onSave={(items) => onSaveField('academic.projects', items)} placeholder="e.g., https://github.com/user/repo" />
+                     <hr className="border-slate-800" />
+                     <EditableList icon={Award} label="Certificates" items={profileData.academic?.certificates || []} onSave={(items) => onSaveField('academic.certificates', items)} placeholder="e.g., Google Cloud Certified" />
+                </div>
+                
+                {/* --- Professional Card --- */}
+                <div className={`${cardStyles} p-6 space-y-6`}>
+                    <EditableList icon={Briefcase} label="Internships & Experience" items={profileData.academic?.internships || []} onSave={(items) => onSaveField('academic.internships', items)} placeholder="e.g., SDE Intern @ Google" />
+                     <hr className="border-slate-800" />
+                    <EditableField label="Resume Link" value={profileData.academic?.resumeLink} onSave={(val) => onSaveField('academic.resumeLink', val)} />
+                     <hr className="border-slate-800" />
+                    <EditableList icon={LinkIcon} label="Social & Portfolio Links" items={profileData.social?.links || []} onSave={(items) => onSaveField('social.links', items)} placeholder="e.g., https://linkedin.com/in/..." />
+                </div>
+
+                {/* --- Personal Card --- */}
+                 <div className={`${cardStyles} p-6 space-y-6`}>
+                    <EditableField label="Location" value={profileData.personal?.location} onSave={(val) => onSaveField('personal.location', val)} />
+                     <hr className="border-slate-800" />
+                    <EditableList icon={Trophy} label="Achievements" items={profileData.personal?.achievements || []} onSave={(items) => onSaveField('personal.achievements', items)} placeholder="e.g., Winner of Smart India Hackathon" />
+                </div>
+            </motion.div>
         </motion.div>
     );
 };

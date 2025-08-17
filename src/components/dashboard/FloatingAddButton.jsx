@@ -1,15 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, ClipboardList, Edit, GraduationCap, Bell, CheckCircle2 } from 'lucide-react';
+import { Plus, ClipboardList, Edit, GraduationCap, Bell, CheckCircle2, Users, CreditCard } from 'lucide-react';
 
-const FloatingAddButton = ({ onAddCourse, onAddExamMarks, onAddGrade, onAddDeadline, onAddTask }) => {
+const FloatingAddButton = ({ 
+    onAddCourse, 
+    onAddExamMarks, 
+    onAddGrade, 
+    onAddDeadline, 
+    onAddTask,
+    onAddContact,
+    onAddExpenditure
+}) => {
     const [isOpen, setIsOpen] = useState(false);
     const menuRef = useRef(null);
 
-    // Click outside to close logic
     useEffect(() => {
         const handleClickOutside = (event) => {
-            // FIX: Corrected typo from 'menu-ref' to 'menuRef'
             if (menuRef.current && !menuRef.current.contains(event.target)) {
                 setIsOpen(false);
             }
@@ -26,6 +32,9 @@ const FloatingAddButton = ({ onAddCourse, onAddExamMarks, onAddGrade, onAddDeadl
         { label: 'Grade', icon: GraduationCap, action: onAddGrade },
         { label: 'Deadline', icon: Bell, action: onAddDeadline },
         { label: 'Planner', icon: CheckCircle2, action: onAddTask },
+        // FIX: Added new menu items
+        { label: 'Contact', icon: Users, action: onAddContact },
+        { label: 'Expense', icon: CreditCard, action: onAddExpenditure },
     ];
 
     const menuVariants = {
@@ -58,7 +67,7 @@ const FloatingAddButton = ({ onAddCourse, onAddExamMarks, onAddGrade, onAddDeadl
                 )}
             </AnimatePresence>
 
-            <div className="fixed bottom-8 right-8 z-50" ref={menuRef}>
+            <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50" ref={menuRef}>
                 <AnimatePresence>
                     {isOpen && (
                         <motion.div

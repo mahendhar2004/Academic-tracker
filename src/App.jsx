@@ -1,20 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut } from 'firebase/auth';
-import { auth } from './firebase/config';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db, appId } from './firebase/config';
+import { useStore } from './store/useStore';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
 
 export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const { initializeListeners, cleanupListeners } = useStore();
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-            setUser(currentUser);
+        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+            if (currentUser) {
+                // Ensure user profile exists before initializing listeners
+                const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
+                const profileSnap = await getDoc(profileRef);
+                if (!profileSnap.exists()) {
+                    await setDoc(profileRef, {
+                        name: currentUser.displayName || 'User',
+                        email: currentUser.email || '',
+                        imageUrl: currentUser.photoURL || '',
+                        coins: 0,
+                        expenditureBalance: 0,
+                        isBalanceVisible: true
+                    });
+                }
+                
+                setUser(currentUser);
+                initializeListeners(currentUser);
+            } else {
+                setUser(null);
+                cleanupListeners();
+            }
             setLoading(false);
         });
         return () => unsubscribe();
-    }, []);
+    }, [initializeListeners, cleanupListeners]);
 
     const handleLogin = async (providerName) => {
         let provider;
