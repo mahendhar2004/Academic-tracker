@@ -225,10 +225,11 @@ const Dashboard = ({ user, onSignOut }) => {
 
     return (
         <>
-            <div className="min-h-screen bg-black text-white font-sans flex">
+             <div className="min-h-screen bg-black text-white font-sans flex">
                 <SideNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
-                <div className="flex-1 pl-28 overflow-hidden">
-                    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-10">
+                {/* UPDATED: Padding is now responsive. No padding on mobile, 28-unit padding on desktop */}
+                <div className="flex-1 md:pl-28 overflow-hidden">
+                    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-10">
                         <Header 
                             currentPage={currentPage} 
                             profileData={profileData} 

@@ -141,7 +141,8 @@ const DailyFocus = ({ schedule, deadlines, tasks, cardStyles }) => {
         <div className={cardStyles}>
             <div className="absolute -top-1 -left-1 w-32 h-32 bg-white/10 rounded-full blur-[80px] opacity-50"></div>
             <h3 className="font-bold text-white text-lg mb-4">Today's Focus</h3>
-            <div className="grid grid-cols-3 gap-4 text-center">
+            {/* UPDATED: Breakpoint changed from sm to md */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 {focusItems.map(item => (
                     <div key={item.label} className="bg-black/20 p-4 rounded-lg border border-white/10">
                         <item.icon className="mx-auto text-cyan-400 mb-2" size={24} />
@@ -153,7 +154,6 @@ const DailyFocus = ({ schedule, deadlines, tasks, cardStyles }) => {
         </div>
     );
 };
-
 
 const MotivationalQuote = () => {
     const quote = useMemo(() => {

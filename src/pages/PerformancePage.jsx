@@ -7,8 +7,6 @@ import WhatIfModal from '../components/modals/WhatIfModal';
 import { useStore } from '../store/useStore';
 import { usePerformanceGraphs } from '../hooks/usePerformanceGraphs';
 
-// --- Reusable Child Components ---
-
 const ExamMarkCard = ({ mark, onEdit, onDelete }) => {
     return (
         <div className="bg-black/30 p-3 rounded-lg flex items-center gap-4 group">
@@ -33,9 +31,6 @@ const SemesterCardSkeleton = () => (
         <div className="h-8 bg-slate-700 rounded w-1/2"></div>
     </div>
 );
-
-
-// --- Main Performance Page Component ---
 
 const PerformancePage = ({ 
     performanceData, allCourses, examMarks, onDeleteCourse, onEditGrade, onAddGrade, 
@@ -71,7 +66,6 @@ const PerformancePage = ({
 
     useEffect(() => {
         if (selectedSemester || isComponentLoading) return;
-
         const currentSemData = semesters.find(s => s.semester === currentSemester);
         if (currentSemData) {
             setSelectedSemester(currentSemData);
@@ -82,11 +76,9 @@ const PerformancePage = ({
 
     const semesterDetails = useMemo(() => {
         if (!selectedSemester) return { courses: [], marksByCourse: {} };
-
         const coursesForSemester = allCourses.filter(c => c.semester === selectedSemester.semester);
         const courseIds = coursesForSemester.map(c => c.id);
         const marksForSemester = examMarks.filter(m => courseIds.includes(m.courseId));
-
         const marksByCourse = marksForSemester.reduce((acc, mark) => {
             const course = coursesForSemester.find(c => c.id === mark.courseId);
             if (course) {
@@ -94,7 +86,6 @@ const PerformancePage = ({
             }
             return acc;
         }, {});
-
         return { courses: coursesForSemester, marksByCourse };
     }, [selectedSemester, allCourses, examMarks]);
     
@@ -108,8 +99,10 @@ const PerformancePage = ({
 
     const scroll = (direction) => {
         if (timelineRef.current) {
-            const scrollAmount = timelineRef.current.clientWidth * 0.8;
-            timelineRef.current.scrollBy({ left: direction === 'left' ? -scrollAmount : scrollAmount, behavior: 'smooth' });
+            timelineRef.current.scrollBy({ 
+                left: direction === 'left' ? -300 : 300, 
+                behavior: 'smooth' 
+            });
         }
     };
     
@@ -117,7 +110,7 @@ const PerformancePage = ({
         const timeline = timelineRef.current;
         if (timeline) {
             handleScroll();
-            timeline.addEventListener('scroll', handleScroll);
+            timeline.addEventListener('scroll', handleScroll, { passive: true });
             window.addEventListener('resize', handleScroll);
             return () => {
                 timeline.removeEventListener('scroll', handleScroll);
@@ -131,9 +124,7 @@ const PerformancePage = ({
     return (
         <>
             <WhatIfModal isOpen={isWhatIfModalOpen} onClose={() => setIsWhatIfModalOpen(false)} allCourses={allCourses} />
-
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="space-y-8">
-                
                 <div className={`${cardStyles} flex flex-col md:flex-row items-center justify-between gap-6`}>
                     <div className="absolute -top-1 -left-1 w-48 h-48 bg-cyan-500/10 rounded-full blur-[100px]"></div>
                     <div>
@@ -149,11 +140,8 @@ const PerformancePage = ({
                         </motion.button>
                     </div>
                 </div>
-
                 <div className="relative pt-8">
-                    <div className="absolute inset-x-0 top-0 h-full bg-radial-gradient(ellipse_at_top,_var(--tw-gradient-stops)) from-slate-900/80 via-black to-black pointer-events-none"></div>
-                    <h2 className="text-xl font-bold text-white mb-4 px-4 lg:px-0">Your Academic Journey</h2>
-                    
+                    <h2 className="text-xl font-bold text-white mb-4">Your Academic Journey</h2>
                     <div className="relative group">
                         <AnimatePresence>
                             {canScrollLeft && !isComponentLoading && (
@@ -162,38 +150,35 @@ const PerformancePage = ({
                                 </motion.button>
                             )}
                         </AnimatePresence>
-                        <div ref={timelineRef} className="flex gap-4 overflow-x-auto no-scrollbar pb-4 px-4 lg:px-0">
-                            {isComponentLoading ? (
-                                <>
-                                    <SemesterCardSkeleton />
-                                    <SemesterCardSkeleton />
-                                    <SemesterCardSkeleton />
-                                    <SemesterCardSkeleton />
-                                </>
-                            ) : (
-                                allSemesterNumbers.map(semNum => {
-                                    const semData = semesters.find(s => s.semester === semNum);
-                                    const hasData = !!semData;
-                                    return (
-                                        <motion.div
-                                            key={semNum}
-                                            onClick={() => setSelectedSemester(semData || { semester: semNum, spi: "N/A" })}
-                                            className={`relative cursor-pointer flex-shrink-0 w-48 p-4 rounded-xl border transition-all duration-300 ${selectedSemester?.semester === semNum ? 'border-cyan-400/80 bg-cyan-900/40' : (hasData ? 'border-white/10 bg-black/30 hover:bg-white/5' : 'border-dashed border-slate-700 bg-transparent hover:bg-slate-800/50')}`}
-                                            layoutId={`semester-card-${semNum}`}
-                                        >
-                                            <p className="text-sm text-slate-400">Semester {semNum}</p>
-                                            {hasData ? (
-                                                <p className="text-3xl font-bold text-white">{semData.spi} <span className="text-xl text-slate-300">SPI</span></p>
-                                            ) : (
-                                                <p className="text-lg font-semibold text-slate-600 mt-2">No Data</p>
-                                            )}
-                                            {selectedSemester?.semester === semNum && (
-                                                <motion.div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full" layoutId="active-semester-indicator"></motion.div>
-                                            )}
-                                        </motion.div>
-                                    );
-                                })
-                            )}
+                        <div ref={timelineRef} className="overflow-x-auto no-scrollbar -mx-4 sm:-mx-6 lg:mx-0">
+                            <div className="flex gap-4 pb-4 px-4 sm:px-6 lg:px-0">
+                                {isComponentLoading ? (
+                                    <><SemesterCardSkeleton /><SemesterCardSkeleton /><SemesterCardSkeleton /><SemesterCardSkeleton /></>
+                                ) : (
+                                    allSemesterNumbers.map(semNum => {
+                                        const semData = semesters.find(s => s.semester === semNum);
+                                        const hasData = !!semData;
+                                        return (
+                                            <motion.div
+                                                key={semNum}
+                                                onClick={() => setSelectedSemester(semData || { semester: semNum, spi: "N/A" })}
+                                                className={`relative cursor-pointer flex-shrink-0 w-48 p-4 rounded-xl border transition-all duration-300 ${selectedSemester?.semester === semNum ? 'border-cyan-400/80 bg-cyan-900/40' : (hasData ? 'border-white/10 bg-black/30 hover:bg-white/5' : 'border-dashed border-slate-700 bg-transparent hover:bg-slate-800/50')}`}
+                                                layoutId={`semester-card-${semNum}`}
+                                            >
+                                                <p className="text-sm text-slate-400">Semester {semNum}</p>
+                                                {hasData ? (
+                                                    <p className="text-3xl font-bold text-white">{semData.spi} <span className="text-xl text-slate-300">SPI</span></p>
+                                                ) : (
+                                                    <p className="text-lg font-semibold text-slate-600 mt-2">No Data</p>
+                                                )}
+                                                {selectedSemester?.semester === semNum && (
+                                                    <motion.div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full" layoutId="active-semester-indicator"></motion.div>
+                                                )}
+                                            </motion.div>
+                                        );
+                                    })
+                                )}
+                            </div>
                         </div>
                         <AnimatePresence>
                             {canScrollRight && !isComponentLoading && (
@@ -204,7 +189,6 @@ const PerformancePage = ({
                         </AnimatePresence>
                     </div>
                 </div>
-                
                 <div className="h-[420px]">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -264,7 +248,6 @@ const PerformancePage = ({
                         </motion.div>
                     </AnimatePresence>
                 </div>
-
                 {cpiGraphData && cpiGraphData.length > 0 ? (
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-white/10">
                         <CpiGraph data={cpiGraphData} />
