@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
-import { getColorForCourse } from '../../constants'; // Import the new robust color function
+import { MapPin } from 'lucide-react';
+import { getColorForCourse } from '../../constants';
 
 const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
     const [now, setNow] = useState(new Date());
@@ -16,7 +17,6 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
 
     const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-    // UPDATED: This function now uses the centralized, robust color generator
     const getCourseDetails = (courseId) => {
         const course = courses.find(c => c.id === courseId);
         const color = getColorForCourse(courseId);
@@ -25,13 +25,14 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
     };
 
     const timeToMinutes = (timeStr) => {
+        if (!timeStr || !timeStr.includes(':')) return 0;
         const [hours, minutes] = timeStr.split(':').map(Number);
         return hours * 60 + minutes;
     };
 
     const { timeSlots, minHour, maxHour } = useMemo(() => {
         if (schedule.length === 0) {
-            return { timeSlots: [], minHour: 8, maxHour: 18 };
+            return { timeSlots: Array.from({ length: 10 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`), minHour: 8, maxHour: 18 };
         }
         let min = 24 * 60, max = 0;
         schedule.forEach(item => {
@@ -39,8 +40,8 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
             max = Math.max(max, timeToMinutes(item.endTime));
         });
 
-        const minH = Math.floor(min / 60);
-        const maxH = Math.ceil(max / 60);
+        const minH = Math.max(0, Math.floor(min / 60) -1);
+        const maxH = Math.min(23, Math.ceil(max / 60));
         const slots = [];
         for (let i = minH; i < maxH; i++) {
             slots.push(`${String(i).padStart(2, '0')}:00`);
@@ -127,6 +128,12 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                                         >
                                             <p className="font-bold text-sm leading-tight">{details.name}</p>
                                             <p className="text-xs opacity-80 mt-1">{item.startTime} - {item.endTime}</p>
+                                            {item.venue && (
+                                                <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
+                                                    <MapPin size={12} />
+                                                    <span className="truncate">{item.venue}</span>
+                                                </div>
+                                            )}
                                         </motion.div>
                                     );
                                 })}
@@ -134,7 +141,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                         </div>
                     ))}
                     
-                    {currentTimePosition >= 0 && currentTimePosition <= totalPixelHeight && now.getDay() > 0 && now.getDay() < 7 && (
+                    {currentTimePosition >= 0 && currentTimePosition <= totalPixelHeight && now.getDay() > 0 && now.getDay() < 6 && (
                         <div 
                             className="absolute h-0.5 bg-red-500 w-full z-10"
                             style={{ top: `calc(3rem + ${currentTimePosition}px)`}}

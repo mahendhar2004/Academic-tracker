@@ -1,11 +1,8 @@
 import {
     doc, setDoc, collection, addDoc, deleteDoc,
-    updateDoc, writeBatch, getDocs, Timestamp, increment
+    updateDoc, writeBatch, getDocs, Timestamp, increment, getDoc
 } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
-
-// NOTE: We don't need onSnapshot here because that's part of state listening,
-// which is now handled by the store.
 
 const firestoreService = {
 
@@ -23,9 +20,8 @@ const firestoreService = {
 
     // === COURSES & GRADES ===
     saveCourse: async (userId, courseData) => {
-        // UPDATED: This function is now simpler and correctly saves all provided data.
         const dataToSave = {
-            ...courseData, // This includes name, credits, semester, attended, total
+            ...courseData,
             grade: courseData.grade === "Not Published" ? null : courseData.grade,
             lastAttended: null,
             attendanceCountToday: 0,
@@ -145,20 +141,44 @@ const firestoreService = {
     },
 
     // === EXPENDITURES ===
-    saveExpenditure: async (userId, expenditureData, currentBalance) => {
-        if (currentBalance < expenditureData.amount) {
-            return 'INSUFFICIENT_FUNDS'; 
-        }
+    saveExpenditure: async (userId, expenditureData, expenditureId, currentBalance) => {
         const path = `artifacts/${appId}/users/${userId}/expenditures`;
-        await addDoc(collection(db, path), expenditureData);
         const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        await updateDoc(profileRef, { expenditureBalance: increment(-expenditureData.amount) });
+
+        if (expenditureId) {
+            const expenditureRef = doc(db, path, expenditureId);
+            const oldDoc = await getDoc(expenditureRef);
+            const oldAmount = oldDoc.exists() ? oldDoc.data().amount : 0;
+            const difference = oldAmount - expenditureData.amount;
+
+            if (difference < 0 && currentBalance < Math.abs(difference)) {
+                return 'INSUFFICIENT_FUNDS';
+            }
+            
+            const batch = writeBatch(db);
+            batch.update(expenditureRef, expenditureData);
+            batch.update(profileRef, { expenditureBalance: increment(difference) });
+            await batch.commit();
+
+        } else {
+            if (currentBalance < expenditureData.amount) {
+                return 'INSUFFICIENT_FUNDS'; 
+            }
+            await addDoc(collection(db, path), expenditureData);
+            await updateDoc(profileRef, { expenditureBalance: increment(-expenditureData.amount) });
+        }
         return 'SUCCESS';
     },
 
-    deleteExpenditure: async (userId, expenditureId) => {
+    deleteExpenditure: async (userId, expenditureToDelete) => {
         const path = `artifacts/${appId}/users/${userId}/expenditures`;
-        await deleteDoc(doc(db, path, expenditureId));
+        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
+        
+        const batch = writeBatch(db);
+        batch.delete(doc(db, path, expenditureToDelete.id));
+        batch.update(profileRef, { expenditureBalance: increment(expenditureToDelete.amount) });
+        
+        await batch.commit();
     },
 
     setExpenditureBalance: async (userId, newBalance) => {
@@ -176,10 +196,11 @@ const firestoreService = {
         const snapshot = await getDocs(ref);
         const batch = writeBatch(db);
         snapshot.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
-
+        
         const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        await updateDoc(profileRef, { expenditureBalance: 0 });
+        batch.update(profileRef, { expenditureBalance: 0 });
+
+        await batch.commit();
     },
 
     // === GLOBAL ACTIONS ===

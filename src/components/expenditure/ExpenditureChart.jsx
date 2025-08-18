@@ -1,7 +1,6 @@
 import React from 'react';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 
-// FIX: Moved COLORS constant to the top-level scope
 const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088fe', '#00c49f', '#ffbb28'];
 
 const CustomChartTooltip = ({ active, payload }) => {
@@ -9,10 +8,7 @@ const CustomChartTooltip = ({ active, payload }) => {
         const data = payload[0];
         const formattedValue = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(data.value);
         return (
-            <div 
-                className="bg-slate-900/80 backdrop-blur-md border border-white/20 p-3 rounded-lg shadow-lg"
-                style={{ transition: 'opacity 0.2s ease-in-out' }}
-            >
+            <div className="bg-slate-900/80 backdrop-blur-md border border-white/20 p-3 rounded-lg shadow-lg">
                 <p className="label text-sm text-slate-300">{data.name}</p>
                 <p className="intro text-white font-bold">{formattedValue}</p>
             </div>
@@ -43,8 +39,10 @@ const ExpenditureChart = ({ data, total }) => {
         return `₹${amount}`;
     };
     
+    // UPDATED: The main container is now a relative parent for perfect centering.
+    // The previous background styles have also been removed as requested.
     return (
-        <div className="bg-slate-800/50 backdrop-blur-3xl border border-white/25 p-6 rounded-3xl shadow-lg h-full flex flex-col">
+        <div className="relative w-full h-full">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                     <Tooltip 
@@ -67,10 +65,11 @@ const ExpenditureChart = ({ data, total }) => {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                     </Pie>
-                    <Legend content={<CustomLegend />} verticalAlign="bottom" />
+                    <Legend content={<CustomLegend />} verticalAlign="bottom" height={36}/>
                 </PieChart>
             </ResponsiveContainer>
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none mt-[-20px]">
+            {/* UPDATED: This div is now perfectly centered inside the relative parent. */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
                 <p className="text-5xl font-bold text-white">{formatCurrency(total)}</p>
                 <p className="text-slate-400">Total Spent</p>
             </div>

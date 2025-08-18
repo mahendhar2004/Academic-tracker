@@ -17,3 +17,27 @@ html, body {
   initial-value: 0px;
   inherits: false;
 }
+
+/* Add this to the bottom of src/index.css */
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
+
+.aurora-background {
+  animation: aurora 60s linear infinite;
+  background-image: radial-gradient(
+      100% 100% at 100% 0,
+      rgba(0, 100, 255, 0.15) 0,
+      rgba(0, 100, 255, 0) 50%
+    ),
+    radial-gradient(
+      100% 100% at 0 100%,
+      rgba(0, 255, 100, 0.15) 0,
+      rgba(0, 255, 100, 0) 50%
+    );
+}

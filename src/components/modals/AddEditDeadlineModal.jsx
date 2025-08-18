@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 import { Calendar, Clock } from 'lucide-react';
@@ -10,6 +10,11 @@ const AddEditDeadlineModal = ({ isOpen, onClose, onSave, currentCourses, deadlin
     const [time, setTime] = useState('');
 
     const isNew = !deadlineToEdit;
+
+    // UPDATED: Create a memoized, sorted list of courses
+    const sortedCourses = useMemo(() => {
+        return [...currentCourses].sort((a, b) => a.name.localeCompare(b.name));
+    }, [currentCourses]);
 
     useEffect(() => {
         if (isOpen) {
@@ -67,7 +72,8 @@ const AddEditDeadlineModal = ({ isOpen, onClose, onSave, currentCourses, deadlin
                         required
                     >
                         <option value="">Select Subject</option>
-                        {currentCourses.map(c => <option key={c.id} value={c.id} className="bg-slate-800">{c.name}</option>)}
+                        {/* UPDATED: Map over the new sortedCourses array */}
+                        {sortedCourses.map(c => <option key={c.id} value={c.id} className="bg-slate-800">{c.name}</option>)}
                     </select>
                 </div>
                 <div>
@@ -87,7 +93,6 @@ const AddEditDeadlineModal = ({ isOpen, onClose, onSave, currentCourses, deadlin
                     <div className="w-2/3">
                         <label htmlFor="deadlineDate" className="block text-sm font-medium text-slate-300 mb-2">Due Date</label>
                         <div className="relative">
-                             {/* UPDATED: Icon color changed to white */}
                              <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-white" size={18} />
                              <input
                                 id="deadlineDate"
@@ -102,7 +107,6 @@ const AddEditDeadlineModal = ({ isOpen, onClose, onSave, currentCourses, deadlin
                     <div className="w-1/3">
                         <label htmlFor="deadlineTime" className="block text-sm font-medium text-slate-300 mb-2">Time</label>
                         <div className="relative">
-                            {/* UPDATED: Icon color changed to white */}
                             <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-white" size={18} />
                             <input
                                 id="deadlineTime"

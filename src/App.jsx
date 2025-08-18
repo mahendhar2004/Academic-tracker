@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, FacebookAuthProvider, OAuthProvider, signOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './firebase/config';
 import { useStore } from './store/useStore';
+import authService from './services/authService';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
 
@@ -14,20 +15,24 @@ export default function App() {
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
-                // Ensure user profile exists before initializing listeners
                 const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
                 const profileSnap = await getDoc(profileRef);
+                
                 if (!profileSnap.exists()) {
                     await setDoc(profileRef, {
-                        name: currentUser.displayName || 'User',
+                        name: currentUser.displayName || 'New User',
                         email: currentUser.email || '',
                         imageUrl: currentUser.photoURL || '',
                         coins: 0,
                         expenditureBalance: 0,
-                        isBalanceVisible: true
+                        isBalanceVisible: true,
+                        personal: {
+                            phone: currentUser.phoneNumber || '',
+                            isPhoneVerified: false,
+                            email: currentUser.email || ''
+                        }
                     });
                 }
-                
                 setUser(currentUser);
                 initializeListeners(currentUser);
             } else {
@@ -39,25 +44,43 @@ export default function App() {
         return () => unsubscribe();
     }, [initializeListeners, cleanupListeners]);
 
-    const handleLogin = async (providerName) => {
-        let provider;
-        if (providerName === 'google') provider = new GoogleAuthProvider();
-        if (providerName === 'facebook') provider = new FacebookAuthProvider();
-        if (providerName === 'apple') provider = new OAuthProvider('apple.com');
-        
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error("Authentication failed:", error);
+    const handleLogin = (providerName) => {
+        if (providerName === 'google') {
+            authService.signInWithGoogle().catch(err => alert(err.message));
         }
     };
 
-    const handleSignOut = async () => {
+    const handleLoginWithEmail = (email, password) => {
+        authService.signInWithEmail(email, password).catch(err => alert(err.message));
+    };
+    
+    const handleSignUpWithEmail = async (email, password, name, phone) => {
         try {
-            await signOut(auth);
+            const userCredential = await authService.signUpWithEmail(email, password);
+            const user = userCredential.user;
+            await authService.updateUserProfile(user, { displayName: name });
+
+            const profileRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/data`);
+            await setDoc(profileRef, {
+                name: name,
+                email: user.email,
+                imageUrl: user.photoURL || '',
+                coins: 0,
+                expenditureBalance: 0,
+                isBalanceVisible: true,
+                personal: {
+                    phone: phone || '',
+                    isPhoneVerified: false,
+                    email: user.email || ''
+                }
+            });
         } catch (error) {
-            console.error("Sign out failed:", error);
+            alert("Sign up failed: " + error.message);
         }
+    };
+
+    const handleSignOut = () => {
+        authService.signOutUser().catch(err => console.error("Sign out failed:", err));
     };
 
     if (loading) {
@@ -67,7 +90,16 @@ export default function App() {
     return (
         <>
             <style>{`.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
-            {user ? <Dashboard user={user} onSignOut={handleSignOut} /> : <LoginPage onLogin={handleLogin} />}
+            {user ? (
+                <Dashboard user={user} onSignOut={handleSignOut} />
+            ) : (
+                <LoginPage 
+                    onLogin={handleLogin} 
+                    onLoginWithEmail={handleLoginWithEmail}
+                    onSignUpWithEmail={handleSignUpWithEmail}
+                />
+            )}
+            {/* REMOVED: The reCAPTCHA container div is no longer needed */}
         </>
     );
 }

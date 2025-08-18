@@ -4,8 +4,10 @@ import { increment } from 'firebase/firestore';
 import { useStore } from '../store/useStore';
 import { useModalStore } from '../store/useModalStore';
 import firestoreService from '../services/firebaseService';
+import authService from '../services/authService';
+import { GRADE_POINTS, COIN_VALUES } from '../constants';
 
-// Import all your components
+// Import all page and component assets
 import SideNav from '../components/dashboard/SideNav';
 import Header from '../components/dashboard/Header';
 import AttendancePage from './AttendancePage';
@@ -26,14 +28,16 @@ import AddEditDeadlineModal from '../components/modals/AddEditDeadlineModal';
 import AddEditMarksModal from '../components/modals/AddEditMarksModal';
 import AddEditTaskModal from '../components/modals/AddEditTaskModal';
 import AddEditContactModal from '../components/modals/AddEditContactModal';
-import AddExpenditureModal from '../components/modals/AddExpenditureModal';
+import AddEditExpenditureModal from '../components/modals/AddEditExpenditureModal';
 import SetBalanceModal from '../components/modals/SetBalanceModal';
 import TimetableModal from '../components/modals/TimetableModal';
 import PomodoroModal from '../components/modals/PomodoroModal';
 import PomodoroTimer from '../components/pomodoro/PomodoroTimer';
 import WhatIfModal from '../components/modals/WhatIfModal';
 import EditProfileModal from '../components/modals/EditProfileModal';
-import { GRADE_POINTS, COIN_VALUES } from '../constants'; // Import constants
+import ResetExpendituresModal from '../components/modals/ResetExpendituresModal';
+import DeleteAccountModal from '../components/modals/DeleteAccountModal';
+import ReauthModal from '../components/modals/ReauthModal';
 
 const Dashboard = ({ user, onSignOut }) => {
     const {
@@ -47,6 +51,9 @@ const Dashboard = ({ user, onSignOut }) => {
     const [isCpiVisible, setIsCpiVisible] = useState(true);
     const [confirmationModal, setConfirmationModal] = useState({ isOpen: false, message: '', onConfirm: () => {} });
     const [pomodoroConfig, setPomodoroConfig] = useState({ isActive: false, duration: 0 });
+    const [isResetExpendituresModalOpen, setIsResetExpendituresModalOpen] = useState(false);
+    const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
+    const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
 
     useEffect(() => {
         const savedCpiVisibility = localStorage.getItem('cpiVisible');
@@ -88,94 +95,111 @@ const Dashboard = ({ user, onSignOut }) => {
         if (allCourses.length === 0) return [];
         return allCourses.filter(c => c.semester === currentSemester);
     }, [allCourses, currentSemester]);
+    
+    const currentSemesterSchedule = useMemo(() => {
+        const currentSemesterCourseIds = new Set(currentSemesterCourses.map(c => c.id));
+        return schedule.filter(classItem => currentSemesterCourseIds.has(classItem.courseId));
+    }, [schedule, currentSemesterCourses]);
 
-    // ... (All handler functions remain unchanged) ...
     const handleSaveCourse = (courseData) => firestoreService.saveCourse(user.uid, courseData);
-    const handleSaveGrade = (courseId, grade) => firestoreService.saveGrade(user.uid, courseId, grade);
-    const handleSaveClass = (data, id) => firestoreService.saveClass(user.uid, data, id);
-    const handleSaveDeadline = (data, id) => firestoreService.saveDeadline(user.uid, data, id);
-    const handleSaveExamMark = (data, id) => firestoreService.saveExamMark(user.uid, data, id);
-    const handleSaveTask = (data, id) => firestoreService.saveTask(user.uid, data, id);
-    const handleSaveContact = (data, id) => firestoreService.saveContact(user.uid, data, id);
-    const handleSaveProfileField = (field, value) => firestoreService.saveProfileField(user.uid, field, value);
+    const handleSaveGrade = (courseId, grade) => firestoreService.saveGrade(user.uid, courseId, grade);
+    const handleSaveClass = (data, id) => firestoreService.saveClass(user.uid, data, id);
+    const handleSaveDeadline = (data, id) => firestoreService.saveDeadline(user.uid, data, id);
+    const handleSaveExamMark = (data, id) => firestoreService.saveExamMark(user.uid, data, id);
+    const handleSaveTask = (data, id) => firestoreService.saveTask(user.uid, data, id);
+    const handleSaveContact = (data, id) => firestoreService.saveContact(user.uid, data, id);
+    const handleSaveProfileField = (field, value) => firestoreService.saveProfileField(user.uid, field, value);
     const handleDeleteClass = (id) => firestoreService.deleteClass(user.uid, id);
-    const handleDeleteDeadline = (id) => firestoreService.deleteDeadline(user.uid, id);
-    const handleDeleteExamMark = (id) => firestoreService.deleteExamMark(user.uid, id);
-    const handleDeleteTask = (id) => firestoreService.deleteTask(user.uid, id);
-    const handleDeleteContact = (id) => firestoreService.deleteContact(user.uid, id);
-    const handleDeleteExpenditure = (id) => firestoreService.deleteExpenditure(user.uid, id);
+    const handleDeleteDeadline = (id) => firestoreService.deleteDeadline(user.uid, id);
+    const handleDeleteExamMark = (id) => firestoreService.deleteExamMark(user.uid, id);
+    const handleDeleteTask = (id) => firestoreService.deleteTask(user.uid, id);
+    const handleDeleteContact = (id) => firestoreService.deleteContact(user.uid, id);
+    const handleDeleteExpenditure = (expenditureToDelete) => firestoreService.deleteExpenditure(user.uid, expenditureToDelete);
     const handleMarkAttendance = async (course) => {
-        await firestoreService.updateCourse(user.uid, course.id, { attended: increment(1), total: increment(1) });
-        await firestoreService.updateCoins(user.uid, COIN_VALUES.MARK_ATTENDANCE);
-    };
+        await firestoreService.updateCourse(user.uid, course.id, { attended: increment(1), total: increment(1) });
+        await firestoreService.updateCoins(user.uid, COIN_VALUES.MARK_ATTENDANCE);
+    };
     const handleDecrementAttendance = async (course) => {
-        if ((course.attended || 0) <= 0) return;
-        await firestoreService.updateCourse(user.uid, course.id, { attended: increment(-1) });
-        await firestoreService.updateCoins(user.uid, COIN_VALUES.DECREMENT_ATTENDANCE);
-    };
+        if ((course.attended || 0) <= 0) return;
+        await firestoreService.updateCourse(user.uid, course.id, { attended: increment(-1) });
+        await firestoreService.updateCoins(user.uid, COIN_VALUES.DECREMENT_ATTENDANCE);
+    };
     const handleTotalChange = (course, change) => {
-        const newTotal = (course.total || 0) + change;
-        if (newTotal < course.attended || newTotal < 0) return;
-        firestoreService.updateCourse(user.uid, course.id, { total: newTotal });
-    };
+        const newTotal = (course.total || 0) + change;
+        if (newTotal < course.attended || newTotal < 0) return;
+        firestoreService.updateCourse(user.uid, course.id, { total: newTotal });
+    };
     const handleToggleCourseVisibility = (id, isHidden) => firestoreService.toggleCourseVisibility(user.uid, id, isHidden);
     const handleToggleTaskComplete = async (taskId, isCompleted) => {
-        await firestoreService.toggleTaskComplete(user.uid, taskId, isCompleted);
-        await firestoreService.updateCoins(user.uid, isCompleted ? COIN_VALUES.COMPLETE_TASK : COIN_VALUES.UNCOMPLETE_TASK);
-    };
+        await firestoreService.toggleTaskComplete(user.uid, taskId, isCompleted);
+        await firestoreService.updateCoins(user.uid, isCompleted ? COIN_VALUES.COMPLETE_TASK : COIN_VALUES.UNCOMPLETE_TASK);
+    };
     const handleDeleteCourse = (courseId, courseName) => {
-        setConfirmationModal({
-            isOpen: true,
-            message: `Are you sure you want to delete all data for "${courseName}"?`,
-            onConfirm: async () => {
-                await firestoreService.deleteCourse(user.uid, courseId);
-                setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} });
-            }
-        });
-    };
+        setConfirmationModal({
+            isOpen: true,
+            message: `Are you sure you want to delete all data for "${courseName}"?`,
+            onConfirm: async () => {
+                await firestoreService.deleteCourse(user.uid, courseId);
+                setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} });
+            }
+        });
+    };
     const handleResetData = async () => {
-        await firestoreService.resetAllData(user.uid, user);
-        closeModal();
-        setCurrentPage('attendance');
-    };
+        await firestoreService.resetAllData(user.uid, user);
+        closeModal();
+        setCurrentPage('attendance');
+    };
     const handleToggleCpiVisibility = () => {
-        const newVisibility = !isCpiVisible;
-        setIsCpiVisible(newVisibility);
-        localStorage.setItem('cpiVisible', JSON.stringify(newVisibility));
-    };
+        const newVisibility = !isCpiVisible;
+        setIsCpiVisible(newVisibility);
+        localStorage.setItem('cpiVisible', JSON.stringify(newVisibility));
+    };
     const handleStartPomodoro = (duration) => {
         closeModal();
-        setPomodoroConfig({ isActive: true, duration });
-    };
+        setPomodoroConfig({ isActive: true, duration });
+    };
     const handleClosePomodoro = ({ completed }) => {
-        setPomodoroConfig({ isActive: false, duration: 0 });
-        if (completed) {
-            firestoreService.updateCoins(user.uid, COIN_VALUES.FINISH_POMODORO);
-        }
-    };
-    const handleSaveExpenditure = async (expenditureData) => {
-        const result = await firestoreService.saveExpenditure(user.uid, expenditureData, profileData.expenditureBalance);
-        if (result === 'INSUFFICIENT_FUNDS') {
-             setConfirmationModal({
-                 isOpen: true,
-                 message: "Insufficient balance to record this expense.",
-                 onConfirm: () => setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} })
-             });
-        }
-    };
+        setPomodoroConfig({ isActive: false, duration: 0 });
+        if (completed) {
+            firestoreService.updateCoins(user.uid, COIN_VALUES.FINISH_POMODORO);
+        }
+    };
+    const handleSaveExpenditure = async (expenditureData, expenditureId) => {
+        const result = await firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId, profileData.expenditureBalance);
+        if (result === 'INSUFFICIENT_FUNDS') {
+             setConfirmationModal({
+                 isOpen: true,
+                 message: "Insufficient balance for this transaction.",
+                 onConfirm: () => setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} })
+             });
+        }
+    };
     const handleSetExpenditureBalance = (newBalance) => firestoreService.setExpenditureBalance(user.uid, newBalance);
-    const handleToggleBalanceVisibility = () => firestoreService.toggleBalanceVisibility(user.uid, profileData.isBalanceVisible);
+    const handleToggleBalanceVisibility = () => firestoreService.toggleBalanceVisibility(user.uid, profileData.isBalanceVisible);
     const handleResetExpenditures = () => {
-        setConfirmationModal({
-            isOpen: true,
-            message: 'Are you sure you want to delete all expenditure data? This will also reset your balance to zero.',
-            onConfirm: async () => {
-                await firestoreService.resetExpenditures(user.uid);
-                setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} });
-            }
-        });
-    };
-    // MODAL OPEN/EDIT HANDLERS
+        setIsResetExpendituresModalOpen(true);
+    };
+    const confirmResetExpenditures = async () => {
+        await firestoreService.resetExpenditures(user.uid);
+        setIsResetExpendituresModalOpen(false);
+    };
+    const handleDeleteAccountClick = () => {
+        setIsDeleteAccountModalOpen(true);
+    };
+    const confirmDeleteAccount = async () => {
+        try {
+            await firestoreService.resetAllData(user.uid, user);
+            await authService.deleteCurrentUser();
+            setIsDeleteAccountModalOpen(false);
+        } catch (error) {
+            setIsDeleteAccountModalOpen(false);
+            if (error.code === 'auth/requires-recent-login') {
+                setIsReauthModalOpen(true);
+            } else {
+                alert(`Failed to delete account: ${error.message}`);
+            }
+        }
+    };
     const handleAddNewCourse = () => openModal('addCourse');
     const handleEditGradeClick = (course) => openModal('addGrade', { courseToGrade: course });
     const handleAddGradeClick = () => openModal('addGrade');
@@ -191,6 +215,7 @@ const Dashboard = ({ user, onSignOut }) => {
     const handleAddContactClick = () => openModal('addContact');
     const handleEditContactClick = (contact) => openModal('addContact', { contactToEdit: contact });
     const handleAddExpenditureClick = () => openModal('addExpenditure');
+    const handleEditExpenditureClick = (expenditure) => openModal('addExpenditure', { expenditureToEdit: expenditure });
     const pageVariants = { initial: { opacity: 0 }, in: { opacity: 1 }, out: { opacity: 0 } };
     const pageTransition = { type: 'tween', ease: 'linear', duration: 0.15 };
 
@@ -226,11 +251,17 @@ const Dashboard = ({ user, onSignOut }) => {
                                         onToggleVisibility={handleToggleCourseVisibility}
                                     />}
                                     {currentPage === 'performance' && <PerformancePage 
-                                        performanceData={performanceData} allCourses={allCourses} examMarks={examMarks} 
-                                        onDeleteCourse={handleDeleteCourse} onEditGrade={handleEditGradeClick}
-                                        onAddGrade={handleAddGradeClick} onAddExamMarks={handleAddExamMarksClick} 
-                                        onEditExamMark={handleEditExamMarkClick} onDeleteExamMark={handleDeleteExamMark} 
+                                        performanceData={performanceData} 
+                                        allCourses={allCourses} 
+                                        examMarks={examMarks} 
+                                        onDeleteCourse={handleDeleteCourse} 
+                                        onEditGrade={handleEditGradeClick}
+                                        onAddGrade={handleAddGradeClick} 
+                                        onAddExamMarks={handleAddExamMarksClick} 
+                                        onEditExamMark={handleEditExamMarkClick} 
+                                        onDeleteExamMark={handleDeleteExamMark} 
                                         onAddMarksForCourse={handleAddMarksForCourseClick}
+                                        currentSemester={currentSemester}
                                     />}
                                     {currentPage === 'calendar' && <CalendarPage 
                                         schedule={schedule} deadlines={deadlines} onAddClass={handleAddClassClick} 
@@ -247,19 +278,23 @@ const Dashboard = ({ user, onSignOut }) => {
                                         onEditContact={handleEditContactClick} onDeleteContact={handleDeleteContact}
                                     />}
                                     {currentPage === 'expenditure' && <ExpenditurePage 
-                                        expenditures={expenditures} balance={profileData.expenditureBalance}
-                                        isBalanceVisible={profileData.isBalanceVisible} onAddExpenditure={handleAddExpenditureClick}
-                                        onDeleteExpenditure={handleDeleteExpenditure} onSetBalance={() => openModal('setBalance')}
-                                        onToggleBalanceVisibility={handleToggleBalanceVisibility} onResetExpenditures={handleResetExpenditures}
+                                        expenditures={expenditures} 
+                                        balance={profileData.expenditureBalance}
+                                        isBalanceVisible={profileData.isBalanceVisible} 
+                                        onAddExpenditure={handleAddExpenditureClick}
+                                        onDeleteExpenditure={handleDeleteExpenditure} 
+                                        onEditExpenditure={handleEditExpenditureClick}
+                                        onSetBalance={() => openModal('setBalance')}
+                                        onToggleBalanceVisibility={handleToggleBalanceVisibility} 
+                                        onResetExpenditures={handleResetExpenditures}
                                     />}
                                     {currentPage === 'profile' && <ProfilePage 
+                                        user={user}
                                         profileData={profileData} 
                                         onSaveField={handleSaveProfileField} 
                                         onResetData={() => openModal('resetConfirmation')} 
                                         onSignOut={onSignOut}
-                                        // FIX: Pass the missing props to the redesigned ProfilePage
-                                        performanceData={performanceData}
-                                        currentSemester={currentSemester}
+                                        onDeleteAccount={handleDeleteAccountClick}
                                     />}
                                 </motion.div>
                             </AnimatePresence>
@@ -277,15 +312,27 @@ const Dashboard = ({ user, onSignOut }) => {
                 />
             )}
             
-            {/* ... (All modals remain unchanged) ... */}
             <AddCourseModal isOpen={modal === 'addCourse'} onClose={closeModal} onSave={handleSaveCourse} currentSemester={currentSemester} />
             <AddGradeModal isOpen={modal === 'addGrade'} onClose={closeModal} onSave={handleSaveGrade} allCourses={allCourses} courseToEdit={modalProps.courseToGrade} currentSemester={currentSemester} />
-            <AddEditClassModal isOpen={modal === 'addClass'} onClose={closeModal} onSave={handleSaveClass} currentCourses={currentSemesterCourses} classToEdit={modalProps.classToEdit} />
+            <AddEditClassModal 
+                isOpen={modal === 'addClass'} 
+                onClose={closeModal} 
+                onSave={handleSaveClass} 
+                currentCourses={currentSemesterCourses} 
+                classToEdit={modalProps.classToEdit}
+                schedule={currentSemesterSchedule}
+                allCourses={allCourses}
+            />
             <AddEditDeadlineModal isOpen={modal === 'addDeadline'} onClose={closeModal} onSave={handleSaveDeadline} currentCourses={currentSemesterCourses} deadlineToEdit={modalProps.deadlineToEdit} />
             <AddEditMarksModal isOpen={modal === 'addMarks'} onClose={closeModal} onSave={handleSaveExamMark} allCourses={allCourses} markToEdit={modalProps.markToEdit} currentSemester={currentSemester} />
             <AddEditTaskModal isOpen={modal === 'addTask'} onClose={closeModal} onSave={handleSaveTask} taskToEdit={modalProps.taskToEdit} />
             <AddEditContactModal isOpen={modal === 'addContact'} onClose={closeModal} onSave={handleSaveContact} contactToEdit={modalProps.contactToEdit} />
-            <AddExpenditureModal isOpen={modal === 'addExpenditure'} onClose={closeModal} onSave={handleSaveExpenditure} />
+            <AddEditExpenditureModal 
+                isOpen={modal === 'addExpenditure'} 
+                onClose={closeModal} 
+                onSave={handleSaveExpenditure} 
+                expenditureToEdit={modalProps.expenditureToEdit}
+            />
             <SetBalanceModal isOpen={modal === 'setBalance'} onClose={closeModal} onSave={handleSetExpenditureBalance} currentBalance={profileData.expenditureBalance} />
             <TimetableModal isOpen={modal === 'timetable'} onClose={closeModal} schedule={schedule} courses={allCourses} />
             <PomodoroModal isOpen={modal === 'pomodoro'} onClose={closeModal} onStart={handleStartPomodoro} />
@@ -301,6 +348,22 @@ const Dashboard = ({ user, onSignOut }) => {
                 isOpen={modal === 'resetConfirmation'}
                 onClose={closeModal}
                 onConfirm={handleResetData}
+            />
+            <ResetExpendituresModal
+                isOpen={isResetExpendituresModalOpen}
+                onClose={() => setIsResetExpendituresModalOpen(false)}
+                onConfirm={confirmResetExpenditures}
+            />
+            <DeleteAccountModal
+                isOpen={isDeleteAccountModalOpen}
+                onClose={() => setIsDeleteAccountModalOpen(false)}
+                onConfirm={confirmDeleteAccount}
+            />
+            {/* ADDED: The ReauthModal is now rendered and connected to its state */}
+            <ReauthModal
+                isOpen={isReauthModalOpen}
+                onClose={() => setIsReauthModalOpen(false)}
+                onConfirm={onSignOut}
             />
             <AnimatePresence>
                 {pomodoroConfig.isActive && (

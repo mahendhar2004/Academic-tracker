@@ -1,7 +1,34 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Plus, ArrowDownUp, Eye, EyeOff, Edit, RefreshCw } from 'lucide-react';
+import { CreditCard, Plus, ArrowDownUp, Eye, EyeOff, Edit, RefreshCw, Trash2 } from 'lucide-react';
 import ExpenditureChart from '../components/expenditure/ExpenditureChart';
+
+const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
+    return (
+        <motion.div 
+            layout
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="group flex justify-between items-center bg-black/20 hover:bg-black/40 p-3 rounded-lg transition-colors"
+        >
+            <div>
+                <p className="font-semibold text-white">{item.title}</p>
+                <p className="text-sm text-slate-400">{item.category}</p>
+            </div>
+            <div className="flex items-center gap-4">
+                <div className="text-right">
+                    <p className="font-bold text-red-400">{formatCurrency(item.amount)}</p>
+                    <p className="text-xs text-slate-500">{item.date.toDate().toLocaleDateString('en-GB')}</p>
+                </div>
+                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={onEdit} className="p-1.5 rounded-md text-slate-400 hover:text-cyan-300"><Edit size={16} /></button>
+                    <button onClick={onDelete} className="p-1.5 rounded-md text-slate-400 hover:text-red-400"><Trash2 size={16} /></button>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
 
 const ExpenditurePage = ({ 
     expenditures = [], 
@@ -9,6 +36,7 @@ const ExpenditurePage = ({
     isBalanceVisible = true,
     onAddExpenditure, 
     onDeleteExpenditure,
+    onEditExpenditure,
     onSetBalance,
     onToggleBalanceVisibility,
     onResetExpenditures
@@ -66,53 +94,38 @@ const ExpenditurePage = ({
 
             {expenditures.length > 0 ? (
                 <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                    <div className="lg:col-span-3">
-                        <div className="h-[500px]">
-                           <ExpenditureChart data={byCategory} total={total} />
-                        </div>
+                    <div className="lg:col-span-3 h-[500px]">
+                        <ExpenditureChart data={byCategory} total={total} />
                     </div>
                     <div className="lg:col-span-2">
-                        <div className="bg-slate-800/50 backdrop-blur-3xl border border-white/25 p-6 rounded-xl h-[500px] flex flex-col">
-                             <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                                <h3 className="font-bold text-white">All Transactions</h3>
-                                <div className="relative">
-                                    <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-black/20 text-white text-sm rounded-md pl-3 pr-8 py-1 appearance-none focus:outline-none focus:ring-2 focus:ring-cyan-500">
-                                        <option value="date_desc" className="bg-slate-800">Date (Newest)</option>
-                                        <option value="date_asc" className="bg-slate-800">Date (Oldest)</option>
-                                        <option value="amount_desc" className="bg-slate-800">Amount (High-Low)</option>
-                                        <option value="amount_asc" className="bg-slate-800">Amount (Low-High)</option>
-                                    </select>
-                                    <ArrowDownUp size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                                </div>
-                             </div>
-                             <div className="flex-grow space-y-3 overflow-y-auto no-scrollbar pr-2 max-h-[400px]">
-                                <AnimatePresence>
-                                    {sortedTransactions.map(item => (
-                                        <motion.div 
-                                            key={item.id}
-                                            layout
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            className="flex justify-between items-center bg-black/20 p-3 rounded-lg"
-                                        >
-                                            <div>
-                                                <p className="font-semibold text-white">{item.title}</p>
-                                                <p className="text-sm text-slate-400">{item.category}</p>
-                                            </div>
-                                            <div className="text-right">
-                                                <p className="font-bold text-red-400">{formatCurrency(item.amount)}</p>
-                                                <p className="text-xs text-slate-500">{item.date.toDate().toLocaleDateString('en-GB')}</p>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </AnimatePresence>
-                             </div>
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="font-bold text-white text-lg">All Transactions</h3>
+                            <div className="relative">
+                                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="bg-black/20 text-white text-sm rounded-md pl-3 pr-8 py-1 appearance-none focus:outline-none focus:ring-2 focus:ring-cyan-500">
+                                    <option value="date_desc" className="bg-slate-800">Date (Newest)</option>
+                                    <option value="date_asc" className="bg-slate-800">Date (Oldest)</option>
+                                    <option value="amount_desc" className="bg-slate-800">Amount (High-Low)</option>
+                                    <option value="amount_asc" className="bg-slate-800">Amount (Low-High)</option>
+                                </select>
+                                <ArrowDownUp size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                            </div>
+                        </div>
+                        <div className="space-y-3 h-[450px] overflow-y-auto no-scrollbar pr-2">
+                            <AnimatePresence>
+                                {sortedTransactions.map(item => (
+                                    <TransactionItem 
+                                        key={item.id}
+                                        item={item}
+                                        onEdit={() => onEditExpenditure(item)}
+                                        onDelete={() => onDeleteExpenditure(item)}
+                                        formatCurrency={formatCurrency}
+                                    />
+                                ))}
+                            </AnimatePresence>
                         </div>
                     </div>
                 </div>
             ) : (
-                // FIX: Replaced the large box with a simple paragraph
                 <p className="text-center text-slate-400 mt-24">
                     No expenses logged yet. Click the '+' icon to add your first one.
                 </p>
