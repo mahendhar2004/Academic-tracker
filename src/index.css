@@ -41,3 +41,49 @@ html, body {
       rgba(0, 255, 100, 0) 50%
     );
 }
+
+/* Add or replace these styles in src/index.css */
+@property --glow-x {
+  syntax: '<length>';
+  initial-value: 0px;
+  inherits: false;
+}
+@property --glow-y {
+  syntax: '<length>';
+  initial-value: 0px;
+  inherits: false;
+}
+
+body {
+  /* This creates the main static aurora effect */
+  background-image: 
+    radial-gradient(ellipse 80% 80% at 20% -20%, rgba(59, 130, 246, 0.15), transparent),
+    radial-gradient(ellipse 80% 80% at 80% 120%, rgba(139, 92, 246, 0.15), transparent);
+}
+
+/* This is the interactive spotlight that follows the cursor */
+.interactive-aurora {
+  background: radial-gradient(
+    600px circle at var(--glow-x) var(--glow-y),
+    rgba(0, 255, 255, 0.2),
+    transparent 40%
+  );
+}
+
+/* Add these styles to the bottom of src/index.css */
+@keyframes move-stars {
+  from { background-position: 0 0; }
+  to { background-position: -10000px 5000px; }
+}
+
+.starfield {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: transparent url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900"><circle fill="%231a202c" cx="800" cy="450" r="400"/><g fill-opacity="1"><circle fill="white" cx="800" cy="450" r="2"/><circle fill="white" cx="100" cy="100" r="1"/><circle fill="white" cx="1500" cy="800" r="1"/><circle fill="white" cx="500" cy="300" r="1.5"/><circle fill="white" cx="1200" cy="200" r="1.5"/><circle fill="white" cx="300" cy="700" r="1"/><circle fill="white" cx="1400" cy="500" r="1"/></g></svg>');
+  background-size: 1600px 900px;
+  animation: move-stars 200s linear infinite;
+  z-index: 0;
+}
