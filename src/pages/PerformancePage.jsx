@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GraduationCap, Plus, Trash2, Edit, BrainCircuit, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Edit, BrainCircuit, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import CpiGraph from '../components/performance/CpiGraph';
 import SpiGraph from '../components/performance/SpiGraph';
 import WhatIfModal from '../components/modals/WhatIfModal';
@@ -106,6 +106,8 @@ const PerformancePage = ({
         }
     };
     
+    // UPDATED: Added 'isComponentLoading' to the dependency array.
+    // This ensures the handleScroll function is called after the component finishes loading.
     useEffect(() => {
         const timeline = timelineRef.current;
         if (timeline) {
@@ -117,7 +119,7 @@ const PerformancePage = ({
                 window.removeEventListener('resize', handleScroll);
             };
         }
-    }, [allSemesterNumbers]);
+    }, [allSemesterNumbers, isComponentLoading]);
 
     const cardStyles = "relative overflow-hidden bg-black/50 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl";
 
@@ -142,10 +144,10 @@ const PerformancePage = ({
                 </div>
                 <div className="relative pt-8">
                     <h2 className="text-xl font-bold text-white mb-4">Your Academic Journey</h2>
-                    <div className="relative group">
+                    <div className="relative">
                         <AnimatePresence>
                             {canScrollLeft && !isComponentLoading && (
-                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-r-lg text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-r-lg text-white transition-opacity">
                                     <ChevronLeft size={24} className="mx-auto" />
                                 </motion.button>
                             )}
@@ -182,7 +184,7 @@ const PerformancePage = ({
                         </div>
                         <AnimatePresence>
                             {canScrollRight && !isComponentLoading && (
-                                 <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                                 <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white transition-opacity">
                                      <ChevronRight size={24} className="mx-auto" />
                                  </motion.button>
                             )}
@@ -202,7 +204,9 @@ const PerformancePage = ({
                             {selectedSemester && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                                     <div className={`${cardStyles} flex flex-col`}>
-                                        <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2 flex-shrink-0"><GraduationCap size={20} className="text-cyan-400"/> Courses & Grades</h3>
+                                        <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2 flex-shrink-0">
+                                            <BarChart3 size={20} className="text-cyan-400"/> Courses & Grades
+                                        </h3>
                                         <div className="space-y-2 overflow-y-auto no-scrollbar flex-1 pr-2 -mr-2 min-h-0">
                                             {semesterDetails.courses.length > 0 ? semesterDetails.courses.map(course => (
                                                 <div key={course.id} className="bg-black/30 p-3 rounded-lg flex justify-between items-center group">

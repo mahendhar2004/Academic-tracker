@@ -27,6 +27,15 @@ const AttendancePage = ({ allCourses = [], onAddNew, onMarkAttendance, onTotalCh
                     <ClipboardList className="text-cyan-400" />
                     Current Semester ({currentSemester || 'N/A'})
                 </h2>
+                {/* UPDATED: This button now adds a Subject, not a Class */}
+                <motion.button
+                    whileTap={{ scale: 0.95 }}
+                    onClick={onAddNew}
+                    className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25"
+                >
+                    <Plus size={18} />
+                    <span className="hidden sm:inline">Add Subject</span>
+                </motion.button>
             </div>
 
             {allCourses.length > 0 ? (
@@ -91,7 +100,6 @@ const AttendancePage = ({ allCourses = [], onAddNew, onMarkAttendance, onTotalCh
                     )}
                 </>
             ) : (
-                // UPDATED: New, friendly empty state without the box
                 <div className="text-center py-24">
                     <PackageOpen size={64} className="mx-auto text-slate-600" />
                     <h3 className="mt-4 text-xl font-bold text-white">No Subjects Added Yet</h3>

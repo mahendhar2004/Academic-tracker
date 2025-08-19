@@ -1,6 +1,6 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, BarChart2, Calendar, CheckCircle as CheckCircle2, AlertTriangle, Sparkles, Wind, Bell, Clock } from 'lucide-react';
+import { BarChart2, Calendar, CheckCircle2, AlertTriangle, Sparkles, Wind, Bell, Clock } from 'lucide-react';
 import MiniExpenditureBarChart from '../components/dashboard/MiniExpenditureBarChart';
 import InfoCard from '../components/dashboard/InfoCard';
 import { quotes } from '../data/quotes';
@@ -99,7 +99,8 @@ const AtAGlance = ({
     return (
         <>
             {hasContent ? (
-                <div className="space-y-8">
+                // UPDATED: Changed from a single-column 'space-y-8' to a responsive two-column grid
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {sections.filter(s => s.condition).map(section => (
                         <InfoCard 
                             key={section.title}
@@ -141,7 +142,6 @@ const DailyFocus = ({ schedule, deadlines, tasks, cardStyles }) => {
         <div className={cardStyles}>
             <div className="absolute -top-1 -left-1 w-32 h-32 bg-white/10 rounded-full blur-[80px] opacity-50"></div>
             <h3 className="font-bold text-white text-lg mb-4">Today's Focus</h3>
-            {/* UPDATED: Breakpoint changed from sm to md */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 {focusItems.map(item => (
                     <div key={item.label} className="bg-black/20 p-4 rounded-lg border border-white/10">
@@ -172,8 +172,7 @@ const MotivationalQuote = () => {
 
 // --- Main HomePage Component ---
 const HomePage = ({ 
-    schedule, deadlines, tasks, courses, 
-    performanceData, isCpiVisible, onToggleCpiVisibility, expenditures = []
+    schedule, deadlines, tasks, courses, expenditures = []
 }) => {
     
     const cardStyles = "relative overflow-hidden bg-black/50 bg-gradient-to-b from-black/10 via-transparent to-black/50 backdrop-blur-2xl border border-gray-800 p-6 rounded-2xl shadow-2xl";
@@ -194,19 +193,7 @@ const HomePage = ({
             transition={{ duration: 0.4 }}
             className="relative"
         >
-            <div className="flex justify-end mb-8">
-                <div className="flex items-center gap-2 bg-black/20 px-3 py-1 rounded-lg border border-white/20">
-                    <span className="font-semibold text-slate-300 text-sm">CPI:</span>
-                    <span className="font-bold text-lg text-cyan-300 w-12 text-center">
-                        {isCpiVisible ? (performanceData?.cpi || '0.0') : '–.–'}
-                    </span>
-                    <button onClick={onToggleCpiVisibility} className="text-slate-400 hover:text-white">
-                        {isCpiVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                </div>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 pb-20">
+            <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-start gap-8 pb-20 pt-8">
                 <div className="lg:col-span-3">
                     <AtAGlance 
                         todaysSchedule={todaysSchedule} 

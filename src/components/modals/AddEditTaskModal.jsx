@@ -1,37 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
-import DateTimePicker from '../common/DateTimePicker';
+import { Calendar, Clock } from 'lucide-react';
 
-const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit }) => {
-    const [task, setTask] = useState({ title: '', description: '', datetime: '', type: 'Short-term' });
+const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit, defaultType }) => {
+    const [task, setTask] = useState({ title: '', description: '', dueDate: '', dueTime: '', type: 'Short-term' });
     const isNew = !taskToEdit;
 
     useEffect(() => {
         if (isOpen) {
+            const today = new Date().toISOString().split('T')[0];
             if (taskToEdit) {
-                const date = taskToEdit.dueDate ? new Date(taskToEdit.dueDate) : new Date();
-                const [hours, minutes] = taskToEdit.dueTime.split(':');
-                date.setHours(hours, minutes);
-                setTask({ ...taskToEdit, datetime: date.toISOString() });
+                setTask({
+                    ...taskToEdit,
+                    dueDate: taskToEdit.dueDate || today,
+                    dueTime: taskToEdit.dueTime || '23:59',
+                });
             } else {
-                const defaultDate = new Date();
-                defaultDate.setHours(23, 59, 0, 0);
-                setTask({ title: '', description: '', datetime: defaultDate.toISOString(), type: 'Short-term' });
+                setTask({
+                    title: '',
+                    description: '',
+                    type: defaultType || 'Short-term',
+                    dueDate: today,
+                    dueTime: '23:59',
+                });
             }
         }
-    }, [isOpen, taskToEdit]);
+    }, [isOpen, taskToEdit, defaultType]);
 
     const handleChange = (field, value) => setTask(prev => ({ ...prev, [field]: value }));
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (task.title && task.datetime && task.type) {
-            const dateObj = new Date(task.datetime);
+        if (task.title && task.type) {
             onSave({
                 ...task,
-                dueDate: task.type === 'Long-term' ? dateObj.toISOString().split('T')[0] : null,
-                dueTime: dateObj.toTimeString().slice(0, 5)
+                dueDate: task.type === 'Long-term' ? task.dueDate : null,
+                dueTime: task.dueTime || '23:59'
             }, taskToEdit?.id || null);
             onClose();
         }
@@ -74,16 +79,56 @@ const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit }) => {
                         <option value="Long-term" className="bg-slate-800">Long-term</option>
                     </select>
                 </div>
-                <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                        {task.type === 'Long-term' ? 'Due Date & Time' : 'Due Time'}
-                    </label>
-                    <DateTimePicker
-                        value={task.datetime}
-                        onChange={(val) => handleChange('datetime', val)}
-                        type={task.type === 'Long-term' ? 'datetime' : 'time'}
-                    />
-                </div>
+                
+                {/* UPDATED: Conditionally render separate date and time inputs */}
+                {task.type === 'Long-term' ? (
+                    <div className="flex gap-4">
+                        <div className="w-2/3">
+                            <label htmlFor="taskDate" className="block text-sm font-medium text-slate-300 mb-2">Due Date</label>
+                            <div className="relative">
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                                <input
+                                    id="taskDate"
+                                    type="date"
+                                    value={task.dueDate}
+                                    onChange={(e) => handleChange('dueDate', e.target.value)}
+                                    className="w-full bg-black/20 border border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+                        </div>
+                        <div className="w-1/3">
+                            <label htmlFor="taskTime" className="block text-sm font-medium text-slate-300 mb-2">Time</label>
+                            <div className="relative">
+                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                                <input
+                                    id="taskTime"
+                                    type="time"
+                                    value={task.dueTime}
+                                    onChange={(e) => handleChange('dueTime', e.target.value)}
+                                    className="w-full bg-black/20 border border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <label htmlFor="taskTimeShort" className="block text-sm font-medium text-slate-300 mb-2">Due Time</label>
+                        <div className="relative">
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                            <input
+                                id="taskTimeShort"
+                                type="time"
+                                value={task.dueTime}
+                                onChange={(e) => handleChange('dueTime', e.target.value)}
+                                className="w-full bg-black/20 border border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                required
+                            />
+                        </div>
+                    </div>
+                )}
+
                 <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full bg-cyan-500/50 hover:bg-cyan-500/80 border border-cyan-400/50 text-white font-bold py-3 px-4 rounded-lg transition-colors !mt-6">Save Plan</motion.button>
             </form>
         </GlassyModal>

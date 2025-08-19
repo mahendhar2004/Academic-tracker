@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { startOfDay } from 'date-fns';
 
-// Helper function is now co-located with the hook that uses it
 const normalizeDate = (dateValue) => {
     if (!dateValue) return null;
     if (typeof dateValue.toDate === 'function') return dateValue.toDate();
@@ -14,6 +13,13 @@ export const useDashboardSummary = ({ schedule, deadlines, tasks, courses, expen
         const todayWeekday = now.toLocaleDateString('en-US', { weekday: 'long' });
         const startOfToday = startOfDay(now);
 
+        // UPDATED: This now correctly gets today's date in YYYY-MM-DD format
+        // without being affected by timezones.
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayDateString = `${year}-${month}-${day}`;
+
         const todaysSchedule = schedule?.filter(s => s.day === todayWeekday)
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
         
@@ -24,7 +30,11 @@ export const useDashboardSummary = ({ schedule, deadlines, tasks, courses, expen
             })
             .sort((a, b) => normalizeDate(a.date) - normalizeDate(b.date));
 
-        const todaysTasks = tasks?.filter(t => !t.isCompleted && t.type === 'Short-term')
+        const todaysTasks = tasks
+            ?.filter(t => 
+                !t.isCompleted && 
+                (t.type === 'Short-term' || (t.type === 'Long-term' && t.dueDate === todayDateString))
+            )
             .sort((a, b) => a.dueTime.localeCompare(b.dueTime));
         
         const attendanceWarnings = courses?.filter(c => c.total > 0 && (c.attended / c.total) * 100 < 75);

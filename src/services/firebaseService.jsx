@@ -1,6 +1,7 @@
 import {
     doc, setDoc, collection, addDoc, deleteDoc,
-    updateDoc, writeBatch, getDocs, Timestamp, increment, getDoc
+    updateDoc, writeBatch, getDocs, Timestamp, increment, getDoc, runTransaction,
+    query, where
 } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
 
@@ -13,9 +14,83 @@ const firestoreService = {
         await updateDoc(profileRef, { coins: increment(amount) });
     },
 
-    saveProfileField: async (userId, field, value) => {
+    saveProfileFieldWithReward: async (userId, field, value, rewardAmount) => {
         const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        await updateDoc(profileRef, { [field]: value });
+        
+        try {
+            const newCoins = await runTransaction(db, async (transaction) => {
+                const profileDoc = await transaction.get(profileRef);
+                if (!profileDoc.exists()) {
+                    throw new Error("Document does not exist!");
+                }
+
+                const profileData = profileDoc.data();
+                const rewardedFields = profileData.rewardedFields || {};
+                
+                const isList = Array.isArray(value);
+                const oldListLength = Array.isArray(profileData[field]) ? profileData[field].length : 0;
+                
+                let coinsToAward = 0;
+
+                if (isList) {
+                    const itemsAdded = value.length - oldListLength;
+                    if (itemsAdded > 0) {
+                        coinsToAward = itemsAdded * rewardAmount;
+                    }
+                } else {
+                    if (!rewardedFields[field] && value) {
+                        coinsToAward = rewardAmount;
+                        rewardedFields[field] = true;
+                    }
+                }
+                
+                const updatePayload = {
+                    [field]: value,
+                    rewardedFields: rewardedFields,
+                };
+
+                if (coinsToAward > 0) {
+                    updatePayload.coins = increment(coinsToAward);
+                }
+
+                transaction.update(profileRef, updatePayload);
+                return coinsToAward;
+            });
+
+            return newCoins;
+        
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+            await updateDoc(profileRef, { [field]: value });
+            return 0;
+        }
+    },
+
+    handleDailyCheckIn: async (userId, rewardAmount) => {
+        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
+        try {
+            const success = await runTransaction(db, async (transaction) => {
+                const profileDoc = await transaction.get(profileRef);
+                if (!profileDoc.exists()) throw new Error("Profile not found");
+
+                const data = profileDoc.data();
+                const lastCheckIn = data.lastCheckIn?.toDate();
+                const today = new Date();
+                
+                if (!lastCheckIn || lastCheckIn.toDateString() !== today.toDateString()) {
+                    transaction.update(profileRef, {
+                        coins: increment(rewardAmount),
+                        lastCheckIn: Timestamp.now()
+                    });
+                    return true;
+                }
+                return false;
+            });
+            return success ? rewardAmount : 0;
+        } catch (e) {
+            console.error("Check-in transaction failed: ", e);
+            return 0;
+        }
     },
 
     // === COURSES & GRADES ===
@@ -36,9 +111,33 @@ const firestoreService = {
         await updateDoc(courseRef, { grade });
     },
     
-    deleteCourse: async (userId, courseId) => {
-        const path = `artifacts/${appId}/users/${userId}/courses`;
-        await deleteDoc(doc(db, path, courseId));
+    deleteCourseAndRelatedData: async (userId, courseId) => {
+        const batch = writeBatch(db);
+
+        // 1. Delete the main course document
+        const courseRef = doc(db, `artifacts/${appId}/users/${userId}/courses`, courseId);
+        batch.delete(courseRef);
+
+        // 2. Find and delete related schedule items
+        const schedulePath = `artifacts/${appId}/users/${userId}/schedule`;
+        const scheduleQuery = query(collection(db, schedulePath), where("courseId", "==", courseId));
+        const scheduleSnapshot = await getDocs(scheduleQuery);
+        scheduleSnapshot.forEach(doc => batch.delete(doc.ref));
+
+        // 3. Find and delete related exam marks
+        const marksPath = `artifacts/${appId}/users/${userId}/examMarks`;
+        const marksQuery = query(collection(db, marksPath), where("courseId", "==", courseId));
+        const marksSnapshot = await getDocs(marksQuery);
+        marksSnapshot.forEach(doc => batch.delete(doc.ref));
+        
+        // 4. Find and delete related deadlines
+        const deadlinesPath = `artifacts/${appId}/users/${userId}/deadlines`;
+        const deadlinesQuery = query(collection(db, deadlinesPath), where("courseId", "==", courseId));
+        const deadlinesSnapshot = await getDocs(deadlinesQuery);
+        deadlinesSnapshot.forEach(doc => batch.delete(doc.ref));
+
+        // 5. Commit all deletes at once
+        await batch.commit();
     },
 
     updateCourse: async (userId, courseId, updatedData) => {
@@ -214,7 +313,21 @@ const firestoreService = {
             await batch.commit();
         }
         const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        await setDoc(profileRef, { name: user.displayName || 'User', coins: 0, imageUrl: user.photoURL || '', expenditureBalance: 0, isBalanceVisible: true });
+        await setDoc(profileRef, {
+            name: user.displayName || 'User',
+            email: user.email || '',
+            imageUrl: user.photoURL || '',
+            coins: 0,
+            expenditureBalance: 0,
+            isBalanceVisible: true,
+            personal: {
+                phone: user.phoneNumber || '',
+                isPhoneVerified: false,
+                email: user.email || ''
+            },
+            lastCheckIn: null,
+            rewardedFields: {}
+        });
     },
 };
 

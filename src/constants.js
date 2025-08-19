@@ -11,6 +11,16 @@ export const COIN_VALUES = {
     COMPLETE_TASK: 10, 
     UNCOMPLETE_TASK: -10,
     FINISH_POMODORO: 25,
+    // NEW: Added new coin reward constants
+    DAILY_CHECK_IN: 5,
+    PROFILE_PERSONAL: 10,
+    PROFILE_ACADEMIC: 20,
+    PROFILE_PROJECTS: 30,
+    PROFILE_CERTIFICATES: 30,
+    PROFILE_ACHIEVEMENTS: 30,
+    PROFILE_INTERNSHIPS: 100,
+    PROFILE_RESUMES: 50,
+    PROFILE_SOCIAL: 25,
 };
 
 // FINAL UPDATE: A hand-picked palette with 12 highly distinct colors.

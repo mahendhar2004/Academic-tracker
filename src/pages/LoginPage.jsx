@@ -1,32 +1,37 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Lock, User, Phone, ClipboardList, GraduationCap, ListTodo, Calendar, Users, CreditCard } from 'lucide-react';
+import { Mail, Lock, User, Phone, ClipboardList, GraduationCap, ListTodo, Calendar, Users, CreditCard, Loader2 } from 'lucide-react';
 import { FaGoogle } from 'react-icons/fa';
 import authService from '../services/authService';
 
-// --- A custom, Neumorphic Input Field ---
-const NeumorphicInput = ({ icon: Icon, ...props }) => (
-    <div className="relative">
-        <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 z-10" size={18} />
-        <input 
-            {...props}
-            className="w-full bg-[#1A1A1A] border-none text-white placeholder-slate-500 pl-12 pr-4 py-4 rounded-xl shadow-neumorphic-inset focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300"
-        />
+// --- A custom, Neumorphic Input Field with Label ---
+const NeumorphicInput = ({ icon: Icon, label, id, ...props }) => (
+    <div>
+        <label htmlFor={id} className="block text-sm font-medium text-slate-300 mb-2">{label}</label>
+        <div className="relative">
+            <Icon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 z-10" size={18} />
+            <input 
+                id={id}
+                {...props}
+                className="w-full bg-[#1A1A1A] border-none text-white placeholder-slate-500 pl-12 pr-4 py-4 rounded-xl shadow-neumorphic-inset focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300"
+            />
+        </div>
     </div>
 );
 
 // --- A custom, Neumorphic Button ---
-const NeumorphicButton = ({ children, onClick, type = "button", isPrimary = false }) => (
+const NeumorphicButton = ({ children, onClick, type = "button", isPrimary = false, disabled = false }) => (
     <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98, boxShadow: 'inset 5px 5px 12px #1c1c1c, inset -5px -5px 12px #3a3a3a' }}
+        whileHover={{ scale: disabled ? 1 : 1.02 }}
+        whileTap={{ scale: disabled ? 1 : 0.98, boxShadow: 'inset 5px 5px 12px #1c1c1c, inset -5px -5px 12px #3a3a3a' }}
         onClick={onClick}
         type={type}
+        disabled={disabled}
         className={`w-full font-bold py-4 px-4 rounded-xl transition-all duration-300 shadow-neumorphic-outset ${
             isPrimary 
             ? 'text-white bg-gradient-to-br from-cyan-600 to-blue-700' 
             : 'text-slate-300 bg-[#2e2e2e] hover:text-white'
-        }`}
+        } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
     >
         {children}
     </motion.button>
@@ -53,14 +58,18 @@ const FeatureTile = ({ icon: Icon, title, color, index }) => (
     </motion.div>
 );
 
+
 // --- The Main Login Page Component ---
 const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
     const [formState, setFormState] = useState('login');
-    const [message, setMessage] = useState('');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [phone, setPhone] = useState('');
+    
+    // NEW: State for loading and error messages
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState('');
     
     const features = [
         { icon: ClipboardList, title: "Attendance", color: "text-cyan-400" },
@@ -70,21 +79,56 @@ const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
         { icon: Users, title: "Contacts", color: "text-yellow-400" },
         { icon: CreditCard, title: "Expenditure", color: "text-orange-400" },
     ];
+    
+    // NEW: Handler for Google Login with custom error handling
+    const handleGoogleLogin = async () => {
+        setIsLoading(true);
+        setError('');
+        try {
+            await onLogin('google');
+        } catch (err) {
+            if (err.code === 'auth/popup-closed-by-user') {
+                setError('Sign-in process was cancelled.');
+            } else {
+                setError('Google sign-in failed. Please try again.');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-    const handleSubmit = (e) => {
+    // NEW: Unified handler for all form submissions with loading and error states
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage('');
-        if (formState === 'signup') {
-            onSignUpWithEmail(email, password, name, phone);
-        } else if (formState === 'login') {
-            onLoginWithEmail(email, password);
-        } else if (formState === 'forgotPassword') {
-            authService.sendResetPasswordLink(email)
-                .then(() => {
-                    setMessage(`Password reset link sent to ${email}.`);
-                    setFormState('login');
-                })
-                .catch(err => alert(err.message));
+        setIsLoading(true);
+        setError('');
+        
+        try {
+            if (formState === 'signup') {
+                await onSignUpWithEmail(email, password, name, phone);
+            } else if (formState === 'login') {
+                await onLoginWithEmail(email, password);
+            } else if (formState === 'forgotPassword') {
+                await authService.sendResetPasswordLink(email);
+                alert(`Password reset link sent to ${email}.`); // Alert is acceptable here
+                setFormState('login');
+            }
+        } catch (err) {
+            switch (err.code) {
+                case 'auth/invalid-credential':
+                case 'auth/user-not-found':
+                case 'auth/wrong-password':
+                    setError('Invalid email or password. Please try again.');
+                    break;
+                case 'auth/email-already-in-use':
+                    setError('This email is already registered. Please sign in.');
+                    break;
+                default:
+                    setError('An error occurred. Please try again later.');
+                    break;
+            }
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -119,51 +163,69 @@ const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
                 {/* --- RIGHT PANEL: LOGIN/SIGNUP FORM --- */}
                 <motion.div
                     layout
-                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    // UPDATED: Smoother spring animation
+                    transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                     className="w-full max-w-md mx-auto p-8 rounded-2xl shadow-neumorphic-outset bg-[#242424]"
                 >
-                    <div className="text-center mb-8">
+                    <div className="text-center mb-6">
                         <motion.h1 key={formState + 'h1'} initial={{opacity: 0}} animate={{opacity: 1}} className="text-3xl font-bold text-white mb-2">
                             {formState === 'login' && 'Welcome Back'}
                             {formState === 'signup' && 'Create Account'}
                             {formState === 'forgotPassword' && 'Reset Password'}
                         </motion.h1>
                     </div>
+                    
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        {/* NEW: Custom error message display */}
+                        <AnimatePresence>
+                            {error && (
+                                <motion.p
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: -10 }}
+                                    className="bg-red-500/10 border border-red-500/30 text-red-400 text-center text-sm p-3 rounded-lg"
+                                >
+                                    {error}
+                                </motion.p>
+                            )}
+                        </AnimatePresence>
 
-                    {message && <p className="text-green-400 text-center text-sm mb-4">{message}</p>}
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
                         <AnimatePresence>
                             {formState === 'signup' && (
-                                <motion.div key="name-field" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                    <NeumorphicInput icon={User} type="text" placeholder="Full Name" value={name} onChange={(e) => setName(e.target.value)} required />
-                                </motion.div>
-                            )}
-                             {formState === 'signup' && (
-                                <motion.div key="phone-field" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
-                                    <NeumorphicInput icon={Phone} type="tel" placeholder="Phone Number" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                                <motion.div key="signup-fields" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="space-y-5">
+                                    <NeumorphicInput id="name" label="Full Name" icon={User} type="text" placeholder="Your Name" value={name} onChange={(e) => setName(e.target.value)} required />
+                                    <NeumorphicInput id="phone" label="Phone Number (Optional)" icon={Phone} type="tel" placeholder="Your Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
                                 </motion.div>
                             )}
                         </AnimatePresence>
                         
-                        <NeumorphicInput icon={Mail} type="email" placeholder="Email Address" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                        <NeumorphicInput id="email" label="Email Address" icon={Mail} type="email" placeholder="you@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
                         {formState !== 'forgotPassword' && (
-                            <NeumorphicInput icon={Lock} type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                            <NeumorphicInput id="password" label="Password" icon={Lock} type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
                         )}
                         
                         {formState === 'login' && (
-                            <div className="text-right">
-                                <button type="button" onClick={() => setFormState('forgotPassword')} className="text-xs font-semibold text-cyan-400 hover:text-cyan-300">
+                            <div className="text-right -mt-2">
+                                <button type="button" onClick={() => { setFormState('forgotPassword'); setError(''); }} className="text-xs font-semibold text-cyan-400 hover:text-cyan-300">
                                     Forgot Password?
                                 </button>
                             </div>
                         )}
 
-                        <NeumorphicButton type="submit" isPrimary={true}>
-                            {formState === 'login' && 'Sign In'}
-                            {formState === 'signup' && 'Create Account'}
-                            {formState === 'forgotPassword' && 'Send Reset Link'}
+                        <NeumorphicButton type="submit" isPrimary={true} disabled={isLoading}>
+                             {isLoading && (formState === 'login' || formState === 'signup') ? (
+                                <span className="flex items-center justify-center gap-2">
+                                    <Loader2 className="animate-spin" size={20} />
+                                    {formState === 'login' ? 'Signing In...' : 'Creating Account...'}
+                                </span>
+                            ) : (
+                                <>
+                                    {formState === 'login' && 'Sign In'}
+                                    {formState === 'signup' && 'Create Account'}
+                                    {formState === 'forgotPassword' && 'Send Reset Link'}
+                                </>
+                            )}
                         </NeumorphicButton>
                     </form>
                     
@@ -173,7 +235,7 @@ const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
                         <hr className="w-full border-slate-700/50" />
                     </div>
 
-                    <NeumorphicButton onClick={() => onLogin('google')}>
+                    <NeumorphicButton onClick={handleGoogleLogin} disabled={isLoading}>
                         <span className="flex items-center justify-center gap-3">
                             <FaGoogle /> Continue with Google
                         </span>
@@ -184,7 +246,7 @@ const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
                             {formState === 'login' && "Don't have an account?"}
                             {formState === 'signup' && 'Already have an account?'}
                             {formState === 'forgotPassword' && 'Remember your password?'}
-                            <button onClick={() => setFormState(formState === 'login' ? 'signup' : 'login')} className="font-semibold text-cyan-400 hover:text-cyan-300 ml-2">
+                            <button onClick={() => { setFormState(formState === 'login' ? 'signup' : 'login'); setError(''); }} className="font-semibold text-cyan-400 hover:text-cyan-300 ml-2">
                                 {formState === 'login' ? 'Sign Up' : 'Sign In'}
                             </button>
                         </p>

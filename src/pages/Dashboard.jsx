@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { increment } from 'firebase/firestore';
 import { useStore } from '../store/useStore';
@@ -38,8 +38,9 @@ import EditProfileModal from '../components/modals/EditProfileModal';
 import ResetExpendituresModal from '../components/modals/ResetExpendituresModal';
 import DeleteAccountModal from '../components/modals/DeleteAccountModal';
 import ReauthModal from '../components/modals/ReauthModal';
+import BugReportModal from '../components/modals/BugReportModal';
 
-const Dashboard = ({ user, onSignOut }) => {
+const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const {
         allCourses, profileData, schedule, deadlines,
         examMarks, tasks, contacts, expenditures, isDataLoaded
@@ -48,20 +49,11 @@ const Dashboard = ({ user, onSignOut }) => {
     const { modal, props: modalProps, openModal, closeModal } = useModalStore();
 
     const [currentPage, setCurrentPage] = useState('home');
-    const [isCpiVisible, setIsCpiVisible] = useState(true);
-    const [confirmationModal, setConfirmationModal] = useState({ isOpen: false, message: '', onConfirm: () => {} });
     const [pomodoroConfig, setPomodoroConfig] = useState({ isActive: false, duration: 0 });
     const [isResetExpendituresModalOpen, setIsResetExpendituresModalOpen] = useState(false);
     const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
     const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
-
-    useEffect(() => {
-        const savedCpiVisibility = localStorage.getItem('cpiVisible');
-        if (savedCpiVisibility !== null) {
-            setIsCpiVisible(JSON.parse(savedCpiVisibility));
-        }
-    }, []);
-
+    
     const performanceData = useMemo(() => {
         const gradedCourses = allCourses.filter(c => c.grade && c.credits > 0);
         if (gradedCourses.length === 0) return { cpi: '0.0', semesters: [] };
@@ -90,7 +82,7 @@ const Dashboard = ({ user, onSignOut }) => {
         if (allCourses.length === 0) return 1;
         return Math.max(...allCourses.map(c => c.semester).filter(Boolean), 1);
     }, [allCourses]);
-
+    
     const currentSemesterCourses = useMemo(() => {
         if (allCourses.length === 0) return [];
         return allCourses.filter(c => c.semester === currentSemester);
@@ -108,16 +100,23 @@ const Dashboard = ({ user, onSignOut }) => {
     const handleSaveExamMark = (data, id) => firestoreService.saveExamMark(user.uid, data, id);
     const handleSaveTask = (data, id) => firestoreService.saveTask(user.uid, data, id);
     const handleSaveContact = (data, id) => firestoreService.saveContact(user.uid, data, id);
-    const handleSaveProfileField = (field, value) => firestoreService.saveProfileField(user.uid, field, value);
+    
+    const handleSaveProfileField = async (field, value, rewardAmount) => {
+        const coinsAwarded = await firestoreService.saveProfileFieldWithReward(user.uid, field, value, rewardAmount);
+        triggerReward(coinsAwarded);
+    };
+    
     const handleDeleteClass = (id) => firestoreService.deleteClass(user.uid, id);
     const handleDeleteDeadline = (id) => firestoreService.deleteDeadline(user.uid, id);
     const handleDeleteExamMark = (id) => firestoreService.deleteExamMark(user.uid, id);
     const handleDeleteTask = (id) => firestoreService.deleteTask(user.uid, id);
     const handleDeleteContact = (id) => firestoreService.deleteContact(user.uid, id);
     const handleDeleteExpenditure = (expenditureToDelete) => firestoreService.deleteExpenditure(user.uid, expenditureToDelete);
+    
     const handleMarkAttendance = async (course) => {
         await firestoreService.updateCourse(user.uid, course.id, { attended: increment(1), total: increment(1) });
         await firestoreService.updateCoins(user.uid, COIN_VALUES.MARK_ATTENDANCE);
+        triggerReward(COIN_VALUES.MARK_ATTENDANCE);
     };
     const handleDecrementAttendance = async (course) => {
         if ((course.attended || 0) <= 0) return;
@@ -132,15 +131,15 @@ const Dashboard = ({ user, onSignOut }) => {
     const handleToggleCourseVisibility = (id, isHidden) => firestoreService.toggleCourseVisibility(user.uid, id, isHidden);
     const handleToggleTaskComplete = async (taskId, isCompleted) => {
         await firestoreService.toggleTaskComplete(user.uid, taskId, isCompleted);
-        await firestoreService.updateCoins(user.uid, isCompleted ? COIN_VALUES.COMPLETE_TASK : COIN_VALUES.UNCOMPLETE_TASK);
+        const rewardAmount = isCompleted ? COIN_VALUES.COMPLETE_TASK : COIN_VALUES.UNCOMPLETE_TASK;
+        await firestoreService.updateCoins(user.uid, rewardAmount);
+        if(isCompleted) triggerReward(rewardAmount);
     };
     const handleDeleteCourse = (courseId, courseName) => {
-        setConfirmationModal({
-            isOpen: true,
-            message: `Are you sure you want to delete all data for "${courseName}"?`,
+        openModal('confirmation', {
+            message: `This will permanently delete the subject "${courseName}" and all its associated data, including class timings, grades, marks, and deadlines. This action cannot be undone.`,
             onConfirm: async () => {
-                await firestoreService.deleteCourse(user.uid, courseId);
-                setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} });
+                await firestoreService.deleteCourseAndRelatedData(user.uid, courseId);
             }
         });
     };
@@ -148,11 +147,6 @@ const Dashboard = ({ user, onSignOut }) => {
         await firestoreService.resetAllData(user.uid, user);
         closeModal();
         setCurrentPage('attendance');
-    };
-    const handleToggleCpiVisibility = () => {
-        const newVisibility = !isCpiVisible;
-        setIsCpiVisible(newVisibility);
-        localStorage.setItem('cpiVisible', JSON.stringify(newVisibility));
     };
     const handleStartPomodoro = (duration) => {
         closeModal();
@@ -162,30 +156,26 @@ const Dashboard = ({ user, onSignOut }) => {
         setPomodoroConfig({ isActive: false, duration: 0 });
         if (completed) {
             firestoreService.updateCoins(user.uid, COIN_VALUES.FINISH_POMODORO);
+            triggerReward(COIN_VALUES.FINISH_POMODORO);
         }
     };
     const handleSaveExpenditure = async (expenditureData, expenditureId) => {
         const result = await firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId, profileData.expenditureBalance);
         if (result === 'INSUFFICIENT_FUNDS') {
-             setConfirmationModal({
-                 isOpen: true,
-                 message: "Insufficient balance for this transaction.",
-                 onConfirm: () => setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} })
+             openModal('confirmation', {
+                message: "Insufficient balance for this transaction.",
+                onConfirm: () => {}
              });
         }
     };
     const handleSetExpenditureBalance = (newBalance) => firestoreService.setExpenditureBalance(user.uid, newBalance);
     const handleToggleBalanceVisibility = () => firestoreService.toggleBalanceVisibility(user.uid, profileData.isBalanceVisible);
-    const handleResetExpenditures = () => {
-        setIsResetExpendituresModalOpen(true);
-    };
+    const handleResetExpenditures = () => setIsResetExpendituresModalOpen(true);
     const confirmResetExpenditures = async () => {
         await firestoreService.resetExpenditures(user.uid);
         setIsResetExpendituresModalOpen(false);
     };
-    const handleDeleteAccountClick = () => {
-        setIsDeleteAccountModalOpen(true);
-    };
+    const handleDeleteAccountClick = () => setIsDeleteAccountModalOpen(true);
     const confirmDeleteAccount = async () => {
         try {
             await firestoreService.resetAllData(user.uid, user);
@@ -200,6 +190,7 @@ const Dashboard = ({ user, onSignOut }) => {
             }
         }
     };
+
     const handleAddNewCourse = () => openModal('addCourse');
     const handleEditGradeClick = (course) => openModal('addGrade', { courseToGrade: course });
     const handleAddGradeClick = () => openModal('addGrade');
@@ -208,7 +199,9 @@ const Dashboard = ({ user, onSignOut }) => {
     const handleAddExamMarksClick = () => openModal('addMarks');
     const handleEditExamMarkClick = (mark) => openModal('addMarks', { markToEdit: mark });
     const handleAddMarksForCourseClick = (course) => openModal('addMarks', { markToEdit: { courseId: course.id } });
-    const handleAddTaskClick = () => openModal('addTask');
+const handleAddTaskClick = (planType = 'Short-term') => {
+        openModal('addTask', { defaultType: planType });
+    };
     const handleEditTaskClick = (task) => openModal('addTask', { taskToEdit: task });
     const handleAddClassClick = () => openModal('addClass');
     const handleEditClassClick = (classItem) => openModal('addClass', { classToEdit: classItem });
@@ -227,28 +220,34 @@ const Dashboard = ({ user, onSignOut }) => {
         <>
              <div className="min-h-screen bg-black text-white font-sans flex">
                 <SideNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
-                {/* UPDATED: Padding is now responsive. No padding on mobile, 28-unit padding on desktop */}
                 <div className="flex-1 md:pl-28 overflow-hidden">
                     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-10">
                         <Header 
                             currentPage={currentPage} 
                             profileData={profileData} 
-                            onAddNewCourse={handleAddNewCourse} 
                             onOpenTimetable={() => openModal('timetable')}
                             onOpenPomodoro={() => openModal('pomodoro')}
+                            onOpenBugReport={() => openModal('bugReport')}
+                            reward={reward}
+                            setReward={setReward}
                         />
                         <main>
                             <AnimatePresence mode="wait">
                                 <motion.div key={currentPage} initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
                                     {currentPage === 'home' && <HomePage 
-                                        schedule={schedule} deadlines={deadlines} tasks={tasks} courses={allCourses}
-                                        performanceData={performanceData} isCpiVisible={isCpiVisible}
-                                        onToggleCpiVisibility={handleToggleCpiVisibility} expenditures={expenditures}
+                                        schedule={schedule} 
+                                        deadlines={deadlines} 
+                                        tasks={tasks} 
+                                        courses={allCourses}
+                                        expenditures={expenditures}
                                     />}
                                     {currentPage === 'attendance' && <AttendancePage 
-                                        allCourses={allCourses} onAddNew={handleAddNewCourse} 
-                                        onMarkAttendance={handleMarkAttendance} onTotalChange={handleTotalChange} 
-                                        onDecrementAttendance={handleDecrementAttendance} onDeleteCourse={handleDeleteCourse} 
+                                        allCourses={allCourses} 
+                                        onAddNew={handleAddNewCourse} 
+                                        onMarkAttendance={handleMarkAttendance} 
+                                        onTotalChange={handleTotalChange} 
+                                        onDecrementAttendance={handleDecrementAttendance} 
+                                        onDeleteCourse={handleDeleteCourse} 
                                         onToggleVisibility={handleToggleCourseVisibility}
                                     />}
                                     {currentPage === 'performance' && <PerformancePage 
@@ -271,8 +270,11 @@ const Dashboard = ({ user, onSignOut }) => {
                                         onEditDeadline={handleEditDeadlineClick} courses={allCourses} 
                                     />}
                                     {currentPage === 'planner' && <PlannerPage 
-                                        tasks={tasks} onAddTask={handleAddTaskClick} onEditTask={handleEditTaskClick} 
-                                        onDeleteTask={handleDeleteTask} onToggleComplete={handleToggleTaskComplete} 
+                                        tasks={tasks} 
+                                        onAddTask={handleAddTaskClick}
+                                        onEditTask={handleEditTaskClick} 
+                                        onDeleteTask={handleDeleteTask} 
+                                        onToggleComplete={handleToggleTaskComplete} 
                                     />}
                                     {currentPage === 'contacts' && <ContactsPage 
                                         contacts={contacts} onAddContact={handleAddContactClick}
@@ -326,8 +328,13 @@ const Dashboard = ({ user, onSignOut }) => {
             />
             <AddEditDeadlineModal isOpen={modal === 'addDeadline'} onClose={closeModal} onSave={handleSaveDeadline} currentCourses={currentSemesterCourses} deadlineToEdit={modalProps.deadlineToEdit} />
             <AddEditMarksModal isOpen={modal === 'addMarks'} onClose={closeModal} onSave={handleSaveExamMark} allCourses={allCourses} markToEdit={modalProps.markToEdit} currentSemester={currentSemester} />
-            <AddEditTaskModal isOpen={modal === 'addTask'} onClose={closeModal} onSave={handleSaveTask} taskToEdit={modalProps.taskToEdit} />
-            <AddEditContactModal isOpen={modal === 'addContact'} onClose={closeModal} onSave={handleSaveContact} contactToEdit={modalProps.contactToEdit} />
+<AddEditTaskModal 
+                isOpen={modal === 'addTask'} 
+                onClose={closeModal} 
+                onSave={handleSaveTask} 
+                taskToEdit={modalProps.taskToEdit}
+                defaultType={modalProps.defaultType}
+            />            <AddEditContactModal isOpen={modal === 'addContact'} onClose={closeModal} onSave={handleSaveContact} contactToEdit={modalProps.contactToEdit} />
             <AddEditExpenditureModal 
                 isOpen={modal === 'addExpenditure'} 
                 onClose={closeModal} 
@@ -339,11 +346,15 @@ const Dashboard = ({ user, onSignOut }) => {
             <PomodoroModal isOpen={modal === 'pomodoro'} onClose={closeModal} onStart={handleStartPomodoro} />
             <WhatIfModal isOpen={modal === 'whatIf'} onClose={closeModal} allCourses={allCourses} />
             <EditProfileModal isOpen={modal === 'editProfile'} onClose={closeModal} onSave={(data) => console.log(data)} profileData={profileData} />
+            <BugReportModal isOpen={modal === 'bugReport'} onClose={closeModal} />
             <ConfirmationModal 
-                isOpen={confirmationModal.isOpen} 
-                onClose={() => setConfirmationModal({ isOpen: false, message: '', onConfirm: () => {} })} 
-                onConfirm={confirmationModal.onConfirm} 
-                message={confirmationModal.message} 
+                isOpen={modal === 'confirmation'} 
+                onClose={closeModal} 
+                onConfirm={() => {
+                    modalProps.onConfirm?.();
+                    closeModal();
+                }} 
+                message={modalProps.message} 
             />
             <ResetConfirmationModal
                 isOpen={modal === 'resetConfirmation'}
@@ -360,7 +371,6 @@ const Dashboard = ({ user, onSignOut }) => {
                 onClose={() => setIsDeleteAccountModalOpen(false)}
                 onConfirm={confirmDeleteAccount}
             />
-            {/* ADDED: The ReauthModal is now rendered and connected to its state */}
             <ReauthModal
                 isOpen={isReauthModalOpen}
                 onClose={() => setIsReauthModalOpen(false)}
