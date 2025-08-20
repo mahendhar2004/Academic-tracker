@@ -40,7 +40,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
             max = Math.max(max, timeToMinutes(item.endTime));
         });
 
-        const minH = Math.max(0, Math.floor(min / 60) -1);
+        const minH = Math.max(0, Math.floor(min / 60));
         const maxH = Math.min(23, Math.ceil(max / 60));
         const slots = [];
         for (let i = minH; i < maxH; i++) {
@@ -80,27 +80,27 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
             isOpen={isOpen} 
             onClose={onClose} 
             title="Weekly Timetable" 
-            customClasses="max-w-screen-xl w-full bg-black/95 backdrop-blur-xl border-white/10"
+            customClasses="max-w-screen-xl w-full bg-[#181818] border border-slate-700"
         >
             <div ref={scrollContainerRef} className="relative h-[70vh] overflow-y-auto no-scrollbar">
                 <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr] gap-x-1">
-                    <div className="sticky top-0 z-20 bg-black">
+                    <div className="sticky top-0 z-20 bg-[#181818]">
                         <div className="h-12"></div>
                         {timeSlots.map(time => (
                             <div key={time} style={{ height: `${pixelsPerHour}px` }} className="flex items-start justify-end pr-4">
-                                <span className="text-xs text-slate-400 -mt-2">{time}</span>
+                                <span className="font-medium text-sm text-slate-400 -mt-2">{time}</span>
                             </div>
                         ))}
                     </div>
 
                     {daysOfWeek.map((day, dayIndex) => (
-                        <div key={day} className="relative border-l border-white/10">
-                            <div className="sticky top-0 z-20 bg-black text-center h-12 flex items-center justify-center">
-                                <h3 className="font-bold text-cyan-300">{day}</h3>
+                        <div key={day} className="relative border-l border-slate-800">
+                            <div className="sticky top-0 z-20 bg-[#181818] text-center h-12 flex items-center justify-center">
+                                <h3 className="font-bold text-slate-300">{day}</h3>
                             </div>
                             <div className="relative px-2" style={{ height: `${totalPixelHeight}px` }}>
                                 {timeSlots.map((_, index) => (
-                                    <div key={index} style={{ height: `${pixelsPerHour}px` }} className="border-t border-white/5"></div>
+                                    <div key={index} style={{ height: `${pixelsPerHour}px` }} className="border-t border-slate-800"></div>
                                 ))}
                                 {schedule.filter(s => s.day === day).map(item => {
                                     const startMinutes = timeToMinutes(item.startTime) - minHour * 60;
@@ -119,15 +119,15 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.1 + (dayIndex * 0.05) }}
-                                            className={`absolute w-full p-2.5 rounded-lg text-white transition-all duration-300 bg-black/60 backdrop-blur-md ${isCurrent ? 'shadow-2xl shadow-cyan-500/50' : ''}`}
+                                            className={`absolute w-full p-2.5 rounded-lg text-white transition-all duration-300 bg-[#181818] shadow-[5px_5px_12px_#0f0f0f,-5px_-5px_12px_#212121] ${isCurrent ? 'shadow-cyan-500/20' : ''}`}
                                             style={{
                                                 top: `${top}px`,
                                                 height: `calc(${height}px - 4px)`,
                                                 borderLeft: `4px solid ${details.color}`
                                             }}
                                         >
-                                            <p className="font-bold text-sm leading-tight">{details.name}</p>
-                                            <p className="text-xs opacity-80 mt-1">{item.startTime} - {item.endTime}</p>
+                                            <p className="font-semibold text-sm leading-tight text-white">{details.name}</p>
+                                            <p className="text-xs text-slate-400 mt-1">{item.startTime} - {item.endTime}</p>
                                             {item.venue && (
                                                 <div className="flex items-center gap-1.5 mt-1.5 text-xs text-slate-400">
                                                     <MapPin size={12} />
@@ -141,14 +141,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                         </div>
                     ))}
                     
-                    {currentTimePosition >= 0 && currentTimePosition <= totalPixelHeight && now.getDay() > 0 && now.getDay() < 6 && (
-                        <div 
-                            className="absolute h-0.5 bg-red-500 w-full z-10"
-                            style={{ top: `calc(3rem + ${currentTimePosition}px)`}}
-                        >
-                            <div className="absolute -left-1.5 -top-1 w-3 h-3 bg-red-500 rounded-full"></div>
-                        </div>
-                    )}
+                    {/* REMOVED: The red line for the current time indicator has been removed */}
                 </div>
             </div>
         </GlassyModal>

@@ -99,7 +99,6 @@ const AtAGlance = ({
     return (
         <>
             {hasContent ? (
-                // UPDATED: Changed from a single-column 'space-y-8' to a responsive two-column grid
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {sections.filter(s => s.condition).map(section => (
                         <InfoCard 
@@ -114,7 +113,6 @@ const AtAGlance = ({
                 </div>
             ) : (
                 <div className={cardClassName}>
-                     <div className="absolute -top-1 -left-1 w-32 h-32 bg-white/10 rounded-full blur-[80px] opacity-50"></div>
                      <div className="text-center py-10">
                         <Wind size={48} className="mx-auto text-slate-500 mb-4" />
                         <h3 className="font-bold text-white text-lg">All Clear for Now!</h3>
@@ -175,8 +173,12 @@ const HomePage = ({
     schedule, deadlines, tasks, courses, expenditures = []
 }) => {
     
-    const cardStyles = "relative overflow-hidden bg-black/50 bg-gradient-to-b from-black/10 via-transparent to-black/50 backdrop-blur-2xl border border-gray-800 p-6 rounded-2xl shadow-2xl";
+    // Original glassy style for cards on the right
+    const glassyCardStyles = "relative overflow-hidden bg-black/50 bg-gradient-to-b from-black/10 via-transparent to-black/50 backdrop-blur-2xl border border-gray-800 p-6 rounded-2xl shadow-2xl";
     
+    // NEW: Neumorphic style for cards on the left ("At a Glance")
+    const neumorphicCardStyles = "relative bg-[#181818] p-6 rounded-2xl shadow-[5px_5px_12px_rgba(0,0,0,0.5),-5px_-5px_12px_rgba(255,255,255,0.05)]";
+
     const {
         todaysSchedule,
         upcomingDeadlines,
@@ -201,7 +203,7 @@ const HomePage = ({
                         todaysTasks={todaysTasks} 
                         attendanceWarnings={attendanceWarnings}
                         courses={courses}
-                        cardClassName={cardStyles}
+                        cardClassName={neumorphicCardStyles}
                     />
                 </div>
                 
@@ -210,9 +212,9 @@ const HomePage = ({
                         schedule={schedule} 
                         deadlines={deadlines} 
                         tasks={tasks}
-                        cardStyles={cardStyles}
+                        cardStyles={glassyCardStyles}
                     />
-                    <div className={cardStyles}>
+                    <div className={glassyCardStyles}>
                         <div className="absolute -top-1 -left-1 w-32 h-32 bg-white/10 rounded-full blur-[80px] opacity-50"></div>
                         <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2">
                             <BarChart2 size={20} className="text-cyan-400"/>
