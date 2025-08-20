@@ -14,12 +14,12 @@ import EditableList from '../components/profile/EditableList';
 import EditableResumeList from '../components/profile/EditableResumeList';
 import authService from '../services/authService';
 import { COIN_VALUES } from '../constants';
-import { useModalStore } from '../store/useModalStore'; // NEW: Import modal store
+import { useModalStore } from '../store/useModalStore';
 
 const getSocialIcon = (url) => {
     const lowerUrl = url.toLowerCase();
     const props = { size: 20, className: "text-slate-400 hover:text-white transition-colors" };
-  
+ 
     if (lowerUrl.includes('linkedin')) return <FaLinkedin {...props} />;
     if (lowerUrl.includes('github')) return <FaGithub {...props} />;
     if (lowerUrl.includes('leetcode')) return <SiLeetcode {...props} />;
@@ -40,9 +40,8 @@ const getSocialIcon = (url) => {
 
 const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, onDeleteAccount }) => {
     const cardStyles = "bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl";
-    const { openModal } = useModalStore(); // NEW: Get openModal function
+    const { openModal } = useModalStore();
 
-    // NEW: Handler for the sign out button to show confirmation
     const handleSignOutClick = () => {
         openModal('confirmation', {
             message: 'Are you sure you want to sign out?',
@@ -69,7 +68,6 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
         visible: { y: 0, opacity: 1 }
     };
 
-    // NEW: Fallback to ensure email from auth is shown if not in profile data yet
     const displayEmail = profileData.personal?.email || user.email || '';
 
     return (
@@ -106,7 +104,6 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
                 <div className={`${cardStyles} p-8 border-red-500/30`}>
                     <h3 className="font-bold text-xl text-red-400 mb-4">Danger Zone</h3>
                     <div className="flex flex-col gap-4">
-                        {/* UPDATED: onClick now triggers the confirmation modal */}
                         <motion.button whileTap={{ scale: 0.95 }} onClick={handleSignOutClick} className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold py-2 px-4 rounded-lg transition-colors">
                             <LogOut size={18} /> Sign Out
                         </motion.button>
@@ -137,7 +134,6 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
                     
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
-                            {/* UPDATED: Uses the new 'displayEmail' variable */}
                             <EditableField label="Personal Email" value={displayEmail} onSave={(val) => onSaveField('personal.email', val, COIN_VALUES.PROFILE_PERSONAL)} />
                         </div>
                         {user?.emailVerified ? (

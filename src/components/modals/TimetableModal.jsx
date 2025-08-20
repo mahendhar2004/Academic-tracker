@@ -80,11 +80,13 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
             isOpen={isOpen} 
             onClose={onClose} 
             title="Weekly Timetable" 
-            customClasses="max-w-screen-xl w-full bg-[#181818] border border-slate-700"
+            // UPDATED: Changed background to a black gradient and adjusted border
+            customClasses="max-w-screen-xl w-full bg-gradient-to-br from-black to-slate-900 border border-slate-800"
         >
             <div ref={scrollContainerRef} className="relative h-[70vh] overflow-y-auto no-scrollbar">
                 <div className="grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr] gap-x-1">
-                    <div className="sticky top-0 z-20 bg-[#181818]">
+                    {/* UPDATED: Changed sticky header to be transparent to blend with the new background */}
+                    <div className="sticky top-0 z-20 bg-black/50 backdrop-blur-sm">
                         <div className="h-12"></div>
                         {timeSlots.map(time => (
                             <div key={time} style={{ height: `${pixelsPerHour}px` }} className="flex items-start justify-end pr-4">
@@ -95,7 +97,8 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
 
                     {daysOfWeek.map((day, dayIndex) => (
                         <div key={day} className="relative border-l border-slate-800">
-                            <div className="sticky top-0 z-20 bg-[#181818] text-center h-12 flex items-center justify-center">
+                            {/* UPDATED: Changed sticky header to be transparent to blend with the new background */}
+                            <div className="sticky top-0 z-20 bg-black/50 backdrop-blur-sm text-center h-12 flex items-center justify-center">
                                 <h3 className="font-bold text-slate-300">{day}</h3>
                             </div>
                             <div className="relative px-2" style={{ height: `${totalPixelHeight}px` }}>
@@ -119,7 +122,8 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ delay: 0.1 + (dayIndex * 0.05) }}
-                                            className={`absolute w-full p-2.5 rounded-lg text-white transition-all duration-300 bg-[#181818] shadow-[5px_5px_12px_#0f0f0f,-5px_-5px_12px_#212121] ${isCurrent ? 'shadow-cyan-500/20' : ''}`}
+                                            // UPDATED: Changed class item background for better contrast
+                                            className={`absolute w-full p-2.5 rounded-lg text-white transition-all duration-300 bg-slate-900/70 shadow-lg shadow-black/30 ${isCurrent ? 'ring-2 ring-cyan-500' : ''}`}
                                             style={{
                                                 top: `${top}px`,
                                                 height: `calc(${height}px - 4px)`,

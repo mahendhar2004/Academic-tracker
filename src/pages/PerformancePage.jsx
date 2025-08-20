@@ -106,8 +106,6 @@ const PerformancePage = ({
         }
     };
     
-    // UPDATED: Added 'isComponentLoading' to the dependency array.
-    // This ensures the handleScroll function is called after the component finishes loading.
     useEffect(() => {
         const timeline = timelineRef.current;
         if (timeline) {
@@ -185,7 +183,7 @@ const PerformancePage = ({
                         <AnimatePresence>
                             {canScrollRight && !isComponentLoading && (
                                  <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white transition-opacity">
-                                     <ChevronRight size={24} className="mx-auto" />
+                                      <ChevronRight size={24} className="mx-auto" />
                                  </motion.button>
                             )}
                         </AnimatePresence>
@@ -215,7 +213,10 @@ const PerformancePage = ({
                                                         <p className="text-xs text-slate-400">{course.credits} Credits</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <p className="font-mono text-xl text-cyan-300">{course.grade || 'N/A'}</p>
+                                                        {/* UPDATED: Logic to explicitly show 'N/A' for non-published grades */}
+                                                        <p className="font-mono text-xl text-cyan-300">
+                                                            {(course.grade && course.grade !== 'Not Published') ? course.grade : 'N/A'}
+                                                        </p>
                                                         <button onClick={() => onEditGrade(course)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} /></button>
                                                     </div>
                                                 </div>

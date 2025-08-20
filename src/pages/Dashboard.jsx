@@ -55,7 +55,9 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
     
     const performanceData = useMemo(() => {
-        const gradedCourses = allCourses.filter(c => c.grade && c.credits > 0);
+        // UPDATED: Filter now excludes courses with "Not Published" grades from all calculations.
+        const gradedCourses = allCourses.filter(c => c.grade && c.grade !== 'Not Published' && c.credits > 0);
+        
         if (gradedCourses.length === 0) return { cpi: '0.0', semesters: [] };
         let cumulativeWeightedPoints = 0, cumulativeCredits = 0;
         const semestersMap = new Map();
@@ -95,6 +97,9 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
 
     const handleSaveCourse = (courseData) => firestoreService.saveCourse(user.uid, courseData);
     const handleSaveGrade = (courseId, grade) => firestoreService.saveGrade(user.uid, courseId, grade);
+    const handleSaveNewCourseWithGrade = async (newCourseData) => {
+        await firestoreService.saveCourse(user.uid, newCourseData);
+    };
     const handleSaveClass = (data, id) => firestoreService.saveClass(user.uid, data, id);
     const handleSaveDeadline = (data, id) => firestoreService.saveDeadline(user.uid, data, id);
     const handleSaveExamMark = (data, id) => firestoreService.saveExamMark(user.uid, data, id);
@@ -137,7 +142,7 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     };
     const handleDeleteCourse = (courseId, courseName) => {
         openModal('confirmation', {
-            message: `This will permanently delete the subject "${courseName}" and all its associated data, including class timings, grades, marks, and deadlines. This action cannot be undone.`,
+            message: `This will permanently delete the subject "${courseName}" and all its associated data. This action cannot be undone.`,
             onConfirm: async () => {
                 await firestoreService.deleteCourseAndRelatedData(user.uid, courseId);
             }
@@ -163,8 +168,8 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
         const result = await firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId, profileData.expenditureBalance);
         if (result === 'INSUFFICIENT_FUNDS') {
              openModal('confirmation', {
-                message: "Insufficient balance for this transaction.",
-                onConfirm: () => {}
+                 message: "Insufficient balance for this transaction.",
+                 onConfirm: () => {}
              });
         }
     };
@@ -199,7 +204,7 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const handleAddExamMarksClick = () => openModal('addMarks');
     const handleEditExamMarkClick = (mark) => openModal('addMarks', { markToEdit: mark });
     const handleAddMarksForCourseClick = (course) => openModal('addMarks', { markToEdit: { courseId: course.id } });
-const handleAddTaskClick = (planType = 'Short-term') => {
+    const handleAddTaskClick = (planType = 'Short-term') => {
         openModal('addTask', { defaultType: planType });
     };
     const handleEditTaskClick = (task) => openModal('addTask', { taskToEdit: task });
@@ -219,92 +224,94 @@ const handleAddTaskClick = (planType = 'Short-term') => {
     return (
         <>
              <div className="min-h-screen bg-black text-white font-sans flex">
-                <SideNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
-                <div className="flex-1 md:pl-28 overflow-hidden">
-                    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-10">
-                        <Header 
-                            currentPage={currentPage} 
-                            profileData={profileData} 
-                            onOpenTimetable={() => openModal('timetable')}
-                            onOpenPomodoro={() => openModal('pomodoro')}
-                            onOpenBugReport={() => openModal('bugReport')}
-                            reward={reward}
-                            setReward={setReward}
-                        />
-                        <main>
-                            <AnimatePresence mode="wait">
-                                <motion.div key={currentPage} initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                                    {currentPage === 'home' && <HomePage 
-                                        schedule={schedule} 
-                                        deadlines={deadlines} 
-                                        tasks={tasks} 
-                                        courses={allCourses}
-                                        expenditures={expenditures}
-                                    />}
-                                    {currentPage === 'attendance' && <AttendancePage 
-                                        allCourses={allCourses} 
-                                        onAddNew={handleAddNewCourse} 
-                                        onMarkAttendance={handleMarkAttendance} 
-                                        onTotalChange={handleTotalChange} 
-                                        onDecrementAttendance={handleDecrementAttendance} 
-                                        onDeleteCourse={handleDeleteCourse} 
-                                        onToggleVisibility={handleToggleCourseVisibility}
-                                    />}
-                                    {currentPage === 'performance' && <PerformancePage 
-                                        performanceData={performanceData} 
-                                        allCourses={allCourses} 
-                                        examMarks={examMarks} 
-                                        onDeleteCourse={handleDeleteCourse} 
-                                        onEditGrade={handleEditGradeClick}
-                                        onAddGrade={handleAddGradeClick} 
-                                        onAddExamMarks={handleAddExamMarksClick} 
-                                        onEditExamMark={handleEditExamMarkClick} 
-                                        onDeleteExamMark={handleDeleteExamMark} 
-                                        onAddMarksForCourse={handleAddMarksForCourseClick}
-                                        currentSemester={currentSemester}
-                                    />}
-                                    {currentPage === 'calendar' && <CalendarPage 
-                                        schedule={schedule} deadlines={deadlines} onAddClass={handleAddClassClick} 
-                                        onEditClass={handleEditClassClick} onDeleteClass={handleDeleteClass}
-                                        onAddDeadline={handleAddDeadlineClick} onDeleteDeadline={handleDeleteDeadline} 
-                                        onEditDeadline={handleEditDeadlineClick} courses={allCourses} 
-                                    />}
-                                    {currentPage === 'planner' && <PlannerPage 
-                                        tasks={tasks} 
-                                        onAddTask={handleAddTaskClick}
-                                        onEditTask={handleEditTaskClick} 
-                                        onDeleteTask={handleDeleteTask} 
-                                        onToggleComplete={handleToggleTaskComplete} 
-                                    />}
-                                    {currentPage === 'contacts' && <ContactsPage 
-                                        contacts={contacts} onAddContact={handleAddContactClick}
-                                        onEditContact={handleEditContactClick} onDeleteContact={handleDeleteContact}
-                                    />}
-                                    {currentPage === 'expenditure' && <ExpenditurePage 
-                                        expenditures={expenditures} 
-                                        balance={profileData.expenditureBalance}
-                                        isBalanceVisible={profileData.isBalanceVisible} 
-                                        onAddExpenditure={handleAddExpenditureClick}
-                                        onDeleteExpenditure={handleDeleteExpenditure} 
-                                        onEditExpenditure={handleEditExpenditureClick}
-                                        onSetBalance={() => openModal('setBalance')}
-                                        onToggleBalanceVisibility={handleToggleBalanceVisibility} 
-                                        onResetExpenditures={handleResetExpenditures}
-                                    />}
-                                    {currentPage === 'profile' && <ProfilePage 
-                                        user={user}
-                                        profileData={profileData} 
-                                        onSaveField={handleSaveProfileField} 
-                                        onResetData={() => openModal('resetConfirmation')} 
-                                        onSignOut={onSignOut}
-                                        onDeleteAccount={handleDeleteAccountClick}
-                                    />}
-                                </motion.div>
-                            </AnimatePresence>
-                        </main>
-                    </div>
-                </div>
-            </div>
+                 <SideNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
+                 <div className="flex-1 md:pl-28 overflow-hidden">
+                     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-10">
+                        {currentPage !== 'profile' && (
+                            <Header 
+                                currentPage={currentPage} 
+                                profileData={profileData} 
+                                onOpenTimetable={() => openModal('timetable')}
+                                onOpenPomodoro={() => openModal('pomodoro')}
+                                onOpenBugReport={() => openModal('bugReport')}
+                                reward={reward}
+                                setReward={setReward}
+                            />
+                        )}
+                         <main>
+                             <AnimatePresence mode="wait">
+                                 <motion.div key={currentPage} initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
+                                     {currentPage === 'home' && <HomePage 
+                                         schedule={schedule} 
+                                         deadlines={deadlines} 
+                                         tasks={tasks} 
+                                         courses={allCourses}
+                                         expenditures={expenditures}
+                                     />}
+                                     {currentPage === 'attendance' && <AttendancePage 
+                                         allCourses={allCourses} 
+                                         onAddNew={handleAddNewCourse} 
+                                         onMarkAttendance={handleMarkAttendance} 
+                                         onTotalChange={handleTotalChange} 
+                                         onDecrementAttendance={handleDecrementAttendance} 
+                                         onDeleteCourse={handleDeleteCourse} 
+                                         onToggleVisibility={handleToggleCourseVisibility}
+                                     />}
+                                     {currentPage === 'performance' && <PerformancePage 
+                                         performanceData={performanceData} 
+                                         allCourses={allCourses} 
+                                         examMarks={examMarks} 
+                                         onDeleteCourse={handleDeleteCourse} 
+                                         onEditGrade={handleEditGradeClick}
+                                         onAddGrade={handleAddGradeClick} 
+                                         onAddExamMarks={handleAddExamMarksClick} 
+                                         onEditExamMark={handleEditExamMarkClick} 
+                                         onDeleteExamMark={handleDeleteExamMark} 
+                                         onAddMarksForCourse={handleAddMarksForCourseClick}
+                                         currentSemester={currentSemester}
+                                     />}
+                                     {currentPage === 'calendar' && <CalendarPage 
+                                         schedule={schedule} deadlines={deadlines} onAddClass={handleAddClassClick} 
+                                         onEditClass={handleEditClassClick} onDeleteClass={handleDeleteClass}
+                                         onAddDeadline={handleAddDeadlineClick} onDeleteDeadline={handleDeleteDeadline} 
+                                         onEditDeadline={handleEditDeadlineClick} courses={allCourses} 
+                                     />}
+                                     {currentPage === 'planner' && <PlannerPage 
+                                         tasks={tasks} 
+                                         onAddTask={handleAddTaskClick}
+                                         onEditTask={handleEditTaskClick} 
+                                         onDeleteTask={handleDeleteTask} 
+                                         onToggleComplete={handleToggleTaskComplete} 
+                                     />}
+                                     {currentPage === 'contacts' && <ContactsPage 
+                                         contacts={contacts} onAddContact={handleAddContactClick}
+                                         onEditContact={handleEditContactClick} onDeleteContact={handleDeleteContact}
+                                     />}
+                                     {currentPage === 'expenditure' && <ExpenditurePage 
+                                         expenditures={expenditures} 
+                                         balance={profileData.expenditureBalance}
+                                         isBalanceVisible={profileData.isBalanceVisible} 
+                                         onAddExpenditure={handleAddExpenditureClick}
+                                         onDeleteExpenditure={handleDeleteExpenditure} 
+                                         onEditExpenditure={handleEditExpenditureClick}
+                                         onSetBalance={() => openModal('setBalance')}
+                                         onToggleBalanceVisibility={handleToggleBalanceVisibility} 
+                                         onResetExpenditures={handleResetExpenditures}
+                                     />}
+                                     {currentPage === 'profile' && <ProfilePage 
+                                         user={user}
+                                         profileData={profileData} 
+                                         onSaveField={handleSaveProfileField} 
+                                         onResetData={() => openModal('resetConfirmation')} 
+                                         onSignOut={onSignOut}
+                                         onDeleteAccount={handleDeleteAccountClick}
+                                     />}
+                                 </motion.div>
+                             </AnimatePresence>
+                         </main>
+                     </div>
+                 </div>
+             </div>
             
             {currentPage !== 'profile' && (
                 <FloatingAddButton 
@@ -316,7 +323,15 @@ const handleAddTaskClick = (planType = 'Short-term') => {
             )}
             
             <AddCourseModal isOpen={modal === 'addCourse'} onClose={closeModal} onSave={handleSaveCourse} currentSemester={currentSemester} />
-            <AddGradeModal isOpen={modal === 'addGrade'} onClose={closeModal} onSave={handleSaveGrade} allCourses={allCourses} courseToEdit={modalProps.courseToGrade} currentSemester={currentSemester} />
+            <AddGradeModal 
+                isOpen={modal === 'addGrade'} 
+                onClose={closeModal} 
+                onSave={handleSaveGrade}
+                onSaveNewCourse={handleSaveNewCourseWithGrade}
+                allCourses={allCourses} 
+                courseToEdit={modalProps.courseToGrade} 
+                currentSemester={currentSemester} 
+            />
             <AddEditClassModal 
                 isOpen={modal === 'addClass'} 
                 onClose={closeModal} 
@@ -328,13 +343,14 @@ const handleAddTaskClick = (planType = 'Short-term') => {
             />
             <AddEditDeadlineModal isOpen={modal === 'addDeadline'} onClose={closeModal} onSave={handleSaveDeadline} currentCourses={currentSemesterCourses} deadlineToEdit={modalProps.deadlineToEdit} />
             <AddEditMarksModal isOpen={modal === 'addMarks'} onClose={closeModal} onSave={handleSaveExamMark} allCourses={allCourses} markToEdit={modalProps.markToEdit} currentSemester={currentSemester} />
-<AddEditTaskModal 
+            <AddEditTaskModal 
                 isOpen={modal === 'addTask'} 
                 onClose={closeModal} 
                 onSave={handleSaveTask} 
                 taskToEdit={modalProps.taskToEdit}
                 defaultType={modalProps.defaultType}
-            />            <AddEditContactModal isOpen={modal === 'addContact'} onClose={closeModal} onSave={handleSaveContact} contactToEdit={modalProps.contactToEdit} />
+            />
+            <AddEditContactModal isOpen={modal === 'addContact'} onClose={closeModal} onSave={handleSaveContact} contactToEdit={modalProps.contactToEdit} />
             <AddEditExpenditureModal 
                 isOpen={modal === 'addExpenditure'} 
                 onClose={closeModal} 
