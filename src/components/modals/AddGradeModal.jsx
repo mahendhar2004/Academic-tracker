@@ -20,7 +20,6 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
     const [newCourseCredits, setNewCourseCredits] = useState('');
 
     // State for the final grade selection
-    // UPDATED: Default grade is now 'Not Published'
     const [selectedGrade, setSelectedGrade] = useState('Not Published');
 
     // --- Memoized Data ---
@@ -34,10 +33,10 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
         if (isOpen) {
             setStep(1);
             setMode(courseToEdit ? 'select' : 'select');
+            setSelectedGrade('Not Published');
             setNewCourseName('');
             setNewCourseCredits('');
 
-            // UPDATED: Default to 'Not Published'
             if (courseToEdit) {
                 const course = allCourses.find(c => c.id === courseToEdit.id);
                 setSelectedSemester(course?.semester || '');
@@ -46,7 +45,6 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
             } else {
                 setSelectedSemester(currentSemester || '');
                 setSelectedCourseId('');
-                setSelectedGrade('Not Published');
             }
         }
     }, [isOpen, courseToEdit, allCourses, currentSemester]);
@@ -61,7 +59,7 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
 
     // --- Handlers ---
     const handleNextStep = () => {
-        if ((mode === 'select' && selectedCourseId) || (mode === 'create' && newCourseName.trim() && newCourseCredits > 0 && selectedSemester)) {
+        if ((mode === 'select' && selectedCourseId) || (mode === 'create' && newCourseName.trim() && newCourseCredits > 0 && selectedSemester >= 1)) {
             setStep(2);
         }
     };
@@ -89,8 +87,11 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
         center: { opacity: 1, scale: 1 },
         exit: { opacity: 0, scale: 0.95 },
     };
-
-    const isNextDisabled = mode === 'select' ? !selectedCourseId : !(newCourseName.trim() && newCourseCredits > 0 && selectedSemester);
+    
+    // UPDATED: Validation logic now checks if semester is 1 or greater
+    const isNextDisabled = mode === 'select' 
+        ? !selectedCourseId 
+        : !(newCourseName.trim() && newCourseCredits > 0 && selectedSemester >= 1);
 
     return (
         <GlassyModal 
@@ -120,22 +121,32 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
                                 </div>
                             )}
 
-                            <select 
-                                value={selectedSemester} 
-                                onChange={(e) => setSelectedSemester(e.target.value)} 
-                                className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                            >
-                                <option value="">Select Semester</option>
-                                {semesters.map(s => <option key={s} value={s} className="bg-slate-800">Semester {s}</option>)}
-                            </select>
-
                             {mode === 'select' ? (
-                                <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)} disabled={!selectedSemester} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50">
-                                    <option value="">Select Course</option>
-                                    {coursesInSemester.map(c => <option key={c.id} value={c.id} className="bg-slate-800">{c.name}</option>)}
-                                </select>
+                                <>
+                                    <select 
+                                        value={selectedSemester} 
+                                        onChange={(e) => setSelectedSemester(e.target.value)} 
+                                        className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    >
+                                        <option value="">Select Semester</option>
+                                        {semesters.map(s => <option key={s} value={s} className="bg-slate-800">Semester {s}</option>)}
+                                    </select>
+                                    <select value={selectedCourseId} onChange={(e) => setSelectedCourseId(e.target.value)} disabled={!selectedSemester} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:opacity-50">
+                                        <option value="">Select Course</option>
+                                        {coursesInSemester.map(c => <option key={c.id} value={c.id} className="bg-slate-800">{c.name}</option>)}
+                                    </select>
+                                </>
                             ) : (
                                 <div className="space-y-3">
+                                    <input 
+                                        type="number" 
+                                        placeholder="Semester Number (e.g., 7)" 
+                                        value={selectedSemester} 
+                                        onChange={(e) => setSelectedSemester(e.target.value)}
+                                        // UPDATED: Added min="1" to the input field
+                                        min="1"
+                                        className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    />
                                     <input type="text" placeholder="New Subject Name" value={newCourseName} onChange={(e) => setNewCourseName(e.target.value)} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" />
                                     <input type="number" placeholder="Credits (e.g., 4)" value={newCourseCredits} onChange={(e) => setNewCourseCredits(e.target.value)} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" />
                                 </div>
@@ -180,7 +191,6 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
                                 ))}
                             </div>
                             
-                            {/* UPDATED: Added a dedicated button for 'Not Published Yet' */}
                             <button 
                                 onClick={() => setSelectedGrade('Not Published')}
                                 className={`w-full py-3 text-center font-semibold rounded-lg transition-colors ${selectedGrade === 'Not Published' ? 'bg-slate-600/80 text-white ring-2 ring-slate-500' : 'bg-slate-800/50 text-slate-400 hover:bg-slate-700/60'}`}

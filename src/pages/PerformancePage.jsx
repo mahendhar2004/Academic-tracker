@@ -34,7 +34,7 @@ const SemesterCardSkeleton = () => (
 
 const PerformancePage = ({ 
     performanceData, allCourses, examMarks, onDeleteCourse, onEditGrade, onAddGrade, 
-    onAddExamMarks, onEditExamMark, onDeleteExamMark, currentSemester 
+    onAddExamMarks, onEditExamMark, onDeleteExamMark, currentSemester, onDeleteGrade // UPDATED: Added onDeleteGrade prop
 }) => {
     const { cpi, semesters } = performanceData;
     const { profileData, isDataLoaded } = useStore();
@@ -213,11 +213,18 @@ const PerformancePage = ({
                                                         <p className="text-xs text-slate-400">{course.credits} Credits</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        {/* UPDATED: Logic to explicitly show 'N/A' for non-published grades */}
                                                         <p className="font-mono text-xl text-cyan-300">
                                                             {(course.grade && course.grade !== 'Not Published') ? course.grade : 'N/A'}
                                                         </p>
-                                                        <button onClick={() => onEditGrade(course)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-cyan-300 opacity-0 group-hover:opacity-100 transition-opacity"><Edit size={14} /></button>
+                                                        {/* UPDATED: Added delete button next to the edit button */}
+                                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                            {(course.grade && course.grade !== 'Not Published') && (
+                                                                <>
+                                                                    <button onClick={() => onEditGrade(course)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-cyan-300"><Edit size={14} /></button>
+                                                                    <button onClick={() => onDeleteGrade(course.id, course.name)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-red-400"><Trash2 size={14} /></button>
+                                                                </>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             )) : <p className="text-slate-500 text-center py-8">No courses with grades found for this semester.</p>}

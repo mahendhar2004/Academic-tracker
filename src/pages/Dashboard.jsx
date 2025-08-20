@@ -55,7 +55,6 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
     
     const performanceData = useMemo(() => {
-        // UPDATED: Filter now excludes courses with "Not Published" grades from all calculations.
         const gradedCourses = allCourses.filter(c => c.grade && c.grade !== 'Not Published' && c.credits > 0);
         
         if (gradedCourses.length === 0) return { cpi: '0.0', semesters: [] };
@@ -97,6 +96,17 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
 
     const handleSaveCourse = (courseData) => firestoreService.saveCourse(user.uid, courseData);
     const handleSaveGrade = (courseId, grade) => firestoreService.saveGrade(user.uid, courseId, grade);
+
+    // UPDATED: New handler for deleting a grade
+    const handleDeleteGrade = (courseId, courseName) => {
+        openModal('confirmation', {
+            message: `Are you sure you want to delete the grade for "${courseName}"? This will set it back to "Not Published".`,
+            onConfirm: () => {
+                firestoreService.saveGrade(user.uid, courseId, 'Not Published');
+            }
+        });
+    };
+
     const handleSaveNewCourseWithGrade = async (newCourseData) => {
         await firestoreService.saveCourse(user.uid, newCourseData);
     };
@@ -268,6 +278,7 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
                                          onEditExamMark={handleEditExamMarkClick} 
                                          onDeleteExamMark={handleDeleteExamMark} 
                                          onAddMarksForCourse={handleAddMarksForCourseClick}
+                                         onDeleteGrade={handleDeleteGrade}
                                          currentSemester={currentSemester}
                                      />}
                                      {currentPage === 'calendar' && <CalendarPage 

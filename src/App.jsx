@@ -8,22 +8,32 @@ import firebaseService from './services/firebaseService';
 import { COIN_VALUES } from './constants';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
+// UPDATED: Import the new public profile page
+import PublicProfilePage from './pages/PublicProfilePage'; 
 
 export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const { initializeListeners, cleanupListeners } = useStore();
-
     const [reward, setReward] = useState({ key: 0, amount: 0 });
 
-    // UPDATED: Wrapped in useCallback to memoize the function
+    // UPDATED: Check for a public profile ID in the URL on load
+    const [publicProfileId, setPublicProfileId] = useState(null);
+
+    useEffect(() => {
+        const queryParams = new URLSearchParams(window.location.search);
+        const shareId = queryParams.get('profile');
+        if (shareId) {
+            setPublicProfileId(shareId);
+        }
+    }, []);
+
     const triggerReward = useCallback((amount) => {
         if (amount > 0) {
             setReward(prev => ({ key: prev.key + 1, amount }));
         }
     }, []);
 
-    // UPDATED: Wrapped in useCallback to ensure it's a stable dependency
     const runDailyCheckIn = useCallback(async (userId) => {
         const coinsAwarded = await firebaseService.handleDailyCheckIn(userId, COIN_VALUES.DAILY_CHECK_IN);
         if (coinsAwarded > 0) {
@@ -34,6 +44,12 @@ export default function App() {
     }, [triggerReward]);
 
     useEffect(() => {
+        // This auth listener only runs if we are NOT viewing a public profile
+        if (publicProfileId) {
+            setLoading(false);
+            return;
+        }
+
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
                 const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
@@ -66,8 +82,7 @@ export default function App() {
             setLoading(false);
         });
         return () => unsubscribe();
-    // UPDATED: Added runDailyCheckIn to the dependency array
-    }, [initializeListeners, cleanupListeners, runDailyCheckIn]);
+    }, [publicProfileId, initializeListeners, cleanupListeners, runDailyCheckIn]);
 
     const handleLogin = (providerName) => {
         if (providerName === 'google') {
@@ -112,6 +127,12 @@ export default function App() {
 
     if (loading) {
         return <div className="bg-black min-h-screen flex justify-center items-center text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div></div>;
+    }
+
+    // --- UPDATED RENDER LOGIC ---
+    if (publicProfileId) {
+        // If a public profile ID is in the URL, show the public page
+        return <PublicProfilePage shareId={publicProfileId} />;
     }
 
     return (
