@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, useScroll, useTransform, AnimatePresence, useInView } from 'framer-motion';
 import { 
-    GraduationCap, CheckCircle2, BarChart3, CalendarCheck, CreditCard, Users, Share2, 
-    ArrowRight, Moon, Sun, Menu, X, Lightbulb, Send, Mail, Twitter, Linkedin, Github,
-    Hourglass, Target
+    CheckCircle2, BarChart3, CalendarCheck, CreditCard, Users, Share2, 
+    ArrowRight, Moon, Sun, Menu, X, Mail, Twitter, Linkedin, Github,
+    Hourglass, Target, Loader2
 } from 'lucide-react';
+import AtrackLogo from '../assets/Logo.svg';
 
 // --- Data ---
 const features = [
@@ -93,12 +94,14 @@ const NeumorphicCard = ({ children, className = '', ...props }) => {
     );
 };
 
-const NeumorphicButton = ({ children, className = '', onClick }) => (
+const NeumorphicButton = ({ children, className = '', onClick, type = "button", disabled = false }) => (
     <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: disabled ? 1 : 1.05 }}
+        whileTap={{ scale: disabled ? 1 : 0.95 }}
         onClick={onClick}
-        className={`neumorphic-outset neumorphic-button ${className}`}
+        type={type}
+        disabled={disabled}
+        className={`neumorphic-outset neumorphic-button ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
         {children}
     </motion.button>
@@ -124,7 +127,6 @@ const NeumorphicTextarea = React.forwardRef(({ className = '', ...props }, ref) 
 ));
 
 const FeatureDisplay = ({ activeIndex }) => {
-    // Ensure activeIndex is always valid
     const validIndex = Math.max(0, Math.min(activeIndex, features.length - 1));
     const ActiveIcon = features[validIndex].Icon;
     
@@ -190,9 +192,9 @@ const FeatureCard = ({ feature, index, scrollYProgress }) => {
 const LandingPage = ({ onNavigate }) => {
     const [isDarkMode, setIsDarkMode] = useState(true);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [formStatus, setFormStatus] = useState({ state: 'idle', message: '' });
     const featuresRef = useRef(null);
     
-    // Adjusted useScroll offset for better synchronization
     const { scrollYProgress } = useScroll({ 
         target: featuresRef, 
         offset: ["start 0.5", "end 0.5"] 
@@ -215,14 +217,37 @@ const LandingPage = ({ onNavigate }) => {
         document.documentElement.classList.toggle('dark', isDarkMode);
     }, [isDarkMode]);
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
+        setFormStatus({ state: 'sending', message: '' });
+
         const formData = new FormData(e.target);
-        const data = Object.fromEntries(formData.entries());
-        console.log("Form submitted:", data);
-        // A non-blocking alert for better user experience
-        setTimeout(() => alert("Thank you for your message!"), 0);
-        e.target.reset();
+        
+        // --- UPDATED: Replaced with your actual Google Form details ---
+        const GOOGLE_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLScc7Gxr1bmKAF3YCyGK0NKZym6IZq1JoqvE-5dg8UfO-R-C7A/formResponse";
+        const NAME_ENTRY = "entry.1249149941";
+        const EMAIL_ENTRY = "entry.1210194303";
+        const MESSAGE_ENTRY = "entry.6829889";
+        
+        const googleFormData = new FormData();
+        googleFormData.append(NAME_ENTRY, formData.get('name'));
+        googleFormData.append(EMAIL_ENTRY, formData.get('email'));
+        googleFormData.append(MESSAGE_ENTRY, formData.get('message'));
+
+        try {
+            await fetch(GOOGLE_FORM_URL, {
+                method: 'POST',
+                body: googleFormData,
+                mode: 'no-cors'
+            });
+            setFormStatus({ state: 'success', message: 'Thank you! Your message has been sent.' });
+            e.target.reset();
+        } catch (error) {
+            console.error("Form submission error:", error);
+            setFormStatus({ state: 'error', message: 'Something went wrong. Please try again.' });
+        } finally {
+            setTimeout(() => setFormStatus({ state: 'idle', message: '' }), 5000);
+        }
     };
 
     return (
@@ -258,13 +283,15 @@ const LandingPage = ({ onNavigate }) => {
                 .neumorphic-button:active { box-shadow: inset 6px 6px 12px var(--shadow-dark), inset -6px -6px 12px var(--shadow-light); }
                 .section-title { color: var(--accent-color); }
                 .focus\\:ring-custom:focus { --tw-ring-color: var(--ring-color); }
+                .animate-on-scroll { opacity: 0; transform: translateY(30px); transition: opacity 0.6s ease-out, transform 0.6s ease-out; }
+                .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
             `}</style>
 
             <header className="fixed top-0 left-0 right-0 z-50">
                 <nav className="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center neumorphic-outset mt-4 rounded-full">
-                     <div className="flex-1 flex justify-start">
-                        <a href="#top" className="flex items-center space-x-2">
-                            <GraduationCap style={{ color: 'var(--accent-color)' }} />
+                    <div className="flex-1 flex justify-start">
+                        <a href="#top" className="flex items-center space-x-3">
+                            <img src={AtrackLogo} alt="Atrack Logo" className="w-8 h-8 rounded-full" />
                             <span className="text-xl font-bold" style={{ color: 'var(--text-color)' }}>Atrack</span>
                         </a>
                     </div>
@@ -277,14 +304,14 @@ const LandingPage = ({ onNavigate }) => {
                         <NeumorphicButton onClick={() => setIsDarkMode(!isDarkMode)} className="w-10 h-10 rounded-full flex items-center justify-center">
                             {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
                         </NeumorphicButton>
-                        <button onClick={onNavigate} className="neumorphic-outset neumorphic-button text-white font-semibold px-5 py-2.5 rounded-full hidden sm:block" style={{ backgroundColor: 'var(--accent-color)', color: 'white' }}>Login</button>
+                        <button onClick={onNavigate} className="neumorphic-outset neumorphic-button text-white font-semibold px-5 py-2.5 rounded-full hidden sm:block" style={{ backgroundColor: 'var(--accent-color)', color: 'white' }}>Get Started</button>
                         <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu" className="md:hidden neumorphic-outset neumorphic-button w-10 h-10 rounded-full flex items-center justify-center">
                             <Menu />
                         </button>
                     </div>
                 </nav>
                 <AnimatePresence>
-                     {isMobileMenuOpen && (
+                    {isMobileMenuOpen && (
                         <motion.div 
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setIsMobileMenuOpen(false)}>
@@ -325,11 +352,11 @@ const LandingPage = ({ onNavigate }) => {
             </main>
             
             <section id="features" ref={featuresRef} className="py-24 md:py-32 relative">
-                 <div className="container mx-auto px-6">
+                <div className="container mx-auto px-6">
                     <div className="text-center mb-16">
                         <h2 className="text-4xl md:text-5xl font-bold section-title">One App. Every Angle Covered.</h2>
                         <p className="text-lg mt-4 max-w-2xl mx-auto text-slate-500 dark:text-slate-400">
-                            Stop juggling a dozen apps. Your entire semester finally has one home.
+                            From the lecture hall to the library, Atrack is the only tool you need.
                         </p>
                         <div className="w-full max-w-xl mx-auto mt-8 neumorphic-inset rounded-full h-2">
                             <motion.div className="h-full rounded-full" style={{ scaleX: scrollYProgress, transformOrigin: 'left', background: 'var(--accent-color)' }} />
@@ -360,43 +387,13 @@ const LandingPage = ({ onNavigate }) => {
                     </motion.div>
                     <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.1 }} variants={{ show: { transition: { staggerChildren: 0.15 } } }} className="grid grid-cols-1 md:grid-cols-3 gap-8">
                         {testimonials.map((testimonial, index) => (
-                            <NeumorphicCard 
-                                key={index} 
-                                variants={FADE_UP_ANIMATION_VARIANTS} 
-                                // --- FIX: Added classes to make card black in light mode ---
-                                className="!bg-black dark:!bg-[--bg-color]"
-                            >
+                            <NeumorphicCard key={index} variants={FADE_UP_ANIMATION_VARIANTS}>
                                 <div className="flex items-center mb-4"><span className="text-yellow-400">★★★★★</span></div>
-                                {/* --- FIX: Text is now white in both modes to contrast with the new card background --- */}
-                                <p className="mb-4 text-white">"{testimonial.quote}"</p>
-                                <p className="font-bold text-white">- {testimonial.author}, <span className="text-gray-300 dark:text-gray-400 font-normal">{testimonial.role}</span></p>
+                                <p className="mb-4" style={{ color: 'var(--text-color)' }}>"{testimonial.quote}"</p>
+                                <p className="font-bold" style={{ color: 'var(--text-color)' }}>- {testimonial.author}, <span className="text-slate-500 dark:text-slate-400 font-normal">{testimonial.role}</span></p>
                             </NeumorphicCard>
                         ))}
                     </motion.div>
-                </div>
-            </section>
-
-            <section id="feedback" className="py-24 md:py-32">
-                <div className="container mx-auto px-6">
-                    <NeumorphicCard className="text-center !p-12">
-                         <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.3 }} variants={{ show: { transition: { staggerChildren: 0.2 } } }}>
-                            <motion.div variants={FADE_UP_ANIMATION_VARIANTS} className="flex justify-center mb-4">
-                                <div className="neumorphic-inset rounded-full p-4">
-                                    <Lightbulb className="w-10 h-10" style={{ color: 'var(--accent-color)' }} />
-                                </div>
-                            </motion.div>
-                            <motion.h2 variants={FADE_UP_ANIMATION_VARIANTS} className="text-3xl md:text-4xl font-bold section-title mb-4">Have a brilliant idea?</motion.h2>
-                            <motion.p variants={FADE_UP_ANIMATION_VARIANTS} className="text-lg max-w-2xl mx-auto text-slate-500 dark:text-slate-400 mb-8">
-                                We're constantly improving Atrack with features requested by students like you. Share your suggestions!
-                            </motion.p>
-                            <motion.form variants={FADE_UP_ANIMATION_VARIANTS} onSubmit={handleFormSubmit} className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto">
-                                <NeumorphicInput name="suggestion" type="text" placeholder="Your suggestion..." className="flex-grow" required />
-                                <NeumorphicButton type="submit" className="font-semibold px-6 py-3 rounded-lg flex items-center justify-center gap-2" style={{ backgroundColor: 'var(--accent-color)', color: 'white' }}>
-                                    Send Idea <Send size={18} />
-                                </NeumorphicButton>
-                            </motion.form>
-                         </motion.div>
-                    </NeumorphicCard>
                 </div>
             </section>
             
@@ -405,7 +402,7 @@ const LandingPage = ({ onNavigate }) => {
                     <div className="grid md:grid-cols-2 gap-16 mb-12">
                         <motion.div initial="hidden" whileInView="show" viewport={{ once: true, amount: 0.2 }} variants={{ show: { transition: { staggerChildren: 0.2 } } }}>
                             <motion.div variants={FADE_UP_ANIMATION_VARIANTS} className="flex items-center space-x-3 mb-4">
-                                <GraduationCap size={32} style={{ color: 'var(--accent-color)' }} />
+                                <img src={AtrackLogo} alt="Atrack Logo" className="w-10 h-10 rounded-full" />
                                 <span className="text-3xl font-bold" style={{ color: 'var(--text-color)' }}>Atrack</span>
                             </motion.div>
                             <motion.p variants={FADE_UP_ANIMATION_VARIANTS} className="text-slate-500 dark:text-slate-400 mb-6 max-w-md">
@@ -424,14 +421,26 @@ const LandingPage = ({ onNavigate }) => {
                                 <NeumorphicInput name="name" type="text" placeholder="Your Name" required />
                                 <NeumorphicInput name="email" type="email" placeholder="Your Email" required />
                                 <NeumorphicTextarea name="message" placeholder="Your Message" required />
-                                <NeumorphicButton type="submit" className="w-full font-bold py-3 text-lg rounded-lg" style={{ backgroundColor: 'var(--accent-color)', color: 'white' }}>
-                                    Send Message
+                                <NeumorphicButton type="submit" disabled={formStatus.state === 'sending'} className="w-full font-bold py-3 text-lg rounded-lg" style={{ backgroundColor: 'var(--accent-color)', color: 'white' }}>
+                                    {formStatus.state === 'sending' ? <Loader2 className="animate-spin mx-auto" /> : 'Send Message'}
                                 </NeumorphicButton>
                             </motion.div>
+                            <AnimatePresence>
+                                {formStatus.message && (
+                                    <motion.p 
+                                        initial={{ opacity: 0, height: 0 }}
+                                        animate={{ opacity: 1, height: 'auto' }}
+                                        exit={{ opacity: 0, height: 0 }}
+                                        className={`mt-4 text-center p-2 rounded-lg text-sm ${formStatus.state === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}`}
+                                    >
+                                        {formStatus.message}
+                                    </motion.p>
+                                )}
+                            </AnimatePresence>
                         </motion.form>
                     </div>
                     <div className="text-center text-slate-500 dark:text-slate-500 pt-8 border-t" style={{borderColor: 'var(--shadow-dark)'}}>
-                        <p>&copy; {new Date().getFullYear()} Atrack. All rights reserved. Made with ❤️ in Jabalpur.</p>
+                        <p>&copy; {new Date().getFullYear()} Atrack. All rights reserved.</p>
                     </div>
                 </div>
             </footer>
@@ -439,4 +448,8 @@ const LandingPage = ({ onNavigate }) => {
     );
 };
 
+
 export default LandingPage;
+
+
+
