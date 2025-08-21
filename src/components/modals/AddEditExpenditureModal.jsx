@@ -1,19 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
-import DateTimePicker from '../common/DateTimePicker';
 import { Timestamp } from 'firebase/firestore';
-import { X } from 'lucide-react'; // Import the X icon
+import { X } from 'lucide-react';
 
 const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, categories = [] }) => {
     const [expense, setExpense] = useState({ title: '', amount: '', category: 'Other', date: new Date().toISOString(), reason: '' });
-    // ADDED: State to manage the custom category input
     const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
     const isNew = !expenditureToEdit;
 
     useEffect(() => {
         if (isOpen) {
-            // Reset the custom category state when modal opens
             setIsAddingNewCategory(false);
             if (expenditureToEdit) {
                 setExpense({
@@ -76,7 +73,6 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
                             step="any" 
                         />
                     </div>
-                    {/* UPDATED: Logic to switch between select and input for category */}
                     <div className="w-1/2">
                         <label htmlFor="expenseCategory" className="block text-sm font-medium text-slate-300 mb-2">Category</label>
                         {isAddingNewCategory ? (
@@ -123,8 +119,22 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
                     />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Date of Expense</label>
-                    <DateTimePicker type="date" value={expense.date} onChange={(val) => handleChange('date', val)} />
+                    <label htmlFor="expenseDate" className="block text-sm font-medium text-slate-300 mb-2">Date of Expense</label>
+                    {/* UPDATED: Replaced DateTimePicker with standard input type="date" */}
+                    <input
+                        id="expenseDate"
+                        type="date"
+                        value={new Date(expense.date).toISOString().split('T')[0]}
+                        onChange={(e) => {
+                            // Create a new date object from the input value (YYYY-MM-DD)
+                            // This ensures the time is set to the beginning of the day in UTC
+                            const [year, month, day] = e.target.value.split('-').map(Number);
+                            const newDate = new Date(Date.UTC(year, month - 1, day));
+                            handleChange('date', newDate.toISOString());
+                        }}
+                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        required
+                    />
                 </div>
                 <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full bg-cyan-500/50 hover:bg-cyan-500/80 border border-cyan-400/50 text-white font-bold py-3 px-4 rounded-lg transition-colors !mt-6">
                     {isNew ? 'Add Expense' : 'Save Changes'}
