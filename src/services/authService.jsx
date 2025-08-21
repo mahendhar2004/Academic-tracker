@@ -7,21 +7,36 @@ import {
     sendPasswordResetEmail,
     updateProfile,
     deleteUser,
-    sendEmailVerification // Import the new function
+    sendEmailVerification,
+    // ADDED: Imports for session persistence
+    setPersistence,
+    browserLocalPersistence
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
+// ADDED: Helper function to set persistence before any sign-in action
+const setAuthPersistence = async () => {
+    try {
+        await setPersistence(auth, browserLocalPersistence);
+    } catch (error) {
+        console.error("Error setting auth persistence:", error);
+    }
+};
+
 const authService = {
-    signInWithGoogle: () => {
+    signInWithGoogle: async () => {
+        await setAuthPersistence(); // Set persistence before sign-in
         const provider = new GoogleAuthProvider();
         return signInWithPopup(auth, provider);
     },
 
-    signInWithEmail: (email, password) => {
+    signInWithEmail: async (email, password) => {
+        await setAuthPersistence(); // Set persistence before sign-in
         return signInWithEmailAndPassword(auth, email, password);
     },
 
-    signUpWithEmail: (email, password) => {
+    signUpWithEmail: async (email, password) => {
+        await setAuthPersistence(); // Set persistence for new sign-ups
         return createUserWithEmailAndPassword(auth, email, password);
     },
     
@@ -45,7 +60,6 @@ const authService = {
         return Promise.reject(new Error("No user is currently signed in."));
     },
 
-    // NEW: Function to send a verification email to the current user
     sendVerificationEmail: () => {
         const user = auth.currentUser;
         if (user) {

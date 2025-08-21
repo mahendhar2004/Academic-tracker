@@ -8,11 +8,13 @@ import firebaseService from './services/firebaseService';
 import { COIN_VALUES } from './constants';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
-import PublicProfilePage from './pages/PublicProfilePage'; 
+import PublicProfilePage from './pages/PublicProfilePage';
+import LandingPage from './pages/LandingPage';
 
 export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [view, setView] = useState('landing'); 
     const { initializeListeners, cleanupListeners } = useStore();
     const [reward, setReward] = useState({ key: 0, amount: 0 });
     const [publicProfileId, setPublicProfileId] = useState(null);
@@ -22,6 +24,18 @@ export default function App() {
         const shareId = queryParams.get('profile');
         if (shareId) {
             setPublicProfileId(shareId);
+        }
+    }, []);
+
+    useEffect(() => {
+        const session = JSON.parse(localStorage.getItem('user_session'));
+        if (session) {
+            const now = new Date().getTime();
+            const sevenDaysInMillis = 7 * 24 * 60 * 60 * 1000; 
+            if (now - session.loginTime > sevenDaysInMillis) {
+                authService.signOutUser();
+                localStorage.removeItem('user_session');
+            }
         }
     }, []);
 
@@ -48,11 +62,18 @@ export default function App() {
 
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
+                const session = JSON.parse(localStorage.getItem('user_session'));
+                if (!session || session.uid !== currentUser.uid) {
+                    localStorage.setItem('user_session', JSON.stringify({
+                        uid: currentUser.uid,
+                        loginTime: new Date().getTime()
+                    }));
+                }
+
                 const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
                 const profileSnap = await getDoc(profileRef);
                 
                 if (!profileSnap.exists()) {
-                    // UPDATED: Removed expenditureBalance and isBalanceVisible from new profile
                     await setDoc(profileRef, {
                         name: currentUser.displayName || 'New User',
                         email: currentUser.email || '',
@@ -70,9 +91,12 @@ export default function App() {
                 setUser(currentUser);
                 initializeListeners(currentUser);
                 await runDailyCheckIn(currentUser.uid);
+                setView('dashboard'); 
             } else {
+                localStorage.removeItem('user_session');
                 setUser(null);
                 cleanupListeners();
+                setView('landing'); 
             }
             setLoading(false);
         });
@@ -96,7 +120,6 @@ export default function App() {
             await authService.updateUserProfile(user, { displayName: name });
 
             const profileRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/data`);
-            // UPDATED: Removed expenditureBalance and isBalanceVisible from new profile on signup
             await setDoc(profileRef, {
                 name: name,
                 email: user.email,
@@ -127,24 +150,37 @@ export default function App() {
         return <PublicProfilePage shareId={publicProfileId} />;
     }
 
-    return (
-        <>
-            <style>{`.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
-            {user ? (
-                <Dashboard 
-                    user={user} 
-                    onSignOut={handleSignOut}
-                    reward={reward}
-                    setReward={setReward}
-                    triggerReward={triggerReward}
-                />
-            ) : (
-                <LoginPage 
+    const renderContent = () => {
+        switch (view) {
+            case 'login':
+                return <LoginPage 
                     onLogin={handleLogin} 
                     onLoginWithEmail={handleLoginWithEmail}
                     onSignUpWithEmail={handleSignUpWithEmail}
-                />
-            )}
+                    onNavigateToLanding={() => setView('landing')}
+                />;
+            case 'dashboard':
+                if (user) {
+                    return <Dashboard 
+                        user={user} 
+                        onSignOut={handleSignOut}
+                        reward={reward}
+                        setReward={setReward}
+                        triggerReward={triggerReward}
+                    />;
+                }
+                setView('login');
+                return null;
+            case 'landing':
+            default:
+                return <LandingPage onNavigate={() => setView('login')} />;
+        }
+    };
+
+    return (
+        <>
+            <style>{`.no-scrollbar::-webkit-scrollbar { display: none; } .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+            {renderContent()}
         </>
     );
 }
