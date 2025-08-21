@@ -1,6 +1,6 @@
 import {
     doc, setDoc, collection, addDoc, deleteDoc,
-    updateDoc, writeBatch, getDocs, Timestamp, increment, getDoc, runTransaction,
+    updateDoc, writeBatch, getDocs, Timestamp, increment, runTransaction,
     query, where
 } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
@@ -114,29 +114,24 @@ const firestoreService = {
     deleteCourseAndRelatedData: async (userId, courseId) => {
         const batch = writeBatch(db);
 
-        // 1. Delete the main course document
         const courseRef = doc(db, `artifacts/${appId}/users/${userId}/courses`, courseId);
         batch.delete(courseRef);
 
-        // 2. Find and delete related schedule items
         const schedulePath = `artifacts/${appId}/users/${userId}/schedule`;
         const scheduleQuery = query(collection(db, schedulePath), where("courseId", "==", courseId));
         const scheduleSnapshot = await getDocs(scheduleQuery);
         scheduleSnapshot.forEach(doc => batch.delete(doc.ref));
 
-        // 3. Find and delete related exam marks
         const marksPath = `artifacts/${appId}/users/${userId}/examMarks`;
         const marksQuery = query(collection(db, marksPath), where("courseId", "==", courseId));
         const marksSnapshot = await getDocs(marksQuery);
         marksSnapshot.forEach(doc => batch.delete(doc.ref));
         
-        // 4. Find and delete related deadlines
         const deadlinesPath = `artifacts/${appId}/users/${userId}/deadlines`;
         const deadlinesQuery = query(collection(db, deadlinesPath), where("courseId", "==", courseId));
         const deadlinesSnapshot = await getDocs(deadlinesQuery);
         deadlinesSnapshot.forEach(doc => batch.delete(doc.ref));
 
-        // 5. Commit all deletes at once
         await batch.commit();
     },
 
@@ -240,65 +235,27 @@ const firestoreService = {
     },
 
     // === EXPENDITURES ===
-    saveExpenditure: async (userId, expenditureData, expenditureId, currentBalance) => {
+    saveExpenditure: async (userId, expenditureData, expenditureId) => {
         const path = `artifacts/${appId}/users/${userId}/expenditures`;
-        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-
         if (expenditureId) {
-            const expenditureRef = doc(db, path, expenditureId);
-            const oldDoc = await getDoc(expenditureRef);
-            const oldAmount = oldDoc.exists() ? oldDoc.data().amount : 0;
-            const difference = oldAmount - expenditureData.amount;
-
-            if (difference < 0 && currentBalance < Math.abs(difference)) {
-                return 'INSUFFICIENT_FUNDS';
-            }
-            
-            const batch = writeBatch(db);
-            batch.update(expenditureRef, expenditureData);
-            batch.update(profileRef, { expenditureBalance: increment(difference) });
-            await batch.commit();
-
+            await updateDoc(doc(db, path, expenditureId), expenditureData);
         } else {
-            if (currentBalance < expenditureData.amount) {
-                return 'INSUFFICIENT_FUNDS'; 
-            }
             await addDoc(collection(db, path), expenditureData);
-            await updateDoc(profileRef, { expenditureBalance: increment(-expenditureData.amount) });
         }
         return 'SUCCESS';
     },
 
     deleteExpenditure: async (userId, expenditureToDelete) => {
         const path = `artifacts/${appId}/users/${userId}/expenditures`;
-        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        
-        const batch = writeBatch(db);
-        batch.delete(doc(db, path, expenditureToDelete.id));
-        batch.update(profileRef, { expenditureBalance: increment(expenditureToDelete.amount) });
-        
-        await batch.commit();
-    },
-
-    setExpenditureBalance: async (userId, newBalance) => {
-        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        await updateDoc(profileRef, { expenditureBalance: newBalance });
+        await deleteDoc(doc(db, path, expenditureToDelete.id));
     },
     
-    toggleBalanceVisibility: async (userId, currentVisibility) => {
-        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        await updateDoc(profileRef, { isBalanceVisible: !currentVisibility });
-    },
-
+    // ADDED: Re-added the reset function without balance logic
     resetExpenditures: async (userId) => {
         const ref = collection(db, `artifacts/${appId}/users/${userId}/expenditures`);
         const snapshot = await getDocs(ref);
         const batch = writeBatch(db);
         snapshot.forEach(doc => batch.delete(doc.ref));
-        
-        const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-        batch.update(profileRef, { expenditureBalance: 0 });
-
         await batch.commit();
     },
 
@@ -318,8 +275,6 @@ const firestoreService = {
             email: user.email || '',
             imageUrl: user.photoURL || '',
             coins: 0,
-            expenditureBalance: 0,
-            isBalanceVisible: true,
             personal: {
                 phone: user.phoneNumber || '',
                 isPhoneVerified: false,

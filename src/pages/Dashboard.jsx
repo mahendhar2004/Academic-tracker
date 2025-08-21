@@ -29,13 +29,11 @@ import AddEditMarksModal from '../components/modals/AddEditMarksModal';
 import AddEditTaskModal from '../components/modals/AddEditTaskModal';
 import AddEditContactModal from '../components/modals/AddEditContactModal';
 import AddEditExpenditureModal from '../components/modals/AddEditExpenditureModal';
-import SetBalanceModal from '../components/modals/SetBalanceModal';
 import TimetableModal from '../components/modals/TimetableModal';
 import PomodoroModal from '../components/modals/PomodoroModal';
 import PomodoroTimer from '../components/pomodoro/PomodoroTimer';
 import WhatIfModal from '../components/modals/WhatIfModal';
 import EditProfileModal from '../components/modals/EditProfileModal';
-import ResetExpendituresModal from '../components/modals/ResetExpendituresModal';
 import DeleteAccountModal from '../components/modals/DeleteAccountModal';
 import ReauthModal from '../components/modals/ReauthModal';
 import BugReportModal from '../components/modals/BugReportModal';
@@ -50,7 +48,6 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
 
     const [currentPage, setCurrentPage] = useState('home');
     const [pomodoroConfig, setPomodoroConfig] = useState({ isActive: false, duration: 0 });
-    const [isResetExpendituresModalOpen, setIsResetExpendituresModalOpen] = useState(false);
     const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
     const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
     
@@ -94,10 +91,17 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
         return schedule.filter(classItem => currentSemesterCourseIds.has(classItem.courseId));
     }, [schedule, currentSemesterCourses]);
 
+    // ADDED: Memoized calculation for unique expenditure categories
+    const expenditureCategories = useMemo(() => {
+        const allCategories = expenditures.map(e => e.category);
+        // Add default categories to ensure they are always available
+        const defaultCategories = ['Food', 'Transport', 'Subscriptions', 'Entertainment', 'Study', 'Utilities', 'Other'];
+        return [...new Set([...defaultCategories, ...allCategories])].sort();
+    }, [expenditures]);
+
     const handleSaveCourse = (courseData) => firestoreService.saveCourse(user.uid, courseData);
     const handleSaveGrade = (courseId, grade) => firestoreService.saveGrade(user.uid, courseId, grade);
 
-    // UPDATED: New handler for deleting a grade
     const handleDeleteGrade = (courseId, courseName) => {
         openModal('confirmation', {
             message: `Are you sure you want to delete the grade for "${courseName}"? This will set it back to "Not Published".`,
@@ -174,22 +178,17 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
             triggerReward(COIN_VALUES.FINISH_POMODORO);
         }
     };
-    const handleSaveExpenditure = async (expenditureData, expenditureId) => {
-        const result = await firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId, profileData.expenditureBalance);
-        if (result === 'INSUFFICIENT_FUNDS') {
-             openModal('confirmation', {
-                 message: "Insufficient balance for this transaction.",
-                 onConfirm: () => {}
-             });
-        }
+    const handleSaveExpenditure = (expenditureData, expenditureId) => {
+        firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId);
     };
-    const handleSetExpenditureBalance = (newBalance) => firestoreService.setExpenditureBalance(user.uid, newBalance);
-    const handleToggleBalanceVisibility = () => firestoreService.toggleBalanceVisibility(user.uid, profileData.isBalanceVisible);
-    const handleResetExpenditures = () => setIsResetExpendituresModalOpen(true);
-    const confirmResetExpenditures = async () => {
-        await firestoreService.resetExpenditures(user.uid);
-        setIsResetExpendituresModalOpen(false);
+
+    const handleResetExpenditures = () => {
+        openModal('confirmation', {
+            message: "Are you sure you want to delete all transactions? This action cannot be undone.",
+            onConfirm: () => firestoreService.resetExpenditures(user.uid)
+        });
     };
+
     const handleDeleteAccountClick = () => setIsDeleteAccountModalOpen(true);
     const confirmDeleteAccount = async () => {
         try {
@@ -237,17 +236,17 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
                  <SideNav currentPage={currentPage} setCurrentPage={setCurrentPage} />
                  <div className="flex-1 md:pl-28 overflow-hidden">
                      <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-10">
-                        {currentPage !== 'profile' && (
-                            <Header 
-                                currentPage={currentPage} 
-                                profileData={profileData} 
-                                onOpenTimetable={() => openModal('timetable')}
-                                onOpenPomodoro={() => openModal('pomodoro')}
-                                onOpenBugReport={() => openModal('bugReport')}
-                                reward={reward}
-                                setReward={setReward}
-                            />
-                        )}
+                         {currentPage !== 'profile' && (
+                             <Header 
+                                 currentPage={currentPage} 
+                                 profileData={profileData} 
+                                 onOpenTimetable={() => openModal('timetable')}
+                                 onOpenPomodoro={() => openModal('pomodoro')}
+                                 onOpenBugReport={() => openModal('bugReport')}
+                                 reward={reward}
+                                 setReward={setReward}
+                             />
+                         )}
                          <main>
                              <AnimatePresence mode="wait">
                                  <motion.div key={currentPage} initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
@@ -300,13 +299,9 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
                                      />}
                                      {currentPage === 'expenditure' && <ExpenditurePage 
                                          expenditures={expenditures} 
-                                         balance={profileData.expenditureBalance}
-                                         isBalanceVisible={profileData.isBalanceVisible} 
                                          onAddExpenditure={handleAddExpenditureClick}
                                          onDeleteExpenditure={handleDeleteExpenditure} 
                                          onEditExpenditure={handleEditExpenditureClick}
-                                         onSetBalance={() => openModal('setBalance')}
-                                         onToggleBalanceVisibility={handleToggleBalanceVisibility} 
                                          onResetExpenditures={handleResetExpenditures}
                                      />}
                                      {currentPage === 'profile' && <ProfilePage 
@@ -362,13 +357,14 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
                 defaultType={modalProps.defaultType}
             />
             <AddEditContactModal isOpen={modal === 'addContact'} onClose={closeModal} onSave={handleSaveContact} contactToEdit={modalProps.contactToEdit} />
+            {/* UPDATED: Pass the dynamic categories to the modal */}
             <AddEditExpenditureModal 
                 isOpen={modal === 'addExpenditure'} 
                 onClose={closeModal} 
                 onSave={handleSaveExpenditure} 
                 expenditureToEdit={modalProps.expenditureToEdit}
+                categories={expenditureCategories}
             />
-            <SetBalanceModal isOpen={modal === 'setBalance'} onClose={closeModal} onSave={handleSetExpenditureBalance} currentBalance={profileData.expenditureBalance} />
             <TimetableModal isOpen={modal === 'timetable'} onClose={closeModal} schedule={schedule} courses={allCourses} />
             <PomodoroModal isOpen={modal === 'pomodoro'} onClose={closeModal} onStart={handleStartPomodoro} />
             <WhatIfModal isOpen={modal === 'whatIf'} onClose={closeModal} allCourses={allCourses} />
@@ -387,11 +383,6 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
                 isOpen={modal === 'resetConfirmation'}
                 onClose={closeModal}
                 onConfirm={handleResetData}
-            />
-            <ResetExpendituresModal
-                isOpen={isResetExpendituresModalOpen}
-                onClose={() => setIsResetExpendituresModalOpen(false)}
-                onConfirm={confirmResetExpenditures}
             />
             <DeleteAccountModal
                 isOpen={isDeleteAccountModalOpen}

@@ -23,10 +23,10 @@ const EditableField = ({ label, value, onSave, large = false, placeholder }) => 
 
     // --- In-place Editing UI ---
     if (isEditing) {
-        // This layout is wrapped in a flex container to align with the display mode
+        // UPDATED: Responsive layout for editing mode
         return (
-            <div className="flex items-center gap-2 w-full py-2">
-                <span className="w-44 flex-shrink-0 text-slate-400 font-medium">{label}:</span>
+            <div className="flex flex-col md:flex-row md:items-center gap-2 w-full py-2">
+                <span className="text-slate-400 font-medium md:w-44 md:flex-shrink-0">{label}:</span>
                 <div className="flex-1 flex items-center gap-2">
                     <input 
                         type="text"
@@ -62,15 +62,16 @@ const EditableField = ({ label, value, onSave, large = false, placeholder }) => 
     }
 
     // --- Default Inline Variant (Label: Value) ---
+    // UPDATED: This now stacks vertically on mobile and goes horizontal on medium screens and up
     return (
-        <div className="group relative flex items-center w-full py-2">
-            <span className="w-44 flex-shrink-0 text-slate-400 font-medium">{label}:</span>
+        <div className="group relative flex flex-col md:flex-row md:items-center w-full py-2">
+            <span className="text-slate-400 font-medium md:w-44 md:flex-shrink-0">{label}:</span>
             
-            <div className="flex-1 flex justify-start items-center gap-2 pl-4">
-                <p className="text-white font-semibold text-left truncate">
+            <div className="flex-1 flex justify-start items-center gap-2 pt-1 md:pt-0 md:pl-4">
+                <p className="text-white font-semibold text-left break-words">
                     {value || <span className="text-slate-500">{placeholderText}</span>}
                 </p>
-                <div className="absolute right-0">
+                <div className="absolute top-2 right-0">
                     <button onClick={() => setIsEditing(true)} className="flex-shrink-0 p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Edit size={14} />
                     </button>

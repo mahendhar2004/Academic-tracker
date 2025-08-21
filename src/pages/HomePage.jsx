@@ -74,10 +74,10 @@ const AtAGlance = ({
                 const deadlineDate = normalizeDate(deadline.date);
                 const isUrgent = (deadlineDate.getTime() - now.getTime()) < oneDayInMs;
                 return (
-                     <div key={deadline.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
-                         <span className="font-semibold truncate">{deadline.title}</span>
-                         <span className={isUrgent ? 'text-red-400 font-bold' : 'text-slate-400'}>{deadlineDate.toLocaleDateString('en-GB')}</span>
-                     </div>
+                       <div key={deadline.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
+                           <span className="font-semibold truncate">{deadline.title}</span>
+                           <span className={isUrgent ? 'text-red-400 font-bold' : 'text-slate-400'}>{deadlineDate.toLocaleDateString('en-GB')}</span>
+                       </div>
                 );
             })
         },
@@ -86,10 +86,10 @@ const AtAGlance = ({
             icon: CheckCircle2,
             title: "Today's Plans",
             content: todaysTasks.map(task => (
-                 <div key={task.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
-                     <span className="font-semibold truncate">{task.title}</span>
-                     <span className="text-slate-400">{task.dueTime}</span>
-                 </div>
+                   <div key={task.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
+                       <span className="font-semibold truncate">{task.title}</span>
+                       <span className="text-slate-400">{task.dueTime}</span>
+                   </div>
             ))
         }
     ];
@@ -113,11 +113,11 @@ const AtAGlance = ({
                 </div>
             ) : (
                 <div className={cardClassName}>
-                     <div className="text-center py-10">
-                        <Wind size={48} className="mx-auto text-slate-500 mb-4" />
-                        <h3 className="font-bold text-white text-lg">All Clear for Now!</h3>
-                        <p className="text-slate-400 mt-1">You have no immediate tasks or warnings. <br/> A perfect chance to plan ahead or take a break.</p>
-                     </div>
+                       <div className="text-center py-10">
+                           <Wind size={48} className="mx-auto text-slate-500 mb-4" />
+                           <h3 className="font-bold text-white text-lg">All Clear for Now!</h3>
+                           <p className="text-slate-400 mt-1">You have no immediate tasks or warnings. <br/> A perfect chance to plan ahead or take a break.</p>
+                       </div>
                 </div>
             )}
         </>
@@ -140,7 +140,8 @@ const DailyFocus = ({ schedule, deadlines, tasks, cardStyles }) => {
         <div className={cardStyles}>
             <div className="absolute -top-1 -left-1 w-32 h-32 bg-white/10 rounded-full blur-[80px] opacity-50"></div>
             <h3 className="font-bold text-white text-lg mb-4">Today's Focus</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+            {/* UPDATED: Changed grid-cols-1 to grid-cols-3 and removed the md breakpoint */}
+            <div className="grid grid-cols-3 gap-4 text-center">
                 {focusItems.map(item => (
                     <div key={item.label} className="bg-black/20 p-4 rounded-lg border border-white/10">
                         <item.icon className="mx-auto text-cyan-400 mb-2" size={24} />
@@ -173,10 +174,8 @@ const HomePage = ({
     schedule, deadlines, tasks, courses, expenditures = []
 }) => {
     
-    // Original glassy style for cards on the right
     const glassyCardStyles = "relative overflow-hidden bg-black/50 bg-gradient-to-b from-black/10 via-transparent to-black/50 backdrop-blur-2xl border border-gray-800 p-6 rounded-2xl shadow-2xl";
     
-    // NEW: Neumorphic style for cards on the left ("At a Glance")
     const neumorphicCardStyles = "relative bg-[#181818] p-6 rounded-2xl shadow-[5px_5px_12px_rgba(0,0,0,0.5),-5px_-5px_12px_rgba(255,255,255,0.05)]";
 
     const {

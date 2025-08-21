@@ -116,12 +116,14 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="grid grid-cols-1 lg:grid-cols-3 gap-12 items-start"
+                // UPDATED: Reduced gap on small screens, kept it larger for desktop
+                className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 items-start"
             >
                 {/* --- LEFT COLUMN (STICKY) --- */}
                 <motion.div
                     variants={itemVariants}
-                    className="lg:col-span-1 space-y-12 lg:sticky lg:top-8"
+                    // UPDATED: Reduced vertical spacing on small screens
+                    className="lg:col-span-1 space-y-8 lg:space-y-12 lg:sticky lg:top-8"
                 >
                     <div className={`${cardStyles} p-8 text-center space-y-6`}>
                         <img
@@ -172,7 +174,8 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
                 {/* --- RIGHT COLUMN (SCROLLABLE) --- */}
                 <motion.div
                     variants={itemVariants}
-                    className="lg:col-span-2 space-y-12 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto no-scrollbar lg:pr-4"
+                    // UPDATED: Reduced vertical spacing on small screens
+                    className="lg:col-span-2 space-y-8 lg:space-y-12 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto no-scrollbar lg:pr-4"
                 >
                     <div className={`${cardStyles} p-8 space-y-4`}>
                         <h3 className="font-bold text-xl text-white flex items-center gap-3"><UserIcon size={20} /> Personal Details</h3>

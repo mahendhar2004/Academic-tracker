@@ -3,23 +3,27 @@ import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 import DateTimePicker from '../common/DateTimePicker';
 import { Timestamp } from 'firebase/firestore';
+import { X } from 'lucide-react'; // Import the X icon
 
-const CATEGORIES = ['Food', 'Transport', 'Subscriptions', 'Entertainment', 'Study', 'Utilities', 'Other'];
-
-const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit }) => {
-    const [expense, setExpense] = useState({ title: '', amount: '', category: 'Food', date: new Date().toISOString() });
+const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, categories = [] }) => {
+    const [expense, setExpense] = useState({ title: '', amount: '', category: 'Other', date: new Date().toISOString(), reason: '' });
+    // ADDED: State to manage the custom category input
+    const [isAddingNewCategory, setIsAddingNewCategory] = useState(false);
     const isNew = !expenditureToEdit;
 
     useEffect(() => {
         if (isOpen) {
+            // Reset the custom category state when modal opens
+            setIsAddingNewCategory(false);
             if (expenditureToEdit) {
                 setExpense({
                     ...expenditureToEdit,
-                    date: expenditureToEdit.date.toDate().toISOString(), // Convert Firestore Timestamp to ISO string
-                    amount: expenditureToEdit.amount.toString() // Convert number to string for input
+                    date: expenditureToEdit.date.toDate().toISOString(),
+                    amount: expenditureToEdit.amount.toString(),
+                    reason: expenditureToEdit.reason || '' 
                 });
             } else {
-                setExpense({ title: '', amount: '', category: 'Food', date: new Date().toISOString() });
+                setExpense({ title: '', amount: '', category: 'Other', date: new Date().toISOString(), reason: '' });
             }
         }
     }, [isOpen, expenditureToEdit]);
@@ -29,13 +33,23 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit })
     const handleSubmit = (e) => {
         e.preventDefault();
         const amountNum = parseFloat(expense.amount);
-        if (expense.title.trim() && !isNaN(amountNum) && amountNum > 0 && expense.date) {
+        if (expense.title.trim() && expense.category.trim() && !isNaN(amountNum) && amountNum > 0 && expense.date) {
             onSave({ 
                 ...expense, 
                 amount: amountNum, 
-                date: Timestamp.fromDate(new Date(expense.date)) 
+                date: Timestamp.fromDate(new Date(expense.date)),
+                category: expense.category.charAt(0).toUpperCase() + expense.category.slice(1)
             }, expenditureToEdit?.id || null);
             onClose();
+        }
+    };
+
+    const handleAmountKeyDown = (e) => {
+        if (['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight', '.'].includes(e.key)) {
+            return;
+        }
+        if (e.key.length === 1 && (isNaN(e.key) || e.key === ' ')) {
+            e.preventDefault();
         }
     };
 
@@ -49,14 +63,64 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit })
                 <div className="flex gap-4">
                     <div className="w-1/2">
                         <label htmlFor="expenseAmount" className="block text-sm font-medium text-slate-300 mb-2">Amount (₹)</label>
-                        <input id="expenseAmount" type="number" value={expense.amount} onChange={(e) => handleChange('amount', e.target.value)} placeholder="e.g., 500" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" required min="0" step="any" />
+                        <input 
+                            id="expenseAmount" 
+                            type="number" 
+                            value={expense.amount} 
+                            onChange={(e) => handleChange('amount', e.target.value)} 
+                            onKeyDown={handleAmountKeyDown}
+                            placeholder="e.g., 500" 
+                            className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" 
+                            required 
+                            min="0" 
+                            step="any" 
+                        />
                     </div>
+                    {/* UPDATED: Logic to switch between select and input for category */}
                     <div className="w-1/2">
                         <label htmlFor="expenseCategory" className="block text-sm font-medium text-slate-300 mb-2">Category</label>
-                        <select id="expenseCategory" value={expense.category} onChange={(e) => handleChange('category', e.target.value)} className="w-full h-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
-                            {CATEGORIES.map(cat => <option key={cat} value={cat} className="bg-slate-800">{cat}</option>)}
-                        </select>
+                        {isAddingNewCategory ? (
+                            <div className="flex items-center gap-2">
+                                <input 
+                                    type="text"
+                                    value={expense.category}
+                                    onChange={(e) => handleChange('category', e.target.value)}
+                                    className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    placeholder="New Category"
+                                    autoFocus
+                                    required
+                                />
+                                <button type="button" onClick={() => { setIsAddingNewCategory(false); handleChange('category', 'Other'); }} className="p-2 text-slate-400 hover:text-white transition-colors"><X size={18}/></button>
+                            </div>
+                        ) : (
+                            <select 
+                                id="expenseCategory" 
+                                value={expense.category} 
+                                onChange={(e) => {
+                                    if (e.target.value === '__add_new__') {
+                                        setIsAddingNewCategory(true);
+                                        handleChange('category', '');
+                                    } else {
+                                        handleChange('category', e.target.value);
+                                    }
+                                }} 
+                                className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                            >
+                                {categories.map(cat => <option key={cat} value={cat} className="bg-slate-800">{cat}</option>)}
+                                <option value="__add_new__" className="bg-slate-700 text-cyan-400 font-semibold">Add New...</option>
+                            </select>
+                        )}
                     </div>
+                </div>
+                <div>
+                    <label htmlFor="expenseReason" className="block text-sm font-medium text-slate-300 mb-2">Reason (Optional)</label>
+                    <textarea 
+                        id="expenseReason" 
+                        value={expense.reason} 
+                        onChange={(e) => handleChange('reason', e.target.value)} 
+                        placeholder="e.g., Celebrated end of exams" 
+                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none h-20"
+                    />
                 </div>
                 <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">Date of Expense</label>

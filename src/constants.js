@@ -20,9 +20,10 @@ export const COIN_VALUES = {
     PROFILE_INTERNSHIPS: 100,
     PROFILE_RESUMES: 50,
     PROFILE_SOCIAL: 25,
+    PROFILE_THEME: 15,
 };
 
-export const EXPENDITURE_CATEGORIES = ['Food', 'Transport', 'Subscriptions', 'Entertainment', 'Study', 'Utilities', 'Other'];
+// REMOVED: The EXPENDITURE_CATEGORIES constant is no longer needed.
 
 export const COURSE_COLORS = [
     '#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#16a34a', '#0d9488',

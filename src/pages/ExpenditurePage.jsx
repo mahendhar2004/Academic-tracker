@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CreditCard, Plus, ArrowDownUp, Eye, EyeOff, Edit, RefreshCw, Trash2 } from 'lucide-react';
+import { CreditCard, Plus, ArrowDownUp, Edit, RefreshCw, Trash2 } from 'lucide-react';
 import ExpenditureChart from '../components/expenditure/ExpenditureChart';
 
 const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
@@ -14,7 +14,8 @@ const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
         >
             <div>
                 <p className="font-semibold text-white">{item.title}</p>
-                <p className="text-sm text-slate-400">{item.category}</p>
+                {item.reason && <p className="text-xs text-slate-500 italic mt-0.5">{item.reason}</p>}
+                <p className="text-sm text-slate-400 mt-1">{item.category}</p>
             </div>
             <div className="flex items-center gap-4">
                 <div className="text-right">
@@ -32,13 +33,10 @@ const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
 
 const ExpenditurePage = ({ 
     expenditures = [], 
-    balance = 0,
-    isBalanceVisible = true,
     onAddExpenditure, 
     onDeleteExpenditure,
     onEditExpenditure,
-    onSetBalance,
-    onToggleBalanceVisibility,
+    // ADDED: Prop for the reset handler
     onResetExpenditures
 }) => {
     const [sortBy, setSortBy] = useState('date_desc');
@@ -76,17 +74,8 @@ const ExpenditurePage = ({
             <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
                 <h2 className="text-2xl font-bold text-white flex items-center gap-3"><CreditCard className="text-cyan-400" />Expenditure</h2>
                 
+                {/* ADDED: Container for action buttons */}
                 <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 bg-slate-800/50 backdrop-blur-3xl border border-white/25 px-4 py-2 rounded-lg">
-                        <p className="text-sm text-slate-400">Balance:</p>
-                        <p className="font-bold text-white text-lg">{isBalanceVisible ? formatCurrency(balance) : '∗∗∗∗∗'}</p>
-                        <button onClick={onToggleBalanceVisibility} className="text-slate-400 hover:text-white" title={isBalanceVisible ? 'Hide Balance' : 'Show Balance'}>
-                            {isBalanceVisible ? <EyeOff size={18} /> : <Eye size={18} />}
-                        </button>
-                        <button onClick={onSetBalance} className="text-slate-400 hover:text-white" title="Set Balance">
-                            <Edit size={18} />
-                        </button>
-                    </div>
                     <motion.button whileTap={{ scale: 0.95 }} onClick={onResetExpenditures} title="Reset All Expenses" className="flex-shrink-0 flex items-center justify-center bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 w-10 h-10 rounded-lg transition-colors"><RefreshCw size={18} /></motion.button>
                     <motion.button whileTap={{ scale: 0.95 }} onClick={onAddExpenditure} title="Add Expenditure" className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"><Plus size={20} /></motion.button>
                 </div>

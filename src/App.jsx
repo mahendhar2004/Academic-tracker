@@ -8,7 +8,6 @@ import firebaseService from './services/firebaseService';
 import { COIN_VALUES } from './constants';
 import Dashboard from './pages/Dashboard';
 import LoginPage from './pages/LoginPage';
-// UPDATED: Import the new public profile page
 import PublicProfilePage from './pages/PublicProfilePage'; 
 
 export default function App() {
@@ -16,8 +15,6 @@ export default function App() {
     const [loading, setLoading] = useState(true);
     const { initializeListeners, cleanupListeners } = useStore();
     const [reward, setReward] = useState({ key: 0, amount: 0 });
-
-    // UPDATED: Check for a public profile ID in the URL on load
     const [publicProfileId, setPublicProfileId] = useState(null);
 
     useEffect(() => {
@@ -44,7 +41,6 @@ export default function App() {
     }, [triggerReward]);
 
     useEffect(() => {
-        // This auth listener only runs if we are NOT viewing a public profile
         if (publicProfileId) {
             setLoading(false);
             return;
@@ -56,13 +52,12 @@ export default function App() {
                 const profileSnap = await getDoc(profileRef);
                 
                 if (!profileSnap.exists()) {
+                    // UPDATED: Removed expenditureBalance and isBalanceVisible from new profile
                     await setDoc(profileRef, {
                         name: currentUser.displayName || 'New User',
                         email: currentUser.email || '',
                         imageUrl: currentUser.photoURL || '',
                         coins: 0,
-                        expenditureBalance: 0,
-                        isBalanceVisible: true,
                         personal: {
                             phone: currentUser.phoneNumber || '',
                             isPhoneVerified: false,
@@ -101,13 +96,12 @@ export default function App() {
             await authService.updateUserProfile(user, { displayName: name });
 
             const profileRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/data`);
+            // UPDATED: Removed expenditureBalance and isBalanceVisible from new profile on signup
             await setDoc(profileRef, {
                 name: name,
                 email: user.email,
                 imageUrl: user.photoURL || '',
                 coins: 0,
-                expenditureBalance: 0,
-                isBalanceVisible: true,
                 personal: {
                     phone: phone || '',
                     isPhoneVerified: false,
@@ -129,9 +123,7 @@ export default function App() {
         return <div className="bg-black min-h-screen flex justify-center items-center text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div></div>;
     }
 
-    // --- UPDATED RENDER LOGIC ---
     if (publicProfileId) {
-        // If a public profile ID is in the URL, show the public page
         return <PublicProfilePage shareId={publicProfileId} />;
     }
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Home, ClipboardList, TrendingUp, Calendar, ListTodo, UserCircle2, Users, CreditCard, Menu, X } from 'lucide-react';
-import Logo from '../../assets/Logo.png'; // Make sure this path is correct
 
 const SideNav = ({ currentPage, setCurrentPage }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -40,11 +39,6 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
 
     return (
         <>
-            {/* --- Mobile Logo --- */}
-            <div className="md:hidden fixed top-6 left-6 z-30">
-                <img src={Logo} alt="App Logo" className="w-12 h-12" />
-            </div>
-
             {/* --- Desktop Navbar Wrapper --- */}
             <div className="hidden md:flex fixed left-4 top-14 flex-col items-center gap-6 z-40">
                 <div 
@@ -115,7 +109,6 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
                                 className="fixed top-0 left-0 bottom-0 w-64 bg-slate-900/90 backdrop-blur-lg border-r border-white/10 p-6 z-50"
                             >
                                 <div className="flex justify-between items-center mb-10">
-                                    <img src={Logo} alt="App Logo" className="w-10 h-10" />
                                     <button onClick={() => setIsOpen(false)} className="p-1 text-slate-400 hover:text-white">
                                         <X size={24} />
                                     </button>

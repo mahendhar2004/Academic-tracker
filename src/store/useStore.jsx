@@ -28,8 +28,6 @@ const getProfileListener = (userId, user, callback) => {
                 email: user.email || '',
                 imageUrl: user.photoURL || '',
                 coins: 0,
-                expenditureBalance: 0,
-                isBalanceVisible: true
             };
             callback(newProfile);
         }
@@ -39,7 +37,8 @@ const getProfileListener = (userId, user, callback) => {
 export const useStore = create((set, get) => ({
     // === STATE ===
     allCourses: [],
-    profileData: { name: '', imageUrl: '', coins: 0, expenditureBalance: 0, isBalanceVisible: true },
+    // UPDATED: Removed expenditureBalance and isBalanceVisible from default state
+    profileData: { name: '', imageUrl: '', coins: 0 },
     schedule: [],
     deadlines: [],
     examMarks: [],
@@ -79,7 +78,8 @@ export const useStore = create((set, get) => ({
         listeners = [];
         set({
             allCourses: [],
-            profileData: { name: '', imageUrl: '', coins: 0, expenditureBalance: 0, isBalanceVisible: true },
+            // UPDATED: Removed expenditureBalance and isBalanceVisible from cleanup
+            profileData: { name: '', imageUrl: '', coins: 0 },
             schedule: [],
             deadlines: [],
             examMarks: [],
