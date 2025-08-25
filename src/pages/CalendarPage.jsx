@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Bell, ChevronDown } from 'lucide-react';
 import CalendarComponent from '../components/calendar/Calendar';
 import EventCard from '../components/calendar/EventCard';
-import WeatherWidget from '../components/calendar/WeatherWidget';
 import { isSameDay, startOfDay, addDays } from 'date-fns';
 import { getColorForCourse } from '../constants'; // Import the new function
 
@@ -113,7 +112,6 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
                                      <h3 className="text-2xl font-bold text-cyan-300">Today</h3>
                                      <p className="text-sm text-slate-400">{todayAgenda.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
                                  </div>
-                                 <WeatherWidget />
                              </div>
                              <div className="space-y-4">
                                  {todayAgenda.events.length > 0 ? todayAgenda.events.map(event => (
