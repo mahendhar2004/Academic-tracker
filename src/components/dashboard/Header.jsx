@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Coins, CalendarDays, Timer, Bug } from 'lucide-react';
+import { Coins, CalendarDays, Timer, Bug, Search } from 'lucide-react';
 import CoinReward from '../common/CoinReward';
 
 const useLiveTime = () => {
@@ -12,7 +12,7 @@ const useLiveTime = () => {
     return time;
 };
 
-const Header = ({ currentPage, profileData, onOpenTimetable, onOpenPomodoro, onOpenBugReport, reward, setReward }) => {
+const Header = ({ currentPage, profileData, onOpenTimetable, onOpenPomodoro, onOpenBugReport, onOpenSearch, reward, setReward }) => {
     const currentTime = useLiveTime();
     const formattedTime = currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const formattedDate = currentTime.toLocaleDateString([], { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -21,7 +21,7 @@ const Header = ({ currentPage, profileData, onOpenTimetable, onOpenPomodoro, onO
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
             <div>
                 <h1 className="text-3xl font-bold text-white">
-                    {currentPage === 'home' ? `Welcome, ${profileData.name || 'User'}` : `${currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}`}
+                    {currentPage === 'home' ? 'Dashboard' : `${currentPage.charAt(0).toUpperCase() + currentPage.slice(1)}`}
                 </h1>
                 <p className="text-slate-400 mt-1">{formattedDate} | {formattedTime}</p>
             </div>
@@ -41,18 +41,21 @@ const Header = ({ currentPage, profileData, onOpenTimetable, onOpenPomodoro, onO
                         </ul>
                         <p className="text-xs text-cyan-300 mt-2">Rewards coming soon!</p>
                     </div>
-                    
+
                     <AnimatePresence>
                         {reward.amount > 0 && (
-                            <CoinReward 
+                            <CoinReward
                                 key={reward.key}
-                                amount={reward.amount} 
-                                onComplete={() => setReward({ key: 0, amount: 0 })} 
+                                amount={reward.amount}
+                                onComplete={() => setReward({ key: 0, amount: 0 })}
                             />
                         )}
                     </AnimatePresence>
                 </div>
 
+                <motion.button whileTap={{ scale: 0.95 }} onClick={onOpenSearch} title="Search (Ctrl+K)" className="hidden md:flex flex-shrink-0 items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25">
+                    <Search size={20} />
+                </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }} onClick={onOpenPomodoro} title="Pomodoro Timer" className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25">
                     <Timer size={20} />
                 </motion.button>

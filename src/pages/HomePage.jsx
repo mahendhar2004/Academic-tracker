@@ -1,3 +1,4 @@
+import { useOutletContext } from 'react-router-dom';
 import React, { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BarChart2, Calendar, CheckCircle2, AlertTriangle, Sparkles, Wind, Bell, Clock } from 'lucide-react';
@@ -9,13 +10,13 @@ import { useDashboardSummary } from '../hooks/useDashboardSummary';
 
 // --- Child Components defined within HomePage for clarity ---
 
-const AtAGlance = ({ 
-    todaysSchedule = [], 
-    upcomingDeadlines = [], 
-    todaysTasks = [], 
+const AtAGlance = ({
+    todaysSchedule = [],
+    upcomingDeadlines = [],
+    todaysTasks = [],
     attendanceWarnings = [],
     courses = [],
-    cardClassName 
+    cardClassName
 }) => {
     const [now, setNow] = useState(new Date());
 
@@ -28,7 +29,7 @@ const AtAGlance = ({
         const course = courses?.find(c => c.id === courseId);
         return course ? course.name : 'Unknown';
     };
-    
+
     const oneDayInMs = 24 * 60 * 60 * 1000;
 
     const normalizeDate = (dateValue) => {
@@ -74,10 +75,10 @@ const AtAGlance = ({
                 const deadlineDate = normalizeDate(deadline.date);
                 const isUrgent = (deadlineDate.getTime() - now.getTime()) < oneDayInMs;
                 return (
-                       <div key={deadline.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
-                           <span className="font-semibold truncate">{deadline.title}</span>
-                           <span className={isUrgent ? 'text-red-400 font-bold' : 'text-slate-400'}>{deadlineDate.toLocaleDateString('en-GB')}</span>
-                       </div>
+                    <div key={deadline.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
+                        <span className="font-semibold truncate">{deadline.title}</span>
+                        <span className={isUrgent ? 'text-red-400 font-bold' : 'text-slate-400'}>{deadlineDate.toLocaleDateString('en-GB')}</span>
+                    </div>
                 );
             })
         },
@@ -86,10 +87,10 @@ const AtAGlance = ({
             icon: CheckCircle2,
             title: "Today's Plans",
             content: todaysTasks.map(task => (
-                   <div key={task.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
-                       <span className="font-semibold truncate">{task.title}</span>
-                       <span className="text-slate-400">{task.dueTime}</span>
-                   </div>
+                <div key={task.id} className="bg-black/20 p-2 rounded-lg flex justify-between items-center text-sm">
+                    <span className="font-semibold truncate">{task.title}</span>
+                    <span className="text-slate-400">{task.dueTime}</span>
+                </div>
             ))
         }
     ];
@@ -101,11 +102,11 @@ const AtAGlance = ({
             {hasContent ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {sections.filter(s => s.condition).map(section => (
-                        <InfoCard 
+                        <InfoCard
                             key={section.title}
-                            icon={section.icon} 
+                            icon={section.icon}
                             title={section.title}
-                            className={cardClassName} 
+                            className={cardClassName}
                         >
                             {section.content}
                         </InfoCard>
@@ -113,11 +114,11 @@ const AtAGlance = ({
                 </div>
             ) : (
                 <div className={cardClassName}>
-                       <div className="text-center py-10">
-                           <Wind size={48} className="mx-auto text-slate-500 mb-4" />
-                           <h3 className="font-bold text-white text-lg">All Clear for Now!</h3>
-                           <p className="text-slate-400 mt-1">You have no immediate tasks or warnings. <br/> A perfect chance to plan ahead or take a break.</p>
-                       </div>
+                    <div className="text-center py-10">
+                        <Wind size={48} className="mx-auto text-slate-500 mb-4" />
+                        <h3 className="font-bold text-white text-lg">All Clear for Now!</h3>
+                        <p className="text-slate-400 mt-1">You have no immediate tasks or warnings. <br /> A perfect chance to plan ahead or take a break.</p>
+                    </div>
                 </div>
             )}
         </>
@@ -154,12 +155,80 @@ const DailyFocus = ({ schedule, deadlines, tasks, cardStyles }) => {
     );
 };
 
+// ... (imports remain the same)
+
+const HeroSection = ({ profileData, todaysSchedule, tasks }) => {
+    const hours = new Date().getHours();
+    const greeting = hours < 12 ? 'Good Morning' : hours < 18 ? 'Good Afternoon' : 'Good Evening';
+    const name = profileData?.name?.split(' ')[0] || 'Scholar';
+
+    // Logic for "Coming Up"
+    const now = new Date();
+    const currentClass = todaysSchedule.find(item => {
+        const start = new Date(now.toDateString() + ' ' + item.startTime);
+        const end = new Date(now.toDateString() + ' ' + item.endTime);
+        return now >= start && now <= end;
+    });
+
+    const nextClass = todaysSchedule.find(item => {
+        const start = new Date(now.toDateString() + ' ' + item.startTime);
+        return start > now;
+    });
+
+    let statusMessage = "You're all clear for the rest of the day!";
+    let statusIcon = Sparkles;
+    let statusColor = "text-green-400";
+
+    if (currentClass) {
+        statusMessage = `You should be in ${currentClass.courseId} right now.`;
+        statusIcon = Clock;
+        statusColor = "text-yellow-400";
+    } else if (nextClass) {
+        statusMessage = `Next up: ${nextClass.courseId} at ${nextClass.startTime}.`;
+        statusIcon = Calendar;
+        statusColor = "text-cyan-400";
+    } else if (tasks.length > 0) {
+        const pending = tasks.filter(t => !t.isCompleted).length;
+        if (pending > 0) {
+            statusMessage = `You have ${pending} tasks pending. Time to focus?`;
+            statusIcon = CheckCircle2;
+            statusColor = "text-orange-400";
+        }
+    }
+
+    return (
+        <div className="mb-10 relative overflow-hidden rounded-3xl p-8 border border-white/10 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-transparent">
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                        {greeting}, <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-400">{name}</span>
+                    </h1>
+                    <p className="text-xl text-slate-300 flex items-center gap-2">
+                        <statusIcon className={statusColor} size={24} />
+                        {statusMessage}
+                    </p>
+                </div>
+                <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10">
+                    <p className="text-sm text-slate-400 uppercase tracking-widest font-semibold mb-1">Current Focus</p>
+                    <p className="text-2xl font-bold text-white">{currentClass ? 'In Class' : nextClass ? 'Up Next: Class' : 'Self Study'}</p>
+                </div>
+            </div>
+            {/* Abstract Background Shapes */}
+            <div className="absolute -top-24 -right-24 w-64 h-64 bg-cyan-500/20 rounded-full blur-[100px]"></div>
+            <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px]"></div>
+        </div>
+    );
+};
+
+// ... (Rest of components: AtAGlance, DailyFocus, MotivationalQuote) -> I will assume replace_file keeps them if I target correctly or I need to include them. 
+// Use StartLine/EndLine carefully.
+
 const MotivationalQuote = () => {
     const quote = useMemo(() => {
         const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
         return quotes[dayOfYear % quotes.length];
     }, []);
-    
+
     return (
         <div className="flex items-center justify-center gap-3">
             <Sparkles className="text-slate-500 flex-shrink-0" size={18} />
@@ -169,13 +238,13 @@ const MotivationalQuote = () => {
 };
 
 
-// --- Main HomePage Component ---
-const HomePage = ({ 
-    schedule, deadlines, tasks, courses, expenditures = []
-}) => {
-    
+const HomePage = () => {
+    const {
+        schedule, deadlines, tasks, allCourses: courses, expenditures = []
+    } = useOutletContext();
+
     const glassyCardStyles = "relative overflow-hidden bg-black/50 bg-gradient-to-b from-black/10 via-transparent to-black/50 backdrop-blur-2xl border border-gray-800 p-6 rounded-2xl shadow-2xl";
-    
+
     const neumorphicCardStyles = "relative bg-[#181818] p-6 rounded-2xl shadow-[5px_5px_12px_rgba(0,0,0,0.5),-5px_-5px_12px_rgba(255,255,255,0.05)]";
 
     const {
@@ -187,36 +256,38 @@ const HomePage = ({
     } = useDashboardSummary({ schedule, deadlines, tasks, courses, expenditures });
 
     return (
-        <motion.div 
-            initial={{ opacity: 0, y: 20 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            exit={{ opacity: 0, y: -20 }} 
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.4 }}
             className="relative"
         >
-            <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-start gap-8 pb-20 pt-8">
+            <HeroSection profileData={useOutletContext().profileData} todaysSchedule={todaysSchedule} tasks={tasks} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-start gap-8 pb-20">
                 <div className="lg:col-span-3">
-                    <AtAGlance 
-                        todaysSchedule={todaysSchedule} 
-                        upcomingDeadlines={upcomingDeadlines} 
-                        todaysTasks={todaysTasks} 
+                    <AtAGlance
+                        todaysSchedule={todaysSchedule}
+                        upcomingDeadlines={upcomingDeadlines}
+                        todaysTasks={todaysTasks}
                         attendanceWarnings={attendanceWarnings}
                         courses={courses}
                         cardClassName={neumorphicCardStyles}
                     />
                 </div>
-                
+
                 <div className="lg:col-span-2 space-y-8">
-                    <DailyFocus 
-                        schedule={schedule} 
-                        deadlines={deadlines} 
+                    <DailyFocus
+                        schedule={schedule}
+                        deadlines={deadlines}
                         tasks={tasks}
                         cardStyles={glassyCardStyles}
                     />
                     <div className={glassyCardStyles}>
                         <div className="absolute -top-1 -left-1 w-32 h-32 bg-white/10 rounded-full blur-[80px] opacity-50"></div>
                         <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2">
-                            <BarChart2 size={20} className="text-cyan-400"/>
+                            <BarChart2 size={20} className="text-cyan-400" />
                             Monthly Spending
                         </h3>
                         <div className="min-h-[12rem] flex items-center justify-center">
@@ -229,7 +300,7 @@ const HomePage = ({
                     </div>
                 </div>
             </div>
-            
+
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-full px-4 pointer-events-none">
                 <MotivationalQuote />
             </div>

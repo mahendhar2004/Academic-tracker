@@ -25,10 +25,26 @@ export const COIN_VALUES = {
 
 // REMOVED: The EXPENDITURE_CATEGORIES constant is no longer needed.
 
-export const COURSE_COLORS = [
-    '#dc2626', '#ea580c', '#ca8a04', '#65a30d', '#16a34a', '#0d9488',
-    '#0ea5e9', '#4f46e5', '#9333ea', '#db2777', '#78716c', '#c2410c',
+export const COURSE_THEMES = [
+    { label: 'Red', value: 'red', hex: '#ef4444' },
+    { label: 'Orange', value: 'orange', hex: '#f97316' },
+    { label: 'Amber', value: 'amber', hex: '#f59e0b' },
+    { label: 'Green', value: 'green', hex: '#22c55e' },
+    { label: 'Emerald', value: 'emerald', hex: '#10b981' },
+    { label: 'Teal', value: 'teal', hex: '#14b8a6' },
+    { label: 'Cyan', value: 'cyan', hex: '#06b6d4' },
+    { label: 'Sky', value: 'sky', hex: '#0ea5e9' },
+    { label: 'Blue', value: 'blue', hex: '#3b82f6' },
+    { label: 'Indigo', value: 'indigo', hex: '#6366f1' },
+    { label: 'Violet', value: 'violet', hex: '#8b5cf6' },
+    { label: 'Purple', value: 'purple', hex: '#a855f7' },
+    { label: 'Fuchsia', value: 'fuchsia', hex: '#d946ef' },
+    { label: 'Pink', value: 'pink', hex: '#ec4899' },
+    { label: 'Rose', value: 'rose', hex: '#f43f5e' },
+    { label: 'Slate', value: 'slate', hex: '#64748b' },
 ];
+
+export const COURSE_COLORS = COURSE_THEMES.map(t => t.hex);
 
 const simpleHash = (str) => {
     let hash = 0;

@@ -1,3 +1,4 @@
+import { useOutletContext } from 'react-router-dom';
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
@@ -41,9 +42,18 @@ const getSocialIcon = (url) => {
     return <LinkIcon {...props} />;
 };
 
-const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, onDeleteAccount }) => {
-    const cardStyles = "bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl";
+const ProfilePage = () => {
+    const {
+        user,
+        profileData,
+        handleSaveProfileField: onSaveField,
+        onSignOut,
+        handleDeleteAccountClick: onDeleteAccount
+    } = useOutletContext();
     const { openModal } = useModalStore();
+
+    const onResetData = () => openModal('resetConfirmation');
+    const cardStyles = "bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl";
     const [toast, setToast] = useState({ show: false, message: '' });
 
     const handleShareProfile = async () => {
@@ -194,7 +204,7 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
                                 </div>
                             ) : (
                                 <motion.button
-                                    whileTap={{scale: 0.95}}
+                                    whileTap={{ scale: 0.95 }}
                                     onClick={handleVerifyEmail}
                                     className="bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300 font-semibold text-sm px-3 py-1 rounded-md flex-shrink-0"
                                 >
@@ -236,21 +246,21 @@ const ProfilePage = ({ user, profileData, onSaveField, onResetData, onSignOut, o
                     </div>
 
                     <div className={`${cardStyles} p-8 space-y-6`}>
-                         <EditableList icon={Code} label="Projects" items={profileData.academic?.projects || []} onSave={(items) => onSaveField('academic.projects', items, COIN_VALUES.PROFILE_PROJECTS)} placeholder="e.g., https://github.com/user/repo" />
-                         <hr className="border-slate-800" />
-                         <EditableList icon={Award} label="Certificates" items={profileData.academic?.certificates || []} onSave={(items) => onSaveField('academic.certificates', items, COIN_VALUES.PROFILE_CERTIFICATES)} placeholder="e.g., Google Cloud Certified" />
-                         <hr className="border-slate-800" />
-                         <EditableList icon={Trophy} label="Achievements" items={profileData.personal?.achievements || []} onSave={(items) => onSaveField('personal.achievements', items, COIN_VALUES.PROFILE_ACHIEVEMENTS)} placeholder="e.g., Winner of Smart India Hackathon" />
+                        <EditableList icon={Code} label="Projects" items={profileData.academic?.projects || []} onSave={(items) => onSaveField('academic.projects', items, COIN_VALUES.PROFILE_PROJECTS)} placeholder="e.g., https://github.com/user/repo" />
+                        <hr className="border-slate-800" />
+                        <EditableList icon={Award} label="Certificates" items={profileData.academic?.certificates || []} onSave={(items) => onSaveField('academic.certificates', items, COIN_VALUES.PROFILE_CERTIFICATES)} placeholder="e.g., Google Cloud Certified" />
+                        <hr className="border-slate-800" />
+                        <EditableList icon={Trophy} label="Achievements" items={profileData.personal?.achievements || []} onSave={(items) => onSaveField('personal.achievements', items, COIN_VALUES.PROFILE_ACHIEVEMENTS)} placeholder="e.g., Winner of Smart India Hackathon" />
                     </div>
 
                     <div className={`${cardStyles} p-8 space-y-6`}>
                         <EditableList icon={Briefcase} label="Internships & Experience" items={profileData.academic?.internships || []} onSave={(items) => onSaveField('academic.internships', items, COIN_VALUES.PROFILE_INTERNSHIPS)} placeholder="e.g., SDE Intern @ Google" />
-                         <hr className="border-slate-800" />
+                        <hr className="border-slate-800" />
                         <EditableResumeList
                             items={profileData.academic?.resumes || []}
                             onSave={(items) => onSaveField('academic.resumes', items, COIN_VALUES.PROFILE_RESUMES)}
                         />
-                         <hr className="border-slate-800" />
+                        <hr className="border-slate-800" />
                         <EditableList icon={LinkIcon} label="Social & Portfolio Links" items={profileData.social?.links || []} onSave={(items) => onSaveField('social.links', items, COIN_VALUES.PROFILE_SOCIAL)} placeholder="e.g., https://linkedin.com/in/..." />
                     </div>
                 </motion.div>

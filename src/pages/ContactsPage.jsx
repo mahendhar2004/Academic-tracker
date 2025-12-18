@@ -1,15 +1,21 @@
+import { useOutletContext } from 'react-router-dom';
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, Plus } from 'lucide-react';
 import ContactCard from '../components/contacts/ContactCard';
 
-const ContactsPage = ({ contacts = [], onAddContact, onEditContact, onDeleteContact }) => {
+const ContactsPage = () => {
+    const {
+        contacts,
+        handleAddContactClick: onAddContact,
+        handleEditContactClick: onEditContact,
+        handleDeleteContact: onDeleteContact
+    } = useOutletContext();
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            <div className="flex justify-between items-center mb-10">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3"><Users className="text-cyan-400" />Contacts</h2>
-                <motion.button 
-                    whileTap={{ scale: 0.95 }} 
+            <div className="flex justify-end items-center mb-10">
+                <motion.button
+                    whileTap={{ scale: 0.95 }}
                     onClick={onAddContact}
                     title="Add Contact"
                     className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"
@@ -21,8 +27,8 @@ const ContactsPage = ({ contacts = [], onAddContact, onEditContact, onDeleteCont
             {contacts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {contacts.map(contact => (
-                        <ContactCard 
-                            key={contact.id} 
+                        <ContactCard
+                            key={contact.id}
                             contact={contact}
                             onEdit={() => onEditContact(contact)}
                             onDelete={() => onDeleteContact(contact.id)}

@@ -1,108 +1,108 @@
 import { create } from 'zustand';
 import { onSnapshot, doc, collection, query } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
+import { getCollectionPath, getProfilePath, getPerformanceTargetPath } from '../constants/dbPaths';
+
+import { createCourseSlice } from './slices/courseSlice';
+import { createUserSlice } from './slices/userSlice';
+import { createDataSlice } from './slices/dataSlice';
 
 // This array holds all our listener unsubscribe functions
 let listeners = [];
 
-// Helper functions for listeners, kept inside the store file for co-location
+// Helper functions for listeners
 const getCollectionListener = (userId, collectionName, callback) => {
-    const path = `artifacts/${appId}/users/${userId}/${collectionName}`;
-    const q = query(collection(db, path));
-    return onSnapshot(q, (snapshot) => {
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        callback(data);
-    });
+    const path = getCollectionPath(userId, collectionName);
+    const q = query(collection(db, path));
+    return onSnapshot(q, (snapshot) => {
+        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        callback(data);
+    });
 };
 
-// ADDED: A new listener for a single document, perfect for the performance target
 const getDocumentListener = (path, callback) => {
     return onSnapshot(doc(db, path), (doc) => {
         if (doc.exists()) {
             callback(doc.data());
         } else {
-            callback(null); // Explicitly handle the case where the document doesn't exist
+            callback(null);
         }
     });
 };
 
 const getProfileListener = (userId, user, callback) => {
-    const profileRef = doc(db, `artifacts/${appId}/users/${userId}/profile/data`);
-    return onSnapshot(profileRef, (doc) => {
-        if (doc.exists()) {
-            callback(doc.data());
-        } else {
-            const newProfile = {
-                name: user.displayName || 'User',
-                email: user.email || '',
-                imageUrl: user.photoURL || '',
-                coins: 0,
-            };
-            callback(newProfile);
-        }
-    });
+    const profileRef = doc(db, getProfilePath(userId));
+    return onSnapshot(profileRef, (doc) => {
+        if (doc.exists()) {
+            callback(doc.data());
+        } else {
+            const newProfile = {
+                name: user.displayName || 'User',
+                email: user.email || '',
+                imageUrl: user.photoURL || '',
+                coins: 0,
+            };
+            callback(newProfile);
+        }
+    });
 };
 
 export const useStore = create((set, get) => ({
-    // === STATE ===
-    allCourses: [],
-    profileData: { name: '', imageUrl: '', coins: 0 },
-    schedule: [],
-    deadlines: [],
-    examMarks: [],
-    tasks: [],
-    contacts: [],
-    expenditures: [],
-    // ADDED: New state to hold the performance target data
-    performanceTarget: null,
-    isDataLoaded: false,
+    // Combined State Slices
+    ...createCourseSlice(set, get),
+    ...createUserSlice(set, get),
+    ...createDataSlice(set, get),
 
-    // === ACTIONS ===
-    initializeListeners: (user) => {
-        if (get().isDataLoaded || !user) return; 
+    isDataLoaded: false,
 
-        const collections = ['courses', 'schedule', 'deadlines', 'examMarks', 'tasks', 'contacts', 'expenditures'];
-        const setters = {
-            courses: (data) => set({ allCourses: data }),
-            schedule: (data) => set({ schedule: data }),
-            deadlines: (data) => set({ deadlines: data }),
-            examMarks: (data) => set({ examMarks: data }),
-            tasks: (data) => set({ tasks: data }),
-            contacts: (data) => set({ contacts: data.sort((a, b) => a.name.localeCompare(b.name)) }),
-            expenditures: (data) => set({ expenditures: data }),
-        };
+    // === ACTIONS ===
+    initializeListeners: (user) => {
+        if (get().isDataLoaded || !user) return;
 
-        const unsubProfile = getProfileListener(user.uid, user, (data) => set({ profileData: data }));
-        listeners.push(unsubProfile);
+        // Use setters from slices
+        const setters = {
+            courses: get().setCourses,
+            schedule: get().setSchedule,
+            deadlines: get().setDeadlines,
+            examMarks: get().setExamMarks,
+            tasks: get().setTasks,
+            contacts: get().setContacts,
+            expenditures: get().setExpenditures,
+            scenarios: get().setScenarios,
+        };
+
+        const unsubProfile = getProfileListener(user.uid, user, get().setProfileData);
+        listeners.push(unsubProfile);
 
         // ADDED: Listener for the performance target document
-        const targetPath = `artifacts/${appId}/users/${user.uid}/performanceTarget/target`;
-        const unsubTarget = getDocumentListener(targetPath, (data) => set({ performanceTarget: data }));
+        const targetPath = getPerformanceTargetPath(user.uid);
+        const unsubTarget = getDocumentListener(targetPath, get().setPerformanceTarget);
         listeners.push(unsubTarget);
 
-        collections.forEach(name => {
-            const unsub = getCollectionListener(user.uid, name, setters[name]);
-            listeners.push(unsub);
-        });
+        Object.keys(setters).forEach(name => {
+            const unsub = getCollectionListener(user.uid, name, setters[name]);
+            listeners.push(unsub);
+        });
 
-        set({ isDataLoaded: true });
-    },
+        set({ isDataLoaded: true });
+    },
 
-    cleanupListeners: () => {
-        listeners.forEach(unsub => unsub());
-        listeners = [];
-        set({
-            allCourses: [],
-            profileData: { name: '', imageUrl: '', coins: 0 },
-            schedule: [],
-            deadlines: [],
-            examMarks: [],
-            tasks: [],
-            contacts: [],
-            expenditures: [],
-            // ADDED: Reset performance target on cleanup
-            performanceTarget: null,
-            isDataLoaded: false,
-        });
-    },
+    cleanupListeners: () => {
+        listeners.forEach(unsub => unsub());
+        listeners = [];
+
+        // Reset all state using setters or manual reset
+        get().setCourses([]);
+        get().setSchedule([]);
+        get().setDeadlines([]);
+        get().setExamMarks([]);
+        get().setTasks([]);
+        get().setContacts([]);
+        get().setExpenditures([]);
+        get().setScenarios([]);
+        get().setProfileData({ name: '', imageUrl: '', coins: 0 });
+        get().setPerformanceTarget(null);
+
+        set({ isDataLoaded: false });
+    },
 }));

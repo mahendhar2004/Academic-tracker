@@ -1,3 +1,4 @@
+import { useOutletContext } from 'react-router-dom';
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CreditCard, Plus, ArrowDownUp, Edit, RefreshCw, Trash2 } from 'lucide-react';
@@ -5,7 +6,7 @@ import ExpenditureChart from '../components/expenditure/ExpenditureChart';
 
 const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
     return (
-        <motion.div 
+        <motion.div
             layout
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -31,19 +32,19 @@ const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
     );
 };
 
-const ExpenditurePage = ({ 
-    expenditures = [], 
-    onAddExpenditure, 
-    onDeleteExpenditure,
-    onEditExpenditure,
-    // ADDED: Prop for the reset handler
-    onResetExpenditures
-}) => {
+const ExpenditurePage = () => {
+    const {
+        expenditures = [],
+        handleAddExpenditureClick: onAddExpenditure,
+        handleDeleteExpenditure: onDeleteExpenditure,
+        handleEditExpenditureClick: onEditExpenditure,
+        handleResetExpenditures: onResetExpenditures
+    } = useOutletContext();
     const [sortBy, setSortBy] = useState('date_desc');
 
     const { total, byCategory, sortedTransactions } = useMemo(() => {
         const totalAmount = expenditures.reduce((sum, item) => sum + item.amount, 0);
-        
+
         const categoryMap = expenditures.reduce((acc, item) => {
             const existing = acc[item.category] || { value: 0 };
             acc[item.category] = { value: existing.value + item.amount };
@@ -71,10 +72,7 @@ const ExpenditurePage = ({
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
-                <h2 className="text-2xl font-bold text-white flex items-center gap-3"><CreditCard className="text-cyan-400" />Expenditure</h2>
-                
-                {/* ADDED: Container for action buttons */}
+            <div className="flex justify-end items-center gap-4 mb-10">
                 <div className="flex items-center gap-4">
                     <motion.button whileTap={{ scale: 0.95 }} onClick={onResetExpenditures} title="Reset All Expenses" className="flex-shrink-0 flex items-center justify-center bg-red-500/20 hover:bg-red-500/40 border border-red-500/50 text-red-300 w-10 h-10 rounded-lg transition-colors"><RefreshCw size={18} /></motion.button>
                     <motion.button whileTap={{ scale: 0.95 }} onClick={onAddExpenditure} title="Add Expenditure" className="flex-shrink-0 flex items-center justify-center bg-white/15 backdrop-blur-xl border border-white/25 text-white w-10 h-10 rounded-lg transition-colors hover:bg-white/25"><Plus size={20} /></motion.button>
@@ -102,7 +100,7 @@ const ExpenditurePage = ({
                         <div className="space-y-3 h-[450px] overflow-y-auto no-scrollbar pr-2">
                             <AnimatePresence>
                                 {sortedTransactions.map(item => (
-                                    <TransactionItem 
+                                    <TransactionItem
                                         key={item.id}
                                         item={item}
                                         onEdit={() => onEditExpenditure(item)}

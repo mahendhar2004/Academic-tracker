@@ -1,9 +1,10 @@
+import { useOutletContext } from 'react-router-dom';
 import React, { useMemo, useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, Edit, BrainCircuit, ChevronLeft, ChevronRight, BarChart3 } from 'lucide-react';
 import CpiGraph from '../components/performance/CpiGraph';
 import SpiGraph from '../components/performance/SpiGraph';
-import WhatIfModal from '../components/modals/WhatIfModal';
+
 import { useStore } from '../store/useStore';
 import { usePerformanceGraphs } from '../hooks/usePerformanceGraphs';
 
@@ -32,17 +33,27 @@ const SemesterCardSkeleton = () => (
     </div>
 );
 
-const PerformancePage = ({ 
-    performanceData, allCourses, examMarks, onDeleteCourse, onEditGrade, onAddGrade, 
-    onAddExamMarks, onEditExamMark, onDeleteExamMark, currentSemester, onDeleteGrade // UPDATED: Added onDeleteGrade prop
-}) => {
+const PerformancePage = () => {
+    const {
+        performanceData, allCourses, examMarks,
+        handleDeleteCourse: onDeleteCourse,
+        handleEditGradeClick: onEditGrade,
+        handleAddGradeClick: onAddGrade,
+        handleAddExamMarksClick: onAddExamMarks,
+        handleEditExamMarkClick: onEditExamMark,
+        handleDeleteExamMark: onDeleteExamMark,
+        currentSemester,
+        handleDeleteGrade: onDeleteGrade,
+        scenarios = [],
+        handleOpenWhatIf,
+        handleDeleteScenario
+    } = useOutletContext();
     const { cpi, semesters } = performanceData;
     const { profileData, isDataLoaded } = useStore();
-    
+
     const [isComponentLoading, setIsComponentLoading] = useState(true);
     const [selectedSemester, setSelectedSemester] = useState(null);
-    const [isWhatIfModalOpen, setIsWhatIfModalOpen] = useState(false);
-    
+
     const timelineRef = useRef(null);
     const [canScrollLeft, setCanScrollLeft] = useState(false);
     const [canScrollRight, setCanScrollRight] = useState(true);
@@ -56,7 +67,7 @@ const PerformancePage = ({
     }, [allCourses, profileData]);
 
     const allSemesterNumbers = useMemo(() => Array.from({ length: maxSemester }, (_, i) => i + 1), [maxSemester]);
-    
+
     useEffect(() => {
         if (isDataLoaded) {
             const timer = setTimeout(() => setIsComponentLoading(false), 300);
@@ -88,7 +99,7 @@ const PerformancePage = ({
         }, {});
         return { courses: coursesForSemester, marksByCourse };
     }, [selectedSemester, allCourses, examMarks]);
-    
+
     const handleScroll = () => {
         if (timelineRef.current) {
             const { scrollLeft, scrollWidth, clientWidth } = timelineRef.current;
@@ -99,13 +110,13 @@ const PerformancePage = ({
 
     const scroll = (direction) => {
         if (timelineRef.current) {
-            timelineRef.current.scrollBy({ 
-                left: direction === 'left' ? -300 : 300, 
-                behavior: 'smooth' 
+            timelineRef.current.scrollBy({
+                left: direction === 'left' ? -300 : 300,
+                behavior: 'smooth'
             });
         }
     };
-    
+
     useEffect(() => {
         const timeline = timelineRef.current;
         if (timeline) {
@@ -123,7 +134,6 @@ const PerformancePage = ({
 
     return (
         <>
-            <WhatIfModal isOpen={isWhatIfModalOpen} onClose={() => setIsWhatIfModalOpen(false)} allCourses={allCourses} />
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }} className="space-y-8">
                 <div className={`${cardStyles} flex flex-col md:flex-row items-center justify-between gap-6`}>
                     <div className="absolute -top-1 -left-1 w-48 h-48 bg-cyan-500/10 rounded-full blur-[100px]"></div>
@@ -132,10 +142,10 @@ const PerformancePage = ({
                         <h1 className="text-6xl font-bold text-white tracking-tighter">{cpi} <span className="text-4xl text-slate-400">CPI</span></h1>
                     </div>
                     <div className="flex gap-2">
-                        <motion.button whileTap={{scale:0.95}} onClick={() => setIsWhatIfModalOpen(true)} className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-white/20">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleOpenWhatIf()} className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-white/20">
                             <BrainCircuit size={18} /> What If?
                         </motion.button>
-                        <motion.button whileTap={{scale:0.95}} onClick={onAddGrade} className="flex items-center gap-2 bg-cyan-500/80 backdrop-blur-xl border border-cyan-400/50 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-cyan-500">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={onAddGrade} className="flex items-center gap-2 bg-cyan-500/80 backdrop-blur-xl border border-cyan-400/50 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-cyan-500">
                             <Plus size={18} /> Add Grade
                         </motion.button>
                     </div>
@@ -182,13 +192,61 @@ const PerformancePage = ({
                         </div>
                         <AnimatePresence>
                             {canScrollRight && !isComponentLoading && (
-                                 <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white transition-opacity">
-                                      <ChevronRight size={24} className="mx-auto" />
-                                 </motion.button>
+                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white transition-opacity">
+                                    <ChevronRight size={24} className="mx-auto" />
+                                </motion.button>
                             )}
                         </AnimatePresence>
                     </div>
                 </div>
+
+                {/* Saved Scenarios Section */}
+                {scenarios.length > 0 && (
+                    <div className="space-y-4">
+                        <h2 className="text-xl font-bold text-white">Saved Predictions (Goals)</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {scenarios.map(scenario => (
+                                <motion.div
+                                    key={scenario.id}
+                                    layout
+                                    className="bg-black/30 border border-white/10 p-4 rounded-xl flex flex-col justify-between gap-4 group hover:bg-black/40 transition-colors"
+                                >
+                                    <div>
+                                        <div className="flex justify-between items-start mb-2">
+                                            <h3 className="font-bold text-lg text-white truncate pr-2" title={scenario.name}>{scenario.name}</h3>
+                                            <span className="text-xs text-slate-500 bg-black/40 px-2 py-1 rounded border border-white/5 whitespace-nowrap">
+                                                {scenario.createdAt?.toDate ? scenario.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                                            </span>
+                                        </div>
+                                        <div className="flex items-end gap-2">
+                                            <p className="text-3xl font-bold text-cyan-400">{scenario.predictedCPI}</p>
+                                            <p className="text-sm text-slate-400 mb-1">Target CPI</p>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-2">
+                                            With {scenario.hypotheticalCourses.length} hypothetical subjects
+                                        </p>
+                                    </div>
+
+                                    <div className="flex gap-2 mt-auto">
+                                        <button
+                                            onClick={() => handleOpenWhatIf(scenario)}
+                                            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-cyan-300 text-sm font-semibold py-2 rounded-lg transition-colors"
+                                        >
+                                            Load
+                                        </button>
+                                        <button
+                                            onClick={() => handleDeleteScenario(scenario.id)}
+                                            className="px-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-colors"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="h-[420px]">
                     <AnimatePresence mode="wait">
                         <motion.div
@@ -203,7 +261,7 @@ const PerformancePage = ({
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                                     <div className={`${cardStyles} flex flex-col`}>
                                         <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2 flex-shrink-0">
-                                            <BarChart3 size={20} className="text-cyan-400"/> Courses & Grades
+                                            <BarChart3 size={20} className="text-cyan-400" /> Courses & Grades
                                         </h3>
                                         <div className="space-y-2 overflow-y-auto no-scrollbar flex-1 pr-2 -mr-2 min-h-0">
                                             {semesterDetails.courses.length > 0 ? semesterDetails.courses.map(course => (
@@ -232,8 +290,8 @@ const PerformancePage = ({
                                     </div>
                                     <div className={`${cardStyles} flex flex-col`}>
                                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                                            <h3 className="font-bold text-white text-lg flex items-center gap-2"><Edit size={20} className="text-cyan-400"/> Exam Marks</h3>
-                                            <motion.button whileTap={{scale:0.95}} onClick={onAddExamMarks} className="text-sm flex items-center gap-1 text-slate-400 hover:text-white"><Plus size={14}/> Add Mark</motion.button>
+                                            <h3 className="font-bold text-white text-lg flex items-center gap-2"><Edit size={20} className="text-cyan-400" /> Exam Marks</h3>
+                                            <motion.button whileTap={{ scale: 0.95 }} onClick={onAddExamMarks} className="text-sm flex items-center gap-1 text-slate-400 hover:text-white"><Plus size={14} /> Add Mark</motion.button>
                                         </div>
                                         <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2 min-h-0">
                                             {Object.keys(semesterDetails.marksByCourse).length > 0 ? (

@@ -1,31 +1,38 @@
+import { useOutletContext } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Feather, Plus } from 'lucide-react';
 import { usePlannerTasks } from '../hooks/usePlannerTasks';
 import TaskCard from '../components/planner/TaskCard';
 
-const PlannerPage = ({ tasks, onAddTask, onEditTask, onDeleteTask, onToggleComplete }) => {
+const PlannerPage = () => {
+    const {
+        tasks,
+        handleAddTaskClick: onAddTask,
+        handleEditTaskClick: onEditTask,
+        handleDeleteTask: onDeleteTask,
+        handleToggleTaskComplete: onToggleComplete
+    } = useOutletContext();
     const [activeTab, setActiveTab] = useState('Short-term');
     const [completedVisible, setCompletedVisible] = useState(false);
 
     const { activeTasks, completedTasks } = usePlannerTasks(tasks, activeTab);
-    
+
     useEffect(() => {
         setCompletedVisible(false);
     }, [activeTab]);
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-            
+
             <div className="flex justify-between items-center border-b border-white/10 mb-8">
                 <div className="flex">
                     {['Short-term', 'Long-term'].map(tab => (
-                        <button 
+                        <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`relative px-4 py-3 text-sm font-semibold transition-colors ${
-                                activeTab === tab ? 'text-white' : 'text-slate-400 hover:text-white'
-                            }`}
+                            className={`relative px-4 py-3 text-sm font-semibold transition-colors ${activeTab === tab ? 'text-white' : 'text-slate-400 hover:text-white'
+                                }`}
                         >
                             {tab}
                             {activeTab === tab && (
@@ -55,7 +62,7 @@ const PlannerPage = ({ tasks, onAddTask, onEditTask, onDeleteTask, onToggleCompl
                             <TaskCard key={task.id} task={task} onToggleComplete={onToggleComplete} onEdit={onEditTask} onDelete={onDeleteTask} />
                         ))
                     ) : (
-                        <motion.div 
+                        <motion.div
                             key="empty-message"
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             className="text-center py-24"
@@ -67,10 +74,10 @@ const PlannerPage = ({ tasks, onAddTask, onEditTask, onDeleteTask, onToggleCompl
                     )}
                 </AnimatePresence>
             </div>
-            
+
             {completedTasks.length > 0 && (
                 <div className="pt-4 mt-8 border-t border-white/10">
-                    <button 
+                    <button
                         onClick={() => setCompletedVisible(!completedVisible)}
                         className="w-full flex justify-between items-center hover:bg-black/20 p-2 rounded-lg transition-colors"
                     >
@@ -79,14 +86,14 @@ const PlannerPage = ({ tasks, onAddTask, onEditTask, onDeleteTask, onToggleCompl
                     </button>
                     <AnimatePresence>
                         {completedVisible && (
-                            <motion.div 
-                                initial={{ height: 0, opacity: 0 }} 
-                                animate={{ height: 'auto', opacity: 1 }} 
-                                exit={{ height: 0, opacity: 0 }} 
+                            <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: 'auto', opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
                                 className="overflow-hidden"
                             >
                                 <div className="space-y-4 pt-4">
-                                    {completedTasks.map(task => 
+                                    {completedTasks.map(task =>
                                         <TaskCard key={task.id} task={task} onToggleComplete={onToggleComplete} onEdit={onEditTask} onDelete={onDeleteTask} />
                                     )}
                                 </div>

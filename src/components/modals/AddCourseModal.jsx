@@ -1,18 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
+import { COURSE_THEMES } from '../../constants';
 
 const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
 const GRADES = Object.keys(GRADE_POINTS);
 
 const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester }) => {
-    const [course, setCourse] = useState({ name: '', credits: '', semester: '', grade: 'Not Published', attended: '', total: '' });
+    // Default to 'Rose' if nothing selected, or just the first one
+    const [course, setCourse] = useState({ name: '', credits: '', semester: '', grade: 'Not Published', attended: '', total: '', color: COURSE_THEMES[14].value });
     const [error, setError] = useState('');
     const nameInputRef = useRef(null);
 
     useEffect(() => {
         if (isOpen) {
-            setCourse({ name: '', credits: '', semester: currentSemester || '', grade: 'Not Published', attended: '', total: '' });
+            setCourse({ name: '', credits: '', semester: currentSemester || '', grade: 'Not Published', attended: '', total: '', color: COURSE_THEMES[14].value });
             setError('');
             setTimeout(() => { nameInputRef.current?.focus(); }, 100);
         }
@@ -38,13 +40,14 @@ const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester }) => {
         }
 
         if (course.name.trim() && !isNaN(creditsNum) && creditsNum > 0 && !isNaN(semesterNum) && semesterNum > 0) {
-            const courseToSave = { 
+            const courseToSave = {
                 name: course.name,
-                credits: creditsNum, 
+                credits: creditsNum,
                 semester: semesterNum,
                 grade: course.grade,
                 attended: attendedNum,
-                total: totalNum
+                total: totalNum,
+                color: course.color // Save variable color name ('rose', 'blue') not hex
             };
             onSave(courseToSave);
             onClose();
@@ -58,6 +61,24 @@ const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester }) => {
                     <label htmlFor="courseName" className="block text-sm font-medium text-slate-300 mb-2">Subject Name</label>
                     <input ref={nameInputRef} id="courseName" type="text" value={course.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="e.g., Data Structures" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400" required />
                 </div>
+
+                {/* Color Picker */}
+                <div>
+                    <label className="block text-sm font-medium text-slate-300 mb-2">Theme Color</label>
+                    <div className="flex flex-wrap gap-2">
+                        {COURSE_THEMES.map((theme) => (
+                            <button
+                                key={theme.value}
+                                type="button"
+                                onClick={() => handleChange('color', theme.value)}
+                                className={`w-6 h-6 rounded-full transition-all border-2 ${course.color === theme.value ? 'border-white scale-110' : 'border-transparent hover:scale-105'}`}
+                                style={{ backgroundColor: theme.hex }}
+                                title={theme.label}
+                            />
+                        ))}
+                    </div>
+                </div>
+
                 <div className="flex gap-4">
                     <div className="w-1/2">
                         <label htmlFor="semester" className="block text-sm font-medium text-slate-300 mb-2">Semester</label>

@@ -6,15 +6,48 @@ import GlassyModal from '../common/GlassyModal';
 const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
 const GRADES = Object.keys(GRADE_POINTS);
 
-const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
+const WhatIfModal = ({ isOpen, onClose, allCourses, onSave, initialData }) => {
     const [hypotheticalCourses, setHypotheticalCourses] = useState([]);
     const [newCourse, setNewCourse] = useState({ name: '', credits: '', grade: 'A+' });
+    const [scenarioName, setScenarioName] = useState('');
     const [predictedSPI, setPredictedSPI] = useState('0.0');
     const [predictedCPI, setPredictedCPI] = useState('0.0');
 
+    console.log("WhatIfModal Rendered. initialData:", initialData); // Debugging
+
+    useEffect(() => {
+        if (isOpen) {
+            if (initialData) {
+                setHypotheticalCourses(initialData.hypotheticalCourses || []);
+                setScenarioName(initialData.name || '');
+            } else {
+                setHypotheticalCourses([]);
+                setScenarioName('');
+            }
+            setNewCourse({ name: '', credits: '', grade: 'A+' });
+        }
+    }, [isOpen, initialData]);
+
+    const handleSaveScenario = () => {
+        if (!scenarioName.trim()) {
+            alert("Please enter a name for this scenario.");
+            return;
+        }
+        if (hypotheticalCourses.length === 0) {
+            alert("Add at least one hypothetical course to save.");
+            return;
+        }
+        onSave({
+            name: scenarioName,
+            hypotheticalCourses,
+            predictedCPI,
+            predictedSPI
+        });
+    };
+
     const existingData = useMemo(() => {
         const gradedCourses = allCourses.filter(c => c.grade && c.grade !== 'Not Published' && c.credits > 0);
-        
+
         let cumulativeWeightedPoints = 0;
         let cumulativeCredits = 0;
 
@@ -22,7 +55,7 @@ const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
             cumulativeWeightedPoints += course.credits * (GRADE_POINTS[course.grade] || 0);
             cumulativeCredits += course.credits;
         });
-        
+
         return { cumulativeWeightedPoints, cumulativeCredits };
     }, [allCourses]);
 
@@ -40,14 +73,14 @@ const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
 
         const totalWeightedPoints = existingData.cumulativeWeightedPoints + hypoWeightedPoints;
         const totalCredits = existingData.cumulativeCredits + hypoCredits;
-        
+
         const cpi = (totalCredits > 0 ? totalWeightedPoints / totalCredits : 0).toFixed(1);
         setPredictedCPI(cpi);
 
     }, [hypotheticalCourses, existingData]);
-    
+
     useEffect(() => {
-        if(isOpen) {
+        if (isOpen) {
             setHypotheticalCourses([]);
             setNewCourse({ name: '', credits: '', grade: 'A+' });
         }
@@ -73,7 +106,7 @@ const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
         <GlassyModal isOpen={isOpen} onClose={onClose} title="What If? Calculator" customClasses="max-w-xl w-full">
             {/* NEW: Single-column layout with clear sections */}
             <div className="space-y-6">
-                
+
                 {/* Section 1: Results */}
                 <div className="text-center">
                     <div className="grid grid-cols-2 gap-4 bg-black/20 p-4 rounded-xl border border-white/10">
@@ -92,19 +125,19 @@ const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
                 <div className="space-y-3">
                     <div className="flex justify-between items-center">
                         <h3 className="font-semibold text-white">Hypothetical Subjects</h3>
-                        <motion.button 
-                            whileTap={{scale:0.95}}
+                        <motion.button
+                            whileTap={{ scale: 0.95 }}
                             onClick={() => setHypotheticalCourses([])}
                             className="flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
                         >
-                            <RotateCcw size={14}/>
+                            <RotateCcw size={14} />
                             Reset List
                         </motion.button>
                     </div>
                     <div className="space-y-2 h-40 overflow-y-auto no-scrollbar bg-black/20 p-3 rounded-lg border border-white/10">
                         <AnimatePresence>
                             {hypotheticalCourses.map(course => (
-                                <motion.div 
+                                <motion.div
                                     key={course.id}
                                     layout
                                     initial={{ opacity: 0, x: -20 }}
@@ -124,7 +157,7 @@ const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
                         </AnimatePresence>
                         {hypotheticalCourses.length === 0 && (
                             <div className="flex flex-col items-center justify-center h-full text-center">
-                                <BrainCircuit size={32} className="text-slate-600 mb-2"/>
+                                <BrainCircuit size={32} className="text-slate-600 mb-2" />
                                 <p className="text-slate-500 text-sm">Add a subject below to start predicting.</p>
                             </div>
                         )}
@@ -133,17 +166,37 @@ const WhatIfModal = ({ isOpen, onClose, allCourses }) => {
 
                 {/* Section 3: Input Form */}
                 <form onSubmit={handleAddCourse} className="space-y-4 pt-4 border-t border-white/10">
-                     <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3">
                         <input type="text" value={newCourse.name} onChange={(e) => handleChange('name', e.target.value)} placeholder="New Subject Name" className="flex-1 bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" required />
                         <input type="number" value={newCourse.credits} onChange={(e) => handleChange('credits', e.target.value)} placeholder="Credits" className="w-full sm:w-28 bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" required min="0.5" step="0.5" />
                         <select value={newCourse.grade} onChange={(e) => handleChange('grade', e.target.value)} className="w-full sm:w-28 bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
                             {GRADES.map(g => <option key={g} value={g} className="bg-slate-800">{g}</option>)}
                         </select>
                     </div>
-                    <motion.button whileTap={{scale:0.95}} type="submit" className="w-full bg-cyan-500/50 hover:bg-cyan-500/80 border border-cyan-400/50 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
+                    <motion.button whileTap={{ scale: 0.95 }} type="submit" className="w-full bg-cyan-500/50 hover:bg-cyan-500/80 border border-cyan-400/50 text-white font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2">
                         <Plus size={20} /> Add to Calculation
                     </motion.button>
                 </form>
+
+                {/* Section 4: Save Prediction */}
+                <div className="pt-4 border-t border-white/10">
+                    <div className="flex gap-3">
+                        <input
+                            type="text"
+                            value={scenarioName}
+                            onChange={(e) => setScenarioName(e.target.value)}
+                            placeholder="Scenario Name (e.g. 'Optimistic Aim')"
+                            className="flex-1 bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400"
+                        />
+                        <motion.button
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleSaveScenario}
+                            className="bg-green-600/50 hover:bg-green-600/80 border border-green-500/50 text-white font-bold px-6 py-3 rounded-lg transition-colors"
+                        >
+                            Save Prediction
+                        </motion.button>
+                    </div>
+                </div>
             </div>
         </GlassyModal>
     );

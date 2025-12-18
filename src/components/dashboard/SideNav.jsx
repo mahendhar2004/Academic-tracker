@@ -1,26 +1,28 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
 import { Home, ClipboardList, TrendingUp, Calendar, ListTodo, UserCircle2, Users, CreditCard, Menu, X } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
-const SideNav = ({ currentPage, setCurrentPage }) => {
+const SideNav = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [hoveredId, setHoveredId] = useState(null);
+    const location = useLocation();
+
+    // Extract current section from path, e.g., /dashboard/attendance -> attendance
+    const currentPath = location.pathname.split('/').pop();
+    // Handle root dashboard path or specific paths
+    const currentPage = location.pathname === '/dashboard' ? 'home' : currentPath;
 
     const navItems = [
-        { id: 'home', icon: Home },
-        { id: 'attendance', icon: ClipboardList },
-        { id: 'performance', icon: TrendingUp },
-        { id: 'calendar', icon: Calendar },
-        { id: 'planner', icon: ListTodo },
-        { id: 'contacts', icon: Users },
-        { id: 'expenditure', icon: CreditCard },
-        { id: 'profile', icon: UserCircle2 }
+        { id: 'home', icon: Home, path: '/dashboard/home' },
+        { id: 'attendance', icon: ClipboardList, path: '/dashboard/attendance' },
+        { id: 'performance', icon: TrendingUp, path: '/dashboard/performance' },
+        { id: 'calendar', icon: Calendar, path: '/dashboard/calendar' },
+        { id: 'planner', icon: ListTodo, path: '/dashboard/planner' },
+        { id: 'contacts', icon: Users, path: '/dashboard/contacts' },
+        { id: 'expenditure', icon: CreditCard, path: '/dashboard/expenditure' },
+        { id: 'profile', icon: UserCircle2, path: '/dashboard/profile' }
     ];
-
-    const handleNavClick = (item) => {
-        setCurrentPage(item);
-        setIsOpen(false);
-    };
 
     const tooltipVariants = {
         hidden: { opacity: 0, x: 10, transition: { duration: 0.2 } },
@@ -41,21 +43,22 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
         <>
             {/* --- Desktop Navbar Wrapper --- */}
             <div className="hidden md:flex fixed left-4 top-14 flex-col items-center gap-6 z-40">
-                <div 
+                <div
                     onMouseLeave={() => setHoveredId(null)}
                     className="relative w-20 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full flex flex-col justify-center items-center gap-4 p-4"
                 >
                     <LayoutGroup>
                         {navItems.map((item) => {
                             const Icon = item.icon;
+                            const isActive = currentPage === item.id;
                             return (
-                                <motion.button 
-                                    key={item.id} 
-                                    onClick={() => handleNavClick(item.id)}
+                                <Link
+                                    key={item.id}
+                                    to={item.path}
                                     onMouseEnter={() => setHoveredId(item.id)}
-                                    className={`relative z-10 flex flex-col items-center justify-center transition-colors w-14 h-14 rounded-full ${currentPage === item.id ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                                    className={`relative z-10 flex flex-col items-center justify-center transition-colors w-14 h-14 rounded-full ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'}`}
                                 >
-                                    {(currentPage === item.id || hoveredId === item.id) && (
+                                    {(isActive || hoveredId === item.id) && (
                                         <motion.div
                                             layoutId="desktop-highlight"
                                             className="absolute inset-0 bg-white/10 rounded-full"
@@ -65,7 +68,6 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
                                     <motion.div whileHover={{ scale: 1.1 }}>
                                         <Icon size={24} />
                                     </motion.div>
-                                    {/* UPDATED: Tooltip animation is now controlled by the 'animate' prop */}
                                     <motion.span
                                         variants={tooltipVariants}
                                         initial="hidden"
@@ -74,7 +76,7 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
                                     >
                                         {item.id}
                                     </motion.span>
-                                </motion.button>
+                                </Link>
                             );
                         })}
                     </LayoutGroup>
@@ -83,7 +85,7 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
 
             {/* --- Mobile Menu --- */}
             <div className="md:hidden">
-                <button 
+                <button
                     onClick={() => setIsOpen(true)}
                     className="fixed top-6 right-6 z-50 p-2 rounded-full bg-black/50 backdrop-blur-md text-white"
                     aria-label="Open menu"
@@ -122,16 +124,18 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
                                 >
                                     {navItems.map(item => {
                                         const Icon = item.icon;
-                                        return(
-                                            <motion.button 
+                                        const isActive = currentPage === item.id;
+                                        return (
+                                            <Link
                                                 key={item.id}
                                                 variants={mobileMenuItemVariants}
-                                                onClick={() => handleNavClick(item.id)}
-                                                className={`flex items-center gap-4 text-left p-3 rounded-lg w-full transition-colors ${currentPage === item.id ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-300 hover:bg-white/10'}`}
+                                                to={item.path}
+                                                onClick={() => setIsOpen(false)}
+                                                className={`flex items-center gap-4 text-left p-3 rounded-lg w-full transition-colors ${isActive ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-300 hover:bg-white/10'}`}
                                             >
                                                 <Icon size={20} />
                                                 <span className="font-semibold capitalize">{item.id}</span>
-                                            </motion.button>
+                                            </Link>
                                         )
                                     })}
                                 </motion.div>
@@ -143,5 +147,4 @@ const SideNav = ({ currentPage, setCurrentPage }) => {
         </>
     );
 };
-
 export default SideNav;

@@ -1,3 +1,4 @@
+import { useOutletContext } from 'react-router-dom';
 import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, Bell, ChevronDown } from 'lucide-react';
@@ -7,19 +8,28 @@ import { isSameDay, startOfDay, addDays } from 'date-fns';
 import { getColorForCourse } from '../constants'; // Import the new function
 
 
-const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteClass, onAddDeadline, onDeleteDeadline, onEditDeadline, courses }) => {
+const CalendarPage = () => {
+    const {
+        schedule, deadlines, allCourses: courses,
+        handleAddClassClick: onAddClass,
+        handleEditClassClick: onEditClass,
+        handleDeleteClass: onDeleteClass,
+        handleAddDeadlineClick: onAddDeadline,
+        handleDeleteDeadline: onDeleteDeadline,
+        handleEditDeadlineClick: onEditDeadline
+    } = useOutletContext();
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [isFutureWeekVisible, setIsFutureWeekVisible] = useState(false);
-    
+
     const dayRefs = useRef({});
     const targetDayRef = useRef(null);
 
     const getCourseDetails = useCallback((courseId) => {
-    const course = courses.find(c => c.id === courseId);
-    // The old, fragile logic is replaced by the new robust function call
-    const color = getColorForCourse(courseId);
-    return course ? { name: course.name, color } : { name: 'Unknown', color };
-}, [courses]);
+        const course = courses.find(c => c.id === courseId);
+        // The old, fragile logic is replaced by the new robust function call
+        const color = getColorForCourse(courseId);
+        return course ? { name: course.name, color } : { name: 'Unknown', color };
+    }, [courses]);
 
     const getGreeting = () => {
         const hour = new Date().getHours();
@@ -35,7 +45,7 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
         for (let i = 0; i < 7; i++) {
             const date = addDays(today, i);
             const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-            
+
             const classesToday = schedule.filter(s => s.day === dayName).map(s => ({ ...s, type: 'class', date, courseDetails: getCourseDetails(s.courseId) }));
             const deadlinesToday = deadlines.filter(d => {
                 const deadlineDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
@@ -48,19 +58,19 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
 
         const eventsMap = agenda.reduce((acc, day) => {
             if (day.events.length > 0) {
-              const key = `${day.date.getFullYear()}-${day.date.getMonth() + 1}-${day.date.getDate()}`;
-              acc[key] = true;
+                const key = `${day.date.getFullYear()}-${day.date.getMonth() + 1}-${day.date.getDate()}`;
+                acc[key] = true;
             }
             return acc;
         }, {});
 
-        return { 
-            todayAgenda: agenda[0], 
+        return {
+            todayAgenda: agenda[0],
             futureAgenda: agenda.slice(1),
             eventsByDate: eventsMap
         };
     }, [schedule, deadlines, getCourseDetails]);
-    
+
     const handleDateClick = (day) => {
         const dateKey = `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
         const dayElement = dayRefs.current[dateKey];
@@ -74,7 +84,7 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
             }
         }
     };
-    
+
     const onFutureWeekAnimationComplete = () => {
         if (targetDayRef.current) {
             targetDayRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -107,27 +117,27 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
                             const dateKey = `${todayAgenda.date.getFullYear()}-${todayAgenda.date.getMonth() + 1}-${todayAgenda.date.getDate()}`;
                             dayRefs.current[dateKey] = el;
                         }}>
-                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
-                                 <div className="flex items-baseline gap-4">
-                                     <h3 className="text-2xl font-bold text-cyan-300">Today</h3>
-                                     <p className="text-sm text-slate-400">{todayAgenda.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
-                                 </div>
-                             </div>
-                             <div className="space-y-4">
-                                 {todayAgenda.events.length > 0 ? todayAgenda.events.map(event => (
-                                     <EventCard 
-                                         key={event.id} 
-                                         event={event}
-                                         onEdit={() => event.type === 'class' ? onEditClass(event) : onEditDeadline(event)}
-                                         onDelete={() => event.type === 'class' ? onDeleteClass(event.id) : onDeleteDeadline(event.id)}
+                            <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
+                                <div className="flex items-baseline gap-4">
+                                    <h3 className="text-2xl font-bold text-cyan-300">Today</h3>
+                                    <p className="text-sm text-slate-400">{todayAgenda.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
+                                </div>
+                            </div>
+                            <div className="space-y-4">
+                                {todayAgenda.events.length > 0 ? todayAgenda.events.map(event => (
+                                    <EventCard
+                                        key={event.id}
+                                        event={event}
+                                        onEdit={() => event.type === 'class' ? onEditClass(event) : onEditDeadline(event)}
+                                        onDelete={() => event.type === 'class' ? onDeleteClass(event.id) : onDeleteDeadline(event.id)}
                                     />
-                                 )) : <p className="text-slate-500 pl-4">No events scheduled for today.</p>}
-                             </div>
+                                )) : <p className="text-slate-500 pl-4">No events scheduled for today.</p>}
+                            </div>
                         </div>
 
                         {/* Future Week Toggle */}
                         <div className="text-center pt-4">
-                            <motion.button 
+                            <motion.button
                                 onClick={() => setIsFutureWeekVisible(!isFutureWeekVisible)}
                                 className="flex items-center gap-2 mx-auto text-slate-400 hover:text-white transition-colors"
                             >
@@ -160,8 +170,8 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
                                                 </div>
                                                 <div className="space-y-4">
                                                     {events.length > 0 ? events.map(event => (
-                                                        <EventCard 
-                                                            key={event.id} 
+                                                        <EventCard
+                                                            key={event.id}
                                                             event={event}
                                                             onEdit={() => event.type === 'class' ? onEditClass(event) : onEditDeadline(event)}
                                                             onDelete={() => event.type === 'class' ? onDeleteClass(event.id) : onDeleteDeadline(event.id)}
@@ -177,13 +187,13 @@ const CalendarPage = ({ schedule, deadlines, onAddClass, onEditClass, onDeleteCl
                     </div>
                 </div>
                 <div className="lg:col-span-1 sticky top-28">
-                     <CalendarComponent 
-                         currentDate={selectedDate}
-                         onDateClick={handleDateClick}
-                         eventsByDate={eventsByDate}
-                         onPrevMonth={() => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                         onNextMonth={() => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                         selectedDate={new Date()}
+                    <CalendarComponent
+                        currentDate={selectedDate}
+                        onDateClick={handleDateClick}
+                        eventsByDate={eventsByDate}
+                        onPrevMonth={() => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                        onNextMonth={() => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                        selectedDate={new Date()}
                     />
                 </div>
             </div>
