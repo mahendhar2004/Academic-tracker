@@ -28,38 +28,38 @@ const AddEditContactModal = ({ isOpen, onClose, onSave, contactToEdit }) => {
         <GlassyModal isOpen={isOpen} onClose={onClose} title={isNew ? "Add New Contact" : "Edit Contact"}>
             <form onSubmit={handleSubmit} className="space-y-4 w-80 md:w-96">
                 <div>
-                    <label htmlFor="contactName" className="block text-sm font-medium text-slate-300 mb-2">Name</label>
+                    <label htmlFor="contactName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Name</label>
                     <input
                         id="contactName"
                         type="text"
                         value={contact.name}
                         onChange={(e) => handleChange('name', e.target.value)}
                         placeholder="e.g., John Doe"
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400 text-slate-900 dark:text-white"
                         required
                         autoFocus
                     />
                 </div>
                 <div>
-                    <label htmlFor="contactPhone" className="block text-sm font-medium text-slate-300 mb-2">Phone Number (Optional)</label>
+                    <label htmlFor="contactPhone" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Phone Number (Optional)</label>
                     <input
                         id="contactPhone"
                         type="tel"
                         value={contact.phone}
                         onChange={(e) => handleChange('phone', e.target.value)}
                         placeholder="e.g., +91 12345 67890"
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400 text-slate-900 dark:text-white"
                     />
                 </div>
                 <div>
-                    <label htmlFor="contactEmail" className="block text-sm font-medium text-slate-300 mb-2">Email Address (Optional)</label>
+                    <label htmlFor="contactEmail" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Email Address (Optional)</label>
                     <input
                         id="contactEmail"
                         type="email"
                         value={contact.email}
                         onChange={(e) => handleChange('email', e.target.value)}
                         placeholder="e.g., john.doe@example.com"
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400 text-slate-900 dark:text-white"
                     />
                 </div>
                 <motion.button

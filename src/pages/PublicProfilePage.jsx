@@ -7,9 +7,9 @@ import {
     User as UserIcon, GraduationCap, GitBranch, FileText, MapPin, Mail, Phone
 } from 'lucide-react';
 // UPDATED: Imported all necessary icons
-import { 
-    FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaTwitter, FaWhatsapp, 
-    FaTelegramPlane, FaDiscord, FaYoutube, FaTwitch, FaReddit 
+import {
+    FaLinkedin, FaGithub, FaInstagram, FaFacebook, FaTwitter, FaWhatsapp,
+    FaTelegramPlane, FaDiscord, FaYoutube, FaTwitch, FaReddit
 } from 'react-icons/fa';
 import { SiLeetcode, SiCodeforces } from 'react-icons/si';
 
@@ -17,8 +17,8 @@ import { SiLeetcode, SiCodeforces } from 'react-icons/si';
 // UPDATED: Expanded the function to include all social icons
 const getSocialIcon = (url) => {
     const lowerUrl = url.toLowerCase();
-    const props = { size: 22, className: "text-slate-400 group-hover:text-cyan-400 transition-colors" };
- 
+    const props = { size: 22, className: "text-slate-400 dark:text-slate-400 group-hover:text-brand-primary dark:group-hover:text-cyan-400 transition-colors" };
+
     if (lowerUrl.includes('linkedin')) return <FaLinkedin {...props} />;
     if (lowerUrl.includes('github')) return <FaGithub {...props} />;
     if (lowerUrl.includes('leetcode')) return <SiLeetcode {...props} />;
@@ -43,10 +43,10 @@ const getSocialIcon = (url) => {
 const InfoCard = ({ icon: Icon, title, children }) => (
     <motion.div
         variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
-        className="bg-slate-900/50 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-lg"
+        className="bg-white/60 dark:bg-slate-900/50 backdrop-blur-2xl border border-slate-200 dark:border-white/10 p-6 rounded-2xl shadow-xl dark:shadow-2xl"
     >
-        <h3 className="font-bold text-xl text-white mb-4 flex items-center gap-3">
-            <Icon size={20} className="text-cyan-400" />
+        <h3 className="font-bold text-xl text-slate-900 dark:text-white mb-4 flex items-center gap-3">
+            <Icon size={20} className="text-brand-secondary dark:text-cyan-400" />
             {title}
         </h3>
         <div className="space-y-3">
@@ -58,10 +58,10 @@ const InfoCard = ({ icon: Icon, title, children }) => (
 const DisplayField = ({ label, value, icon: Icon }) => (
     value ? (
         <div className="flex items-start text-sm">
-            <Icon size={16} className="text-slate-500 mt-0.5 mr-3 flex-shrink-0" />
+            <Icon size={16} className="text-slate-500 dark:text-slate-500 mt-0.5 mr-3 flex-shrink-0" />
             <div>
-                <p className="text-slate-400">{label}</p>
-                <p className="font-semibold text-white">{value}</p>
+                <p className="text-slate-500 dark:text-slate-400">{label}</p>
+                <p className="font-semibold text-slate-900 dark:text-white">{value}</p>
             </div>
         </div>
     ) : null
@@ -72,8 +72,8 @@ const DisplayList = ({ items }) => {
     return (
         <div className="space-y-2">
             {items.map((item, index) => (
-                <div key={index} className="bg-black/30 p-3 rounded-lg">
-                    <p className="text-slate-200 text-sm">{item}</p>
+                <div key={index} className="bg-slate-100 dark:bg-black/30 p-3 rounded-lg">
+                    <p className="text-slate-700 dark:text-slate-200 text-sm">{item}</p>
                 </div>
             ))}
         </div>
@@ -90,9 +90,9 @@ const DisplayResumeList = ({ items }) => {
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="block bg-black/30 p-3 rounded-lg hover:bg-black/50 transition-colors group"
+                    className="block bg-slate-100 dark:bg-black/30 p-3 rounded-lg hover:bg-slate-200 dark:hover:bg-black/50 transition-colors group"
                 >
-                    <p className="font-semibold text-cyan-400 group-hover:text-cyan-300 transition-colors">{item.title}</p>
+                    <p className="font-semibold text-brand-secondary dark:text-cyan-400 group-hover:text-brand-primary dark:group-hover:text-cyan-300 transition-colors">{item.title}</p>
                     <p className="text-xs text-slate-500 truncate">{item.link}</p>
                 </a>
             ))}
@@ -127,10 +127,10 @@ const PublicProfilePage = ({ shareId }) => {
     }, [shareId]);
 
     if (loading) {
-        return <div className="bg-black min-h-screen flex justify-center items-center text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div></div>;
+        return <div className="bg-slate-50 dark:bg-black min-h-screen flex justify-center items-center text-slate-900 dark:text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-primary dark:border-cyan-400"></div></div>;
     }
     if (error) {
-        return <div className="bg-black min-h-screen flex justify-center items-center text-red-400 text-xl">{error}</div>;
+        return <div className="bg-slate-50 dark:bg-black min-h-screen flex justify-center items-center text-red-500 dark:text-red-400 text-xl">{error}</div>;
     }
 
     // Safely access nested properties and provide default empty arrays to prevent errors
@@ -148,7 +148,7 @@ const PublicProfilePage = ({ shareId }) => {
     const hasResumes = academic.resumes && academic.resumes.length > 0;
 
     return (
-        <div className="bg-black min-h-screen text-white font-sans aurora-background">
+        <div className="bg-slate-50 dark:bg-black min-h-screen text-slate-900 dark:text-white font-sans aurora-background">
             <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -158,7 +158,7 @@ const PublicProfilePage = ({ shareId }) => {
                 >
                     {/* --- Header / Hero --- */}
                     <header className="relative text-center mb-8">
-                         <motion.div
+                        <motion.div
                             initial={{ scale: 0.8, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             transition={{ delay: 0.1, type: 'spring', stiffness: 200, damping: 20 }}
@@ -167,11 +167,11 @@ const PublicProfilePage = ({ shareId }) => {
                             <img
                                 src={profile.imageUrl || `https://ui-avatars.com/api/?name=${profile.name}&background=0d1117&color=fff&bold=true&size=128`}
                                 alt={profile.name}
-                                className="w-36 h-36 rounded-full border-4 border-slate-800 object-cover mx-auto mb-4"
+                                className="w-36 h-36 rounded-full border-4 border-slate-200 dark:border-slate-800 object-cover mx-auto mb-4"
                             />
-                            <h1 className="text-4xl md:text-5xl font-bold text-white">{profile.name}</h1>
-                            {profile.branch && <p className="text-xl text-cyan-400 mt-1">{profile.branch}</p>}
-                            
+                            <h1 className="text-4xl md:text-5xl font-bold text-slate-900 dark:text-white">{profile.name}</h1>
+                            {profile.branch && <p className="text-xl text-brand-secondary dark:text-cyan-400 mt-1">{profile.branch}</p>}
+
                             {socialLinks.length > 0 && (
                                 <div className="flex justify-center items-center gap-6 mt-4">
                                     {socialLinks.map((link, index) => (

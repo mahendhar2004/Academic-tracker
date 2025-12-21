@@ -96,14 +96,14 @@ const CalendarPage = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
             <div className="flex flex-wrap justify-between items-center gap-4 mb-10">
                 <div>
-                    <h2 className="text-3xl font-bold text-white mb-1">{getGreeting()}</h2>
-                    <p className="text-slate-400">Here's what's on your agenda.</p>
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-1">{getGreeting()}</h2>
+                    <p className="text-slate-500 dark:text-slate-400">Here's what's on your agenda.</p>
                 </div>
                 <div className="flex gap-4">
-                    <motion.button whileTap={{ scale: 0.95 }} onClick={onAddDeadline} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
+                    <motion.button whileTap={{ scale: 0.95 }} onClick={onAddDeadline} className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-white/15 backdrop-blur-xl border border-slate-200 dark:border-white/25 text-brand-primary dark:text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-slate-50 dark:hover:bg-white/25 shadow-sm dark:shadow-none">
                         <Bell size={16} /> <span className="hidden sm:inline">Add Deadline</span>
                     </motion.button>
-                    <motion.button whileTap={{ scale: 0.95 }} onClick={onAddClass} className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25">
+                    <motion.button whileTap={{ scale: 0.95 }} onClick={onAddClass} className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-white/15 backdrop-blur-xl border border-slate-200 dark:border-white/25 text-brand-primary dark:text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-slate-50 dark:hover:bg-white/25 shadow-sm dark:shadow-none">
                         <Clock size={16} /> <span className="hidden sm:inline">Add Class</span>
                     </motion.button>
                 </div>
@@ -119,8 +119,8 @@ const CalendarPage = () => {
                         }}>
                             <div className="flex flex-wrap justify-between items-center gap-4 mb-4">
                                 <div className="flex items-baseline gap-4">
-                                    <h3 className="text-2xl font-bold text-cyan-300">Today</h3>
-                                    <p className="text-sm text-slate-400">{todayAgenda.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
+                                    <h3 className="text-2xl font-bold text-brand-secondary dark:text-cyan-400">Today</h3>
+                                    <p className="text-sm text-slate-500 dark:text-slate-400">{todayAgenda.date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
                                 </div>
                             </div>
                             <div className="space-y-4">
@@ -139,7 +139,7 @@ const CalendarPage = () => {
                         <div className="text-center pt-4">
                             <motion.button
                                 onClick={() => setIsFutureWeekVisible(!isFutureWeekVisible)}
-                                className="flex items-center gap-2 mx-auto text-slate-400 hover:text-white transition-colors"
+                                className="flex items-center gap-2 mx-auto text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
                             >
                                 <span>{isFutureWeekVisible ? 'Hide Future Days' : 'Show Full Week'}</span>
                                 <motion.div animate={{ rotate: isFutureWeekVisible ? 180 : 0 }}>
@@ -165,8 +165,8 @@ const CalendarPage = () => {
                                                 dayRefs.current[dateKey] = el;
                                             }}>
                                                 <div className="flex items-baseline gap-4 mb-4">
-                                                    <h3 className="text-2xl font-bold text-white">{dayName}</h3>
-                                                    <p className="text-sm text-slate-400">{date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
+                                                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">{dayName}</h3>
+                                                    <p className="text-sm text-slate-500 dark:text-slate-400">{date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
                                                 </div>
                                                 <div className="space-y-4">
                                                     {events.length > 0 ? events.map(event => (

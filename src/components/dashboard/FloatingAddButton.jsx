@@ -2,11 +2,11 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, ClipboardList, Edit, GraduationCap, Bell, CheckCircle2, Users, CreditCard } from 'lucide-react';
 
-const FloatingAddButton = ({ 
-    onAddCourse, 
-    onAddExamMarks, 
-    onAddGrade, 
-    onAddDeadline, 
+const FloatingAddButton = ({
+    onAddCourse,
+    onAddExamMarks,
+    onAddGrade,
+    onAddDeadline,
     onAddTask,
     onAddContact,
     onAddExpenditure
@@ -38,13 +38,13 @@ const FloatingAddButton = ({
     ];
 
     const menuVariants = {
-        closed: { 
-            opacity: 0, 
-            transition: { when: "afterChildren", staggerChildren: 0.05, staggerDirection: -1 } 
+        closed: {
+            opacity: 0,
+            transition: { when: "afterChildren", staggerChildren: 0.05, staggerDirection: -1 }
         },
-        open: { 
-            opacity: 1, 
-            transition: { when: "beforeChildren", staggerChildren: 0.07, delayChildren: 0.2 } 
+        open: {
+            opacity: 1,
+            transition: { when: "beforeChildren", staggerChildren: 0.07, delayChildren: 0.2 }
         },
     };
 
@@ -75,7 +75,7 @@ const FloatingAddButton = ({
                             initial="closed"
                             animate="open"
                             exit="closed"
-                            className="absolute bottom-full right-0 mb-4 w-48 bg-black/50 saturate-150 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl p-2"
+                            className="absolute bottom-full right-0 mb-4 w-48 bg-white/90 dark:bg-black/50 saturate-150 backdrop-blur-xl border border-slate-200 dark:border-white/20 rounded-xl shadow-xl dark:shadow-2xl p-2"
                         >
                             {menuItems.map((item) => (
                                 <motion.button
@@ -85,7 +85,7 @@ const FloatingAddButton = ({
                                         item.action();
                                         setIsOpen(false);
                                     }}
-                                    className="w-full flex items-center gap-3 p-2 rounded-lg text-left text-slate-200 hover:bg-white/10 transition-colors"
+                                    className="w-full flex items-center gap-3 p-2 rounded-lg text-left text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors"
                                 >
                                     <item.icon size={18} />
                                     <span>{item.label}</span>
@@ -98,7 +98,7 @@ const FloatingAddButton = ({
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     onClick={() => setIsOpen(!isOpen)}
-                    className="relative z-20 flex-shrink-0 flex items-center justify-center bg-cyan-500/80 backdrop-blur-xl border border-cyan-400/50 text-white w-16 h-16 rounded-full shadow-lg transition-colors hover:bg-cyan-500"
+                    className="relative z-20 flex-shrink-0 flex items-center justify-center bg-brand-primary dark:bg-cyan-500/80 backdrop-blur-xl border border-brand-primary/50 dark:border-cyan-400/50 text-white w-16 h-16 rounded-full shadow-lg transition-colors hover:bg-brand-primary/90 dark:hover:bg-cyan-500"
                 >
                     <motion.div animate={{ rotate: isOpen ? 45 : 0 }} transition={{ duration: 0.3, ease: 'easeInOut' }}>
                         <Plus size={28} />

@@ -17,7 +17,7 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
                     ...expenditureToEdit,
                     date: expenditureToEdit.date.toDate().toISOString(),
                     amount: expenditureToEdit.amount.toString(),
-                    reason: expenditureToEdit.reason || '' 
+                    reason: expenditureToEdit.reason || ''
                 });
             } else {
                 setExpense({ title: '', amount: '', category: 'Other', date: new Date().toISOString(), reason: '' });
@@ -31,9 +31,9 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
         e.preventDefault();
         const amountNum = parseFloat(expense.amount);
         if (expense.title.trim() && expense.category.trim() && !isNaN(amountNum) && amountNum > 0 && expense.date) {
-            onSave({ 
-                ...expense, 
-                amount: amountNum, 
+            onSave({
+                ...expense,
+                amount: amountNum,
                 date: Timestamp.fromDate(new Date(expense.date)),
                 category: expense.category.charAt(0).toUpperCase() + expense.category.slice(1)
             }, expenditureToEdit?.id || null);
@@ -54,44 +54,44 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
         <GlassyModal isOpen={isOpen} onClose={onClose} title={isNew ? "Add New Expense" : "Edit Expense"}>
             <form onSubmit={handleSubmit} className="space-y-4 w-80 md:w-96">
                 <div>
-                    <label htmlFor="expenseTitle" className="block text-sm font-medium text-slate-300 mb-2">Expense Title</label>
-                    <input id="expenseTitle" type="text" value={expense.title} onChange={(e) => handleChange('title', e.target.value)} placeholder="e.g., Lunch with friends" className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" required />
+                    <label htmlFor="expenseTitle" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Expense Title</label>
+                    <input id="expenseTitle" type="text" value={expense.title} onChange={(e) => handleChange('title', e.target.value)} placeholder="e.g., Lunch with friends" className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white" required />
                 </div>
                 <div className="flex gap-4">
                     <div className="w-1/2">
-                        <label htmlFor="expenseAmount" className="block text-sm font-medium text-slate-300 mb-2">Amount (₹)</label>
-                        <input 
-                            id="expenseAmount" 
-                            type="number" 
-                            value={expense.amount} 
-                            onChange={(e) => handleChange('amount', e.target.value)} 
+                        <label htmlFor="expenseAmount" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Amount (₹)</label>
+                        <input
+                            id="expenseAmount"
+                            type="number"
+                            value={expense.amount}
+                            onChange={(e) => handleChange('amount', e.target.value)}
                             onKeyDown={handleAmountKeyDown}
-                            placeholder="e.g., 500" 
-                            className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400" 
-                            required 
-                            min="0" 
-                            step="any" 
+                            placeholder="e.g., 500"
+                            className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
+                            required
+                            min="0"
+                            step="any"
                         />
                     </div>
                     <div className="w-1/2">
-                        <label htmlFor="expenseCategory" className="block text-sm font-medium text-slate-300 mb-2">Category</label>
+                        <label htmlFor="expenseCategory" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Category</label>
                         {isAddingNewCategory ? (
                             <div className="flex items-center gap-2">
-                                <input 
+                                <input
                                     type="text"
                                     value={expense.category}
                                     onChange={(e) => handleChange('category', e.target.value)}
-                                    className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                                     placeholder="New Category"
                                     autoFocus
                                     required
                                 />
-                                <button type="button" onClick={() => { setIsAddingNewCategory(false); handleChange('category', 'Other'); }} className="p-2 text-slate-400 hover:text-white transition-colors"><X size={18}/></button>
+                                <button type="button" onClick={() => { setIsAddingNewCategory(false); handleChange('category', 'Other'); }} className="p-2 text-slate-400 hover:text-white transition-colors"><X size={18} /></button>
                             </div>
                         ) : (
-                            <select 
-                                id="expenseCategory" 
-                                value={expense.category} 
+                            <select
+                                id="expenseCategory"
+                                value={expense.category}
                                 onChange={(e) => {
                                     if (e.target.value === '__add_new__') {
                                         setIsAddingNewCategory(true);
@@ -99,27 +99,27 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
                                     } else {
                                         handleChange('category', e.target.value);
                                     }
-                                }} 
-                                className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                }}
+                                className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                             >
-                                {categories.map(cat => <option key={cat} value={cat} className="bg-slate-800">{cat}</option>)}
-                                <option value="__add_new__" className="bg-slate-700 text-cyan-400 font-semibold">Add New...</option>
+                                {categories.map(cat => <option key={cat} value={cat} className="bg-white dark:bg-slate-800">{cat}</option>)}
+                                <option value="__add_new__" className="bg-slate-200 dark:bg-slate-700 text-cyan-600 dark:text-cyan-400 font-semibold">Add New...</option>
                             </select>
                         )}
                     </div>
                 </div>
                 <div>
-                    <label htmlFor="expenseReason" className="block text-sm font-medium text-slate-300 mb-2">Reason (Optional)</label>
-                    <textarea 
-                        id="expenseReason" 
-                        value={expense.reason} 
-                        onChange={(e) => handleChange('reason', e.target.value)} 
-                        placeholder="e.g., Celebrated end of exams" 
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none h-20"
+                    <label htmlFor="expenseReason" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Reason (Optional)</label>
+                    <textarea
+                        id="expenseReason"
+                        value={expense.reason}
+                        onChange={(e) => handleChange('reason', e.target.value)}
+                        placeholder="e.g., Celebrated end of exams"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 resize-none h-20 text-slate-900 dark:text-white"
                     />
                 </div>
                 <div>
-                    <label htmlFor="expenseDate" className="block text-sm font-medium text-slate-300 mb-2">Date of Expense</label>
+                    <label htmlFor="expenseDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Date of Expense</label>
                     {/* UPDATED: Replaced DateTimePicker with standard input type="date" */}
                     <input
                         id="expenseDate"
@@ -132,7 +132,7 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
                             const newDate = new Date(Date.UTC(year, month - 1, day));
                             handleChange('date', newDate.toISOString());
                         }}
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                         required
                     />
                 </div>

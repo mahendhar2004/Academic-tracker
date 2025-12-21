@@ -3,7 +3,7 @@ import {
     updateDoc, writeBatch, getDocs, Timestamp, increment, runTransaction,
     query, where
 } from 'firebase/firestore';
-import { db, appId } from '../firebase/config';
+import { db } from '../firebase/config';
 import {
     getProfilePath, getCollectionPath, getDocPath,
     getPerformanceTargetPath, COLLECTIONS

@@ -1,14 +1,14 @@
 import React from 'react';
 
 const Skeleton = ({ className, variant = 'rect', ...props }) => {
-    const baseClasses = "animate-pulse bg-slate-800/50 rounded";
+    const baseClasses = "animate-pulse bg-slate-200 dark:bg-slate-800/50 rounded";
 
     // Variant specific classes
     const variantClasses = {
         circle: "rounded-full",
         rect: "rounded-md",
         text: "h-4 rounded w-3/4",
-        card: "p-6 rounded-2xl border border-white/10"
+        card: "p-6 rounded-2xl border border-slate-200 dark:border-white/10"
     };
 
     return (

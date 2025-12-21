@@ -43,7 +43,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
         }
         let min = 24 * 60, max = 0;
         const byDay = {};
-        
+
         daysOfWeek.forEach(day => {
             byDay[day] = schedule
                 .filter(item => item.day === day)
@@ -72,14 +72,14 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
     const currentDayName = now.toLocaleDateString('en-US', { weekday: 'long' });
 
     return (
-        <GlassyModal 
-            isOpen={isOpen} 
-            onClose={onClose} 
-            title="Weekly Timetable" 
-            customClasses="max-w-screen-xl w-full bg-gradient-to-br from-black to-slate-900 border border-slate-800"
+        <GlassyModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Weekly Timetable"
+            customClasses="max-w-screen-xl w-full bg-gradient-to-br from-black to-slate-900 border border-slate-800 text-white"
         >
             <div ref={scrollContainerRef} className="relative h-[70vh] overflow-y-auto no-scrollbar">
-                
+
                 {/* --- Desktop View (Grid) --- */}
                 <div className="hidden md:grid grid-cols-[auto_1fr_1fr_1fr_1fr_1fr_1fr] gap-x-1">
                     <div className="sticky top-0 z-20 bg-black/50 backdrop-blur-sm">
@@ -106,7 +106,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                                     const top = startMinutes * pixelsPerMinute;
                                     const height = (endMinutes - startMinutes) * pixelsPerMinute;
                                     const details = getCourseDetails(item.courseId);
-                                    
+
                                     return (
                                         <motion.div
                                             key={item.id}
@@ -136,12 +136,12 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                     ))}
                     {/* Current Time Indicator Line for Desktop */}
                     {currentTimePosition > 0 && currentTimePosition < totalPixelHeight && currentDayName && daysOfWeek.includes(currentDayName) && (
-                         <div 
+                        <div
                             className="absolute z-10 w-full h-0.5 bg-red-500"
                             style={{ top: `${currentTimePosition + 48}px` }}
-                         >
+                        >
                             <div className="w-2 h-2 rounded-full bg-red-500 absolute -left-1 -top-[3px]"></div>
-                         </div>
+                        </div>
                     )}
                 </div>
 
@@ -165,7 +165,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                                                     </div>
                                                     <div>
                                                         <p className="font-semibold text-white">{details.name}</p>
-                                                        {item.venue && <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5"><MapPin size={12}/>{item.venue}</p>}
+                                                        {item.venue && <p className="text-xs text-slate-400 mt-1 flex items-center gap-1.5"><MapPin size={12} />{item.venue}</p>}
                                                     </div>
                                                 </div>
                                             );

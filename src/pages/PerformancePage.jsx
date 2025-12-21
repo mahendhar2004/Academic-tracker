@@ -10,16 +10,16 @@ import { usePerformanceGraphs } from '../hooks/usePerformanceGraphs';
 
 const ExamMarkCard = ({ mark, onEdit, onDelete }) => {
     return (
-        <div className="bg-black/30 p-3 rounded-lg flex items-center gap-4 group">
+        <div className="bg-slate-50 dark:bg-black/30 p-3 rounded-lg flex items-center gap-4 group border border-slate-100 dark:border-transparent">
             <div className="flex-1">
-                <p className="font-semibold text-white truncate">{mark.examName}</p>
-                <p className="text-xs text-slate-400">{mark.weightage}% Weightage</p>
+                <p className="font-semibold text-slate-800 dark:text-white truncate">{mark.examName}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{mark.weightage}% Weightage</p>
             </div>
             <div className="flex items-center gap-3">
-                <p className="font-mono text-lg text-cyan-300">{mark.marksSecured}<span className="text-sm text-slate-500">/{mark.maxMarks}</span></p>
+                <p className="font-mono text-lg text-brand-secondary dark:text-cyan-300">{mark.marksSecured}<span className="text-sm text-slate-500">/{mark.maxMarks}</span></p>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-cyan-300"><Edit size={14} /></button>
-                    <button onClick={onDelete} className="p-1.5 rounded-md hover:bg-white/10 text-slate-400 hover:text-red-400"><Trash2 size={14} /></button>
+                    <button onClick={onEdit} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-brand-secondary dark:hover:text-cyan-300"><Edit size={14} /></button>
+                    <button onClick={onDelete} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-red-500 dark:hover:text-red-400"><Trash2 size={14} /></button>
                 </div>
             </div>
         </div>
@@ -27,16 +27,15 @@ const ExamMarkCard = ({ mark, onEdit, onDelete }) => {
 };
 
 const SemesterCardSkeleton = () => (
-    <div className="flex-shrink-0 w-48 p-4 rounded-xl bg-slate-800/50 border border-white/10 animate-pulse">
-        <div className="h-4 bg-slate-700 rounded w-3/4 mb-3"></div>
-        <div className="h-8 bg-slate-700 rounded w-1/2"></div>
+    <div className="flex-shrink-0 w-48 p-4 rounded-xl bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 animate-pulse">
+        <div className="h-4 bg-slate-300 dark:bg-slate-700 rounded w-3/4 mb-3"></div>
+        <div className="h-8 bg-slate-300 dark:bg-slate-700 rounded w-1/2"></div>
     </div>
 );
 
 const PerformancePage = () => {
     const {
         performanceData, allCourses, examMarks,
-        handleDeleteCourse: onDeleteCourse,
         handleEditGradeClick: onEditGrade,
         handleAddGradeClick: onAddGrade,
         handleAddExamMarksClick: onAddExamMarks,
@@ -130,7 +129,7 @@ const PerformancePage = () => {
         }
     }, [allSemesterNumbers, isComponentLoading]);
 
-    const cardStyles = "relative overflow-hidden bg-black/50 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl";
+    const cardStyles = "relative overflow-hidden bg-white/60 dark:bg-black/50 backdrop-blur-2xl border border-slate-200 dark:border-white/10 p-6 rounded-2xl shadow-xl dark:shadow-2xl";
 
     return (
         <>
@@ -138,24 +137,24 @@ const PerformancePage = () => {
                 <div className={`${cardStyles} flex flex-col md:flex-row items-center justify-between gap-6`}>
                     <div className="absolute -top-1 -left-1 w-48 h-48 bg-cyan-500/10 rounded-full blur-[100px]"></div>
                     <div>
-                        <p className="text-slate-300">Overall Cumulative Performance</p>
-                        <h1 className="text-6xl font-bold text-white tracking-tighter">{cpi} <span className="text-4xl text-slate-400">CPI</span></h1>
+                        <p className="text-slate-500 dark:text-slate-300">Overall Cumulative Performance</p>
+                        <h1 className="text-6xl font-bold text-slate-900 dark:text-white tracking-tighter">{cpi} <span className="text-4xl text-slate-400 dark:text-slate-400">CPI</span></h1>
                     </div>
                     <div className="flex gap-2">
-                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleOpenWhatIf()} className="flex items-center gap-2 bg-white/10 backdrop-blur-xl border border-white/20 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-white/20">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={() => handleOpenWhatIf()} className="flex items-center gap-2 bg-white dark:bg-white/10 backdrop-blur-xl border border-slate-200 dark:border-white/20 text-brand-primary dark:text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-slate-50 dark:hover:bg-white/20 shadow-sm dark:shadow-none">
                             <BrainCircuit size={18} /> What If?
                         </motion.button>
-                        <motion.button whileTap={{ scale: 0.95 }} onClick={onAddGrade} className="flex items-center gap-2 bg-cyan-500/80 backdrop-blur-xl border border-cyan-400/50 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-cyan-500">
+                        <motion.button whileTap={{ scale: 0.95 }} onClick={onAddGrade} className="flex items-center gap-2 bg-brand-primary dark:bg-cyan-500/80 backdrop-blur-xl border border-brand-primary/50 dark:border-cyan-400/50 text-white font-bold py-3 px-5 rounded-lg transition-colors hover:bg-brand-primary/90 dark:hover:bg-cyan-500">
                             <Plus size={18} /> Add Grade
                         </motion.button>
                     </div>
                 </div>
                 <div className="relative pt-8">
-                    <h2 className="text-xl font-bold text-white mb-4">Your Academic Journey</h2>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-4">Your Academic Journey</h2>
                     <div className="relative">
                         <AnimatePresence>
                             {canScrollLeft && !isComponentLoading && (
-                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-r-lg text-white transition-opacity">
+                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('left')} className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-r-lg text-slate-900 dark:text-white transition-opacity shadow-lg dark:shadow-none">
                                     <ChevronLeft size={24} className="mx-auto" />
                                 </motion.button>
                             )}
@@ -172,17 +171,17 @@ const PerformancePage = () => {
                                             <motion.div
                                                 key={semNum}
                                                 onClick={() => setSelectedSemester(semData || { semester: semNum, spi: "N/A" })}
-                                                className={`relative cursor-pointer flex-shrink-0 w-48 p-4 rounded-xl border transition-all duration-300 ${selectedSemester?.semester === semNum ? 'border-cyan-400/80 bg-cyan-900/40' : (hasData ? 'border-white/10 bg-black/30 hover:bg-white/5' : 'border-dashed border-slate-700 bg-transparent hover:bg-slate-800/50')}`}
+                                                className={`relative cursor-pointer flex-shrink-0 w-48 p-4 rounded-xl border transition-all duration-300 ${selectedSemester?.semester === semNum ? 'border-brand-primary/80 bg-brand-primary/10 dark:border-cyan-400/80 dark:bg-cyan-900/40' : (hasData ? 'border-slate-200 dark:border-white/10 bg-white dark:bg-black/30 hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm dark:shadow-none' : 'border-dashed border-slate-300 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800/50')}`}
                                                 layoutId={`semester-card-${semNum}`}
                                             >
-                                                <p className="text-sm text-slate-400">Semester {semNum}</p>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400">Semester {semNum}</p>
                                                 {hasData ? (
-                                                    <p className="text-3xl font-bold text-white">{semData.spi} <span className="text-xl text-slate-300">SPI</span></p>
+                                                    <p className="text-3xl font-bold text-slate-900 dark:text-white">{semData.spi} <span className="text-xl text-slate-400 dark:text-slate-300">SPI</span></p>
                                                 ) : (
-                                                    <p className="text-lg font-semibold text-slate-600 mt-2">No Data</p>
+                                                    <p className="text-lg font-semibold text-slate-400 dark:text-slate-600 mt-2">No Data</p>
                                                 )}
                                                 {selectedSemester?.semester === semNum && (
-                                                    <motion.div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-cyan-400 rounded-full" layoutId="active-semester-indicator"></motion.div>
+                                                    <motion.div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-brand-primary dark:bg-cyan-400 rounded-full" layoutId="active-semester-indicator"></motion.div>
                                                 )}
                                             </motion.div>
                                         );
@@ -192,7 +191,7 @@ const PerformancePage = () => {
                         </div>
                         <AnimatePresence>
                             {canScrollRight && !isComponentLoading && (
-                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-black/50 backdrop-blur-md rounded-l-lg text-white transition-opacity">
+                                <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => scroll('right')} className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-24 bg-white/80 dark:bg-black/50 backdrop-blur-md rounded-l-lg text-slate-900 dark:text-white transition-opacity shadow-lg dark:shadow-none">
                                     <ChevronRight size={24} className="mx-auto" />
                                 </motion.button>
                             )}
@@ -203,24 +202,24 @@ const PerformancePage = () => {
                 {/* Saved Scenarios Section */}
                 {scenarios.length > 0 && (
                     <div className="space-y-4">
-                        <h2 className="text-xl font-bold text-white">Saved Predictions (Goals)</h2>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Saved Predictions (Goals)</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             {scenarios.map(scenario => (
                                 <motion.div
                                     key={scenario.id}
                                     layout
-                                    className="bg-black/30 border border-white/10 p-4 rounded-xl flex flex-col justify-between gap-4 group hover:bg-black/40 transition-colors"
+                                    className="bg-white dark:bg-black/30 border border-slate-200 dark:border-white/10 p-4 rounded-xl flex flex-col justify-between gap-4 group hover:bg-slate-50 dark:hover:bg-black/40 transition-colors shadow-sm dark:shadow-none"
                                 >
                                     <div>
                                         <div className="flex justify-between items-start mb-2">
-                                            <h3 className="font-bold text-lg text-white truncate pr-2" title={scenario.name}>{scenario.name}</h3>
-                                            <span className="text-xs text-slate-500 bg-black/40 px-2 py-1 rounded border border-white/5 whitespace-nowrap">
+                                            <h3 className="font-bold text-lg text-slate-900 dark:text-white truncate pr-2" title={scenario.name}>{scenario.name}</h3>
+                                            <span className="text-xs text-slate-500 bg-slate-100 dark:bg-black/40 px-2 py-1 rounded border border-slate-200 dark:border-white/5 whitespace-nowrap">
                                                 {scenario.createdAt?.toDate ? scenario.createdAt.toDate().toLocaleDateString() : 'Just now'}
                                             </span>
                                         </div>
                                         <div className="flex items-end gap-2">
-                                            <p className="text-3xl font-bold text-cyan-400">{scenario.predictedCPI}</p>
-                                            <p className="text-sm text-slate-400 mb-1">Target CPI</p>
+                                            <p className="text-3xl font-bold text-brand-secondary dark:text-cyan-400">{scenario.predictedCPI}</p>
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">Target CPI</p>
                                         </div>
                                         <p className="text-xs text-slate-500 mt-2">
                                             With {scenario.hypotheticalCourses.length} hypothetical subjects
@@ -230,13 +229,13 @@ const PerformancePage = () => {
                                     <div className="flex gap-2 mt-auto">
                                         <button
                                             onClick={() => handleOpenWhatIf(scenario)}
-                                            className="flex-1 bg-white/5 hover:bg-white/10 border border-white/10 text-cyan-300 text-sm font-semibold py-2 rounded-lg transition-colors"
+                                            className="flex-1 bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 border border-slate-200 dark:border-white/10 text-brand-secondary dark:text-cyan-300 text-sm font-semibold py-2 rounded-lg transition-colors"
                                         >
                                             Load
                                         </button>
                                         <button
                                             onClick={() => handleDeleteScenario(scenario.id)}
-                                            className="px-3 bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 text-red-400 rounded-lg transition-colors"
+                                            className="px-3 bg-red-100 hover:bg-red-200 dark:bg-red-500/10 dark:hover:bg-red-500/20 border border-red-200 dark:border-red-500/20 text-red-500 dark:text-red-400 rounded-lg transition-colors"
                                         >
                                             <Trash2 size={16} />
                                         </button>
@@ -260,26 +259,26 @@ const PerformancePage = () => {
                             {selectedSemester && (
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
                                     <div className={`${cardStyles} flex flex-col`}>
-                                        <h3 className="font-bold text-white text-lg mb-4 flex items-center gap-2 flex-shrink-0">
-                                            <BarChart3 size={20} className="text-cyan-400" /> Courses & Grades
+                                        <h3 className="font-bold text-slate-900 dark:text-white text-lg mb-4 flex items-center gap-2 flex-shrink-0">
+                                            <BarChart3 size={20} className="text-brand-secondary dark:text-cyan-400" /> Courses & Grades
                                         </h3>
                                         <div className="space-y-2 overflow-y-auto no-scrollbar flex-1 pr-2 -mr-2 min-h-0">
                                             {semesterDetails.courses.length > 0 ? semesterDetails.courses.map(course => (
-                                                <div key={course.id} className="bg-black/30 p-3 rounded-lg flex justify-between items-center group">
+                                                <div key={course.id} className="bg-slate-50 dark:bg-black/30 p-3 rounded-lg flex justify-between items-center group border border-slate-100 dark:border-transparent">
                                                     <div>
-                                                        <p className="font-semibold text-white truncate">{course.name}</p>
-                                                        <p className="text-xs text-slate-400">{course.credits} Credits</p>
+                                                        <p className="font-semibold text-slate-800 dark:text-white truncate">{course.name}</p>
+                                                        <p className="text-xs text-slate-500 dark:text-slate-400">{course.credits} Credits</p>
                                                     </div>
                                                     <div className="flex items-center gap-3">
-                                                        <p className="font-mono text-xl text-cyan-300">
+                                                        <p className="font-mono text-xl text-brand-secondary dark:text-cyan-300">
                                                             {(course.grade && course.grade !== 'Not Published') ? course.grade : 'N/A'}
                                                         </p>
                                                         {/* UPDATED: Added delete button next to the edit button */}
                                                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             {(course.grade && course.grade !== 'Not Published') && (
                                                                 <>
-                                                                    <button onClick={() => onEditGrade(course)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-cyan-300"><Edit size={14} /></button>
-                                                                    <button onClick={() => onDeleteGrade(course.id, course.name)} className="p-1.5 rounded-md hover:bg-white/10 text-slate-500 hover:text-red-400"><Trash2 size={14} /></button>
+                                                                    <button onClick={() => onEditGrade(course)} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-brand-secondary dark:hover:text-cyan-300"><Edit size={14} /></button>
+                                                                    <button onClick={() => onDeleteGrade(course.id, course.name)} className="p-1.5 rounded-md hover:bg-slate-200 dark:hover:bg-white/10 text-slate-400 hover:text-red-500 dark:hover:text-red-400"><Trash2 size={14} /></button>
                                                                 </>
                                                             )}
                                                         </div>
@@ -290,15 +289,15 @@ const PerformancePage = () => {
                                     </div>
                                     <div className={`${cardStyles} flex flex-col`}>
                                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                                            <h3 className="font-bold text-white text-lg flex items-center gap-2"><Edit size={20} className="text-cyan-400" /> Exam Marks</h3>
-                                            <motion.button whileTap={{ scale: 0.95 }} onClick={onAddExamMarks} className="text-sm flex items-center gap-1 text-slate-400 hover:text-white"><Plus size={14} /> Add Mark</motion.button>
+                                            <h3 className="font-bold text-slate-900 dark:text-white text-lg flex items-center gap-2"><Edit size={20} className="text-brand-secondary dark:text-cyan-400" /> Exam Marks</h3>
+                                            <motion.button whileTap={{ scale: 0.95 }} onClick={onAddExamMarks} className="text-sm flex items-center gap-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"><Plus size={14} /> Add Mark</motion.button>
                                         </div>
                                         <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar pr-2 -mr-2 min-h-0">
                                             {Object.keys(semesterDetails.marksByCourse).length > 0 ? (
                                                 Object.entries(semesterDetails.marksByCourse).map(([courseName, marks], index) => (
                                                     <div key={courseName}>
-                                                        {index > 0 && <hr className="my-4 border-slate-800" />}
-                                                        <h4 className="font-semibold text-cyan-300 mb-2">{courseName}</h4>
+                                                        {index > 0 && <hr className="my-4 border-slate-200 dark:border-slate-800" />}
+                                                        <h4 className="font-semibold text-brand-secondary dark:text-cyan-300 mb-2">{courseName}</h4>
                                                         <div className="space-y-2">
                                                             {marks.map(mark => (
                                                                 <ExamMarkCard key={mark.id} mark={mark} onEdit={() => onEditExamMark(mark)} onDelete={() => onDeleteExamMark(mark.id)} />
@@ -319,13 +318,13 @@ const PerformancePage = () => {
                     </AnimatePresence>
                 </div>
                 {cpiGraphData && cpiGraphData.length > 0 ? (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-white/10">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pt-8 border-t border-slate-200 dark:border-white/10">
                         <CpiGraph data={cpiGraphData} />
                         <SpiGraph data={spiGraphData} />
                     </div>
                 ) : (
-                    <div className="pt-8 border-t border-white/10 text-center">
-                        <p className="text-slate-400 mt-8 py-16">
+                    <div className="pt-8 border-t border-slate-200 dark:border-white/10 text-center">
+                        <p className="text-slate-500 dark:text-slate-400 mt-8 py-16">
                             Add grades for at least one semester to see your performance trends.
                         </p>
                     </div>

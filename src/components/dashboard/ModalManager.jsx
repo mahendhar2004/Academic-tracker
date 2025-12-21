@@ -1,10 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { increment } from 'firebase/firestore';
+import React, { useMemo } from 'react';
+
 import { useStore } from '../../store/useStore';
 import { useModalStore } from '../../store/useModalStore';
 import firestoreService from '../../services/firebaseService';
 import authService from '../../services/authService';
-import { GRADE_POINTS, COIN_VALUES } from '../../constants';
+
 
 // Import all modals
 import AddCourseModal from '../modals/AddCourseModal';
@@ -27,15 +27,13 @@ import BugReportModal from '../modals/BugReportModal';
 
 const ModalManager = ({ user, onSignOut, triggerReward, onStartPomodoro }) => {
     const {
-        allCourses, profileData, schedule, deadlines,
-        examMarks, tasks, contacts, expenditures
+        allCourses, profileData, schedule, expenditures
     } = useStore();
 
     const { modal, props: modalProps, closeModal, openModal } = useModalStore();
 
     // Local State for specific modals not yet in global store
-    const [isDeleteAccountModalOpen, setIsDeleteAccountModalOpen] = useState(false);
-    const [isReauthModalOpen, setIsReauthModalOpen] = useState(false);
+
 
     // Derived State (Copied from Dashboard to ensure modals have correct context)
     const currentSemester = useMemo(() => {
@@ -60,7 +58,14 @@ const ModalManager = ({ user, onSignOut, triggerReward, onStartPomodoro }) => {
     }, [expenditures]);
 
     // Handlers
-    const handleSaveCourse = (courseData) => firestoreService.saveCourse(user.uid, courseData);
+    const handleSaveCourse = async (courseData) => {
+        if (modalProps.courseToEdit) {
+            await firestoreService.updateCourse(user.uid, modalProps.courseToEdit.id, courseData);
+        } else {
+            await firestoreService.saveCourse(user.uid, courseData);
+        }
+        closeModal();
+    };
     const handleSaveGrade = (courseId, grade) => firestoreService.saveGrade(user.uid, courseId, grade);
     const handleSaveNewCourseWithGrade = async (newCourseData) => {
         await firestoreService.saveCourse(user.uid, newCourseData);
@@ -112,7 +117,13 @@ const ModalManager = ({ user, onSignOut, triggerReward, onStartPomodoro }) => {
 
     return (
         <>
-            <AddCourseModal isOpen={modal === 'addCourse'} onClose={closeModal} onSave={handleSaveCourse} currentSemester={currentSemester} />
+            <AddCourseModal
+                isOpen={modal === 'addCourse'}
+                onClose={closeModal}
+                onSave={handleSaveCourse}
+                currentSemester={currentSemester}
+                initialData={modalProps.courseToEdit}
+            />
             <AddGradeModal
                 isOpen={modal === 'addGrade'}
                 onClose={closeModal}

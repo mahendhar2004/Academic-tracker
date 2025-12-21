@@ -2,27 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  background-color: #000;
+@layer base {
+  body {
+    @apply transition-colors duration-300 ease-in-out;
+  }
 }
 
-/* Add this to the bottom of src/index.css */
+/* Light/Dark Mode Base Styles */
+html.dark body {
+  background-color: #000000;
+  color: #ffffff;
+}
+
+html:not(.dark) body {
+  background-color: #ffffff;
+  color: #18181b;
+}
+
+/* Aurora Animation Props */
 @property --x {
   syntax: '<length>';
   initial-value: 0px;
   inherits: false;
 }
+
 @property --y {
   syntax: '<length>';
   initial-value: 0px;
   inherits: false;
 }
 
-/* Add this to the bottom of src/index.css */
 @keyframes aurora {
   from {
     background-position: 50% 50%, 50% 50%;
   }
+
   to {
     background-position: 350% 50%, 350% 50%;
   }
@@ -30,16 +44,12 @@ html, body {
 
 .aurora-background {
   animation: aurora 60s linear infinite;
-  background-image: radial-gradient(
-      100% 100% at 100% 0,
+  background-image: radial-gradient(100% 100% at 100% 0,
       rgba(0, 100, 255, 0.15) 0,
-      rgba(0, 100, 255, 0) 50%
-    ),
-    radial-gradient(
-      100% 100% at 0 100%,
+      rgba(0, 100, 255, 0) 50%),
+    radial-gradient(100% 100% at 0 100%,
       rgba(0, 255, 100, 0.15) 0,
-      rgba(0, 255, 100, 0) 50%
-    );
+      rgba(0, 255, 100, 0) 50%);
 }
 
 /* Add or replace these styles in src/index.css */
@@ -48,32 +58,42 @@ html, body {
   initial-value: 0px;
   inherits: false;
 }
+
 @property --glow-y {
   syntax: '<length>';
   initial-value: 0px;
   inherits: false;
 }
 
-body {
-  /* This creates the main static aurora effect */
-  background-image: 
+/* Only show aurora background in Dark Mode */
+html.dark body {
+  background-image:
     radial-gradient(ellipse 80% 80% at 20% -20%, rgba(59, 130, 246, 0.15), transparent),
     radial-gradient(ellipse 80% 80% at 80% 120%, rgba(139, 92, 246, 0.15), transparent);
 }
 
+html:not(.dark) body {
+  background-image: none;
+  /* Optional: Add a very subtle gradient for light mode if requested, but clean white is often better */
+  background: white;
+}
+
 /* This is the interactive spotlight that follows the cursor */
 .interactive-aurora {
-  background: radial-gradient(
-    600px circle at var(--glow-x) var(--glow-y),
-    rgba(0, 255, 255, 0.2),
-    transparent 40%
-  );
+  background: radial-gradient(600px circle at var(--glow-x) var(--glow-y),
+      rgba(0, 255, 255, 0.2),
+      transparent 40%);
 }
 
 /* Add these styles to the bottom of src/index.css */
 @keyframes move-stars {
-  from { background-position: 0 0; }
-  to { background-position: -10000px 5000px; }
+  from {
+    background-position: 0 0;
+  }
+
+  to {
+    background-position: -10000px 5000px;
+  }
 }
 
 .starfield {
@@ -86,4 +106,19 @@ body {
   background-size: 1600px 900px;
   animation: move-stars 200s linear infinite;
   z-index: 0;
+}
+
+/* View Transition Styles for Circular Reveal */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 9999;
 }

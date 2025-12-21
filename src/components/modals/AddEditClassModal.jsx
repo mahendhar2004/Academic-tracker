@@ -51,21 +51,21 @@ const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdi
             setConflictWarning('');
             return;
         }
-    
+
         const formatTime = (isoString) => new Date(isoString).toTimeString().slice(0, 5);
         const newClassStart = timeToMinutes(formatTime(scheduleState.startTime));
         const newClassEnd = timeToMinutes(formatTime(scheduleState.endTime));
-    
+
         const conflictingClass = schedule.find(existingClass => {
             if (classToEdit && existingClass.id === classToEdit.id) return false;
             if (existingClass.day !== scheduleState.day) return false;
-    
+
             const existingStart = timeToMinutes(existingClass.startTime);
             const existingEnd = timeToMinutes(existingClass.endTime);
-    
+
             return newClassStart < existingEnd && newClassEnd > existingStart;
         });
-        
+
         if (conflictingClass) {
             const courseName = allCourses.find(c => c.id === conflictingClass.courseId)?.name || 'another class';
             setConflictWarning(`This will overlap with ${courseName} (${conflictingClass.startTime} - ${conflictingClass.endTime}). Saving will create a conflicting entry.`);
@@ -73,7 +73,7 @@ const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdi
             setConflictWarning('');
         }
     }, [scheduleState, schedule, classToEdit, isOpen, allCourses]);
-    
+
 
     const handleChange = (field, value) => {
         if (field === 'startTime') {
@@ -104,29 +104,29 @@ const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdi
         <GlassyModal isOpen={isOpen} onClose={onClose} title={isNew ? "Add Class to Schedule" : "Edit Class Schedule"}>
             <form onSubmit={handleSubmit} className="space-y-4 w-80 md:w-96">
                 <div>
-                    <label htmlFor="classCourse" className="block text-sm font-medium text-slate-300 mb-2">Subject</label>
-                    <select id="classCourse" value={scheduleState.courseId} onChange={(e) => handleChange('courseId', e.target.value)} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <label htmlFor="classCourse" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Subject</label>
+                    <select id="classCourse" value={scheduleState.courseId} onChange={(e) => handleChange('courseId', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white">
                         <option value="">Select Subject</option>
-                        {sortedCourses.map(c => <option key={c.id} value={c.id} className="bg-slate-800">{c.name}</option>)}
+                        {sortedCourses.map(c => <option key={c.id} value={c.id} className="bg-white dark:bg-slate-800">{c.name}</option>)}
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="classDay" className="block text-sm font-medium text-slate-300 mb-2">Day of the Week</label>
-                    <select id="classDay" value={scheduleState.day} onChange={(e) => handleChange('day', e.target.value)} className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400">
+                    <label htmlFor="classDay" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Day of the Week</label>
+                    <select id="classDay" value={scheduleState.day} onChange={(e) => handleChange('day', e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white">
                         {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'].map(day => (
-                            <option key={day} value={day} className="bg-slate-800">{day}</option>
+                            <option key={day} value={day} className="bg-white dark:bg-slate-800">{day}</option>
                         ))}
                     </select>
                 </div>
                 <div>
-                    <label htmlFor="venue" className="block text-sm font-medium text-slate-300 mb-2">Venue</label>
+                    <label htmlFor="venue" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Venue</label>
                     <input
                         id="venue"
                         type="text"
                         value={scheduleState.venue}
                         onChange={(e) => handleChange('venue', e.target.value)}
                         placeholder="e.g., LHTC-1, Room 204"
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                         list="previous-venues"
                     />
                     <datalist id="previous-venues">
@@ -134,11 +134,11 @@ const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdi
                     </datalist>
                 </div>
                 <div>
-                     <label className="block text-sm font-medium text-slate-300 mb-2">Start Time</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Start Time</label>
                     <DateTimePicker type="time" value={scheduleState.startTime} onChange={(val) => handleChange('startTime', val)} />
                 </div>
                 <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">End Time</label>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">End Time</label>
                     <DateTimePicker type="time" value={scheduleState.endTime} onChange={(val) => handleChange('endTime', val)} />
                 </div>
 

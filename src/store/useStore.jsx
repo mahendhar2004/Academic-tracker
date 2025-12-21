@@ -1,11 +1,13 @@
+
 import { create } from 'zustand';
 import { onSnapshot, doc, collection, query } from 'firebase/firestore';
-import { db, appId } from '../firebase/config';
+import { db } from '../firebase/config';
 import { getCollectionPath, getProfilePath, getPerformanceTargetPath } from '../constants/dbPaths';
 
 import { createCourseSlice } from './slices/courseSlice';
 import { createUserSlice } from './slices/userSlice';
 import { createDataSlice } from './slices/dataSlice';
+import { createUiSlice } from './slices/uiSlice';
 
 // This array holds all our listener unsubscribe functions
 let listeners = [];
@@ -52,6 +54,7 @@ export const useStore = create((set, get) => ({
     ...createCourseSlice(set, get),
     ...createUserSlice(set, get),
     ...createDataSlice(set, get),
+    ...createUiSlice(set, get),
 
     isDataLoaded: false,
 

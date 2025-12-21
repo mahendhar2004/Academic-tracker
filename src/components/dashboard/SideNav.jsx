@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, LayoutGroup } from 'framer-motion';
-import { Home, ClipboardList, TrendingUp, Calendar, ListTodo, UserCircle2, Users, CreditCard, Menu, X } from 'lucide-react';
+import { Home, ClipboardList, TrendingUp, Calendar, ListTodo, UserCircle2, Users, CreditCard, Menu, X, Sparkles } from 'lucide-react';
+
 import { Link, useLocation } from 'react-router-dom';
 
 const SideNav = () => {
@@ -15,6 +16,7 @@ const SideNav = () => {
 
     const navItems = [
         { id: 'home', icon: Home, path: '/dashboard/home' },
+        { id: 'predictor', icon: Sparkles, path: '/dashboard/predictor' },
         { id: 'attendance', icon: ClipboardList, path: '/dashboard/attendance' },
         { id: 'performance', icon: TrendingUp, path: '/dashboard/performance' },
         { id: 'calendar', icon: Calendar, path: '/dashboard/calendar' },
@@ -45,7 +47,7 @@ const SideNav = () => {
             <div className="hidden md:flex fixed left-4 top-14 flex-col items-center gap-6 z-40">
                 <div
                     onMouseLeave={() => setHoveredId(null)}
-                    className="relative w-20 bg-black/30 backdrop-blur-xl border border-white/10 rounded-full flex flex-col justify-center items-center gap-4 p-4"
+                    className="relative w-20 bg-white/80 dark:bg-black/30 backdrop-blur-xl border border-slate-200 dark:border-white/10 rounded-full flex flex-col justify-center items-center gap-4 p-4 shadow-xl dark:shadow-none"
                 >
                     <LayoutGroup>
                         {navItems.map((item) => {
@@ -56,23 +58,23 @@ const SideNav = () => {
                                     key={item.id}
                                     to={item.path}
                                     onMouseEnter={() => setHoveredId(item.id)}
-                                    className={`relative z-10 flex flex-col items-center justify-center transition-colors w-14 h-14 rounded-full ${isActive ? 'text-white' : 'text-slate-400 hover:text-white'}`}
+                                    className={`relative z-10 flex flex-col items-center justify-center transition-colors w-14 h-14 rounded-full ${isActive ? 'text-black dark:text-white' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}`}
                                 >
                                     {(isActive || hoveredId === item.id) && (
                                         <motion.div
                                             layoutId="desktop-highlight"
-                                            className="absolute inset-0 bg-white/10 rounded-full"
+                                            className="absolute inset-0 bg-slate-200 dark:bg-white/10 rounded-full z-0"
                                             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                                         />
                                     )}
-                                    <motion.div whileHover={{ scale: 1.1 }}>
+                                    <motion.div whileHover={{ scale: 1.1 }} className="relative z-20">
                                         <Icon size={24} />
                                     </motion.div>
                                     <motion.span
                                         variants={tooltipVariants}
                                         initial="hidden"
                                         animate={hoveredId === item.id ? "visible" : "hidden"}
-                                        className="absolute left-full ml-4 px-3 py-1 bg-black/80 backdrop-blur-md border border-white/20 rounded-lg text-sm capitalize whitespace-nowrap pointer-events-none"
+                                        className="absolute left-full ml-4 px-3 py-1 bg-white dark:bg-black/80 backdrop-blur-md border border-slate-200 dark:border-white/20 rounded-lg text-sm capitalize whitespace-nowrap pointer-events-none text-slate-900 dark:text-white shadow-lg"
                                     >
                                         {item.id}
                                     </motion.span>
@@ -87,7 +89,7 @@ const SideNav = () => {
             <div className="md:hidden">
                 <button
                     onClick={() => setIsOpen(true)}
-                    className="fixed top-6 right-6 z-50 p-2 rounded-full bg-black/50 backdrop-blur-md text-white"
+                    className="fixed top-6 right-6 z-50 p-2 rounded-full bg-white/80 dark:bg-black/50 backdrop-blur-md text-slate-900 dark:text-white shadow-lg dark:shadow-none"
                     aria-label="Open menu"
                 >
                     <Menu size={24} />
@@ -108,10 +110,10 @@ const SideNav = () => {
                                 animate={{ x: 0 }}
                                 exit={{ x: '-100%' }}
                                 transition={{ type: 'spring', stiffness: 400, damping: 40 }}
-                                className="fixed top-0 left-0 bottom-0 w-64 bg-slate-900/90 backdrop-blur-lg border-r border-white/10 p-6 z-50"
+                                className="fixed top-0 left-0 bottom-0 w-64 bg-white/90 dark:bg-slate-900/90 backdrop-blur-lg border-r border-slate-200 dark:border-white/10 p-6 z-50"
                             >
                                 <div className="flex justify-between items-center mb-10">
-                                    <button onClick={() => setIsOpen(false)} className="p-1 text-slate-400 hover:text-white">
+                                    <button onClick={() => setIsOpen(false)} className="p-1 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                                         <X size={24} />
                                     </button>
                                 </div>
@@ -131,7 +133,7 @@ const SideNav = () => {
                                                 variants={mobileMenuItemVariants}
                                                 to={item.path}
                                                 onClick={() => setIsOpen(false)}
-                                                className={`flex items-center gap-4 text-left p-3 rounded-lg w-full transition-colors ${isActive ? 'bg-cyan-500/20 text-cyan-300' : 'text-slate-300 hover:bg-white/10'}`}
+                                                className={`flex items-center gap-4 text-left p-3 rounded-lg w-full transition-colors ${isActive ? 'bg-brand-primary/10 dark:bg-cyan-500/20 text-brand-primary dark:text-cyan-300' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/10'}`}
                                             >
                                                 <Icon size={20} />
                                                 <span className="font-semibold capitalize">{item.id}</span>

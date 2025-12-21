@@ -17,11 +17,11 @@ const GlassyModal = ({ isOpen, onClose, children, title, customClasses = "" }) =
                     exit={{ scale: 0.95, opacity: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
                     // FIX: Replaced the old gradient with the new, darker glass background
-                    className={`bg-slate-900/70 backdrop-blur-2xl border border-white/10 p-6 rounded-2xl shadow-2xl text-white ${customClasses}`}
+                    className={`bg-white/95 dark:bg-slate-900/70 backdrop-blur-2xl border border-slate-200 dark:border-white/10 p-6 rounded-2xl shadow-2xl text-slate-900 dark:text-white ${customClasses}`}
                 >
                     <div className="flex justify-between items-center mb-6">
                         <h2 className="text-xl font-bold">{title}</h2>
-                        <button onClick={onClose} className="text-slate-300 hover:text-white transition-colors"><X size={24} /></button>
+                        <button onClick={onClose} className="text-slate-400 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"><X size={24} /></button>
                     </div>
                     {children}
                 </motion.div>

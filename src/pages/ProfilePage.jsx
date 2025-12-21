@@ -22,7 +22,7 @@ import ToastNotification from '../components/common/ToastNotification';
 
 const getSocialIcon = (url) => {
     const lowerUrl = url.toLowerCase();
-    const props = { size: 20, className: "text-slate-400 hover:text-white transition-colors" };
+    const props = { size: 20, className: "text-slate-500 dark:text-slate-400 hover:text-brand-primary dark:hover:text-white transition-colors" };
 
     if (lowerUrl.includes('linkedin')) return <FaLinkedin {...props} />;
     if (lowerUrl.includes('github')) return <FaGithub {...props} />;
@@ -53,7 +53,7 @@ const ProfilePage = () => {
     const { openModal } = useModalStore();
 
     const onResetData = () => openModal('resetConfirmation');
-    const cardStyles = "bg-slate-900/50 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-2xl";
+    const cardStyles = "bg-white/60 dark:bg-slate-900/50 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-2xl";
     const [toast, setToast] = useState({ show: false, message: '' });
 
     const handleShareProfile = async () => {
@@ -139,7 +139,7 @@ const ProfilePage = () => {
                         <img
                             src={profileData.imageUrl || `https://ui-avatars.com/api/?name=${profileData.name}&background=0d1117&color=fff&bold=true`}
                             alt="Profile"
-                            className="w-32 h-32 rounded-full border-4 border-slate-700 object-cover mx-auto"
+                            className="w-32 h-32 rounded-full border-4 border-slate-200 dark:border-slate-700 object-cover mx-auto"
                         />
                         <div className="space-y-2">
                             <EditableField label="Name" value={profileData.name} onSave={(val) => onSaveField('name', val, COIN_VALUES.PROFILE_PERSONAL)} large={true} />
@@ -162,9 +162,9 @@ const ProfilePage = () => {
                     </div>
 
                     <div className={`${cardStyles} p-8 border-red-500/30`}>
-                        <h3 className="font-bold text-xl text-red-400 mb-4">Danger Zone</h3>
+                        <h3 className="font-bold text-xl text-red-500 dark:text-red-400 mb-4">Danger Zone</h3>
                         <div className="flex flex-col gap-4">
-                            <motion.button whileTap={{ scale: 0.95 }} onClick={handleSignOutClick} className="w-full flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                            <motion.button whileTap={{ scale: 0.95 }} onClick={handleSignOutClick} className="w-full flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 dark:bg-white/10 dark:hover:bg-white/20 border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white font-bold py-2 px-4 rounded-lg transition-colors">
                                 <LogOut size={18} /> Sign Out
                             </motion.button>
                             <motion.button whileTap={{ scale: 0.95 }} onClick={onResetData} className="w-full flex items-center justify-center gap-2 bg-orange-500/20 hover:bg-orange-500/40 border border-orange-500/50 text-orange-300 font-bold py-2 px-4 rounded-lg transition-colors">
@@ -188,7 +188,7 @@ const ProfilePage = () => {
                     className="lg:col-span-2 space-y-8 lg:space-y-12 lg:max-h-[calc(100vh-4rem)] lg:overflow-y-auto no-scrollbar lg:pr-4"
                 >
                     <div className={`${cardStyles} p-8 space-y-4`}>
-                        <h3 className="font-bold text-xl text-white flex items-center gap-3"><UserIcon size={20} /> Personal Details</h3>
+                        <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-3"><UserIcon size={20} /> Personal Details</h3>
                         <EditableField label="Age" value={profileData.personal?.age} onSave={(val) => onSaveField('personal.age', val, COIN_VALUES.PROFILE_PERSONAL)} />
                         <EditableField label="Location" value={profileData.personal?.location} onSave={(val) => onSaveField('personal.location', val, COIN_VALUES.PROFILE_PERSONAL)} placeholder="e.g., Jabalpur, India" />
                         <EditableField label="Contact Number" value={profileData.personal?.phone} onSave={(val) => onSaveField('personal.phone', val, COIN_VALUES.PROFILE_PERSONAL)} />
@@ -215,10 +215,10 @@ const ProfilePage = () => {
                     </div>
 
                     <div className={`${cardStyles} p-8 space-y-6`}>
-                        <h3 className="font-bold text-xl text-white flex items-center gap-3"><BookOpen size={20} /> Academic Background</h3>
+                        <h3 className="font-bold text-xl text-slate-900 dark:text-white flex items-center gap-3"><BookOpen size={20} /> Academic Background</h3>
 
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-lg text-slate-300">Engineering College</h4>
+                            <h4 className="font-semibold text-lg text-slate-700 dark:text-slate-300">Engineering College</h4>
                             <EditableField label="College Name" value={profileData.academic?.collegeName} onSave={(val) => onSaveField('academic.collegeName', val, COIN_VALUES.PROFILE_ACADEMIC)} placeholder="e.g., IIIT Jabalpur" />
                             <EditableField label="Location" value={profileData.academic?.engineeringCollegeLocation} onSave={(val) => onSaveField('academic.engineeringCollegeLocation', val, COIN_VALUES.PROFILE_ACADEMIC)} placeholder="e.g., Jabalpur, India" />
                             <EditableField label="CGPA/Percentile" value={profileData.academic?.collegePercentile} onSave={(val) => onSaveField('academic.collegePercentile', val, COIN_VALUES.PROFILE_ACADEMIC)} />
@@ -226,19 +226,19 @@ const ProfilePage = () => {
                             <EditableField label="College Email" value={profileData.academic?.collegeEmail} onSave={(val) => onSaveField('academic.collegeEmail', val, COIN_VALUES.PROFILE_ACADEMIC)} />
                         </div>
 
-                        <hr className="border-slate-800" />
+                        <hr className="border-slate-200 dark:border-slate-800" />
 
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-lg text-slate-300">Intermediate College</h4>
+                            <h4 className="font-semibold text-lg text-slate-700 dark:text-slate-300">Intermediate College</h4>
                             <EditableField label="College Name" value={profileData.academic?.intermediateCollegeName} onSave={(val) => onSaveField('academic.intermediateCollegeName', val, COIN_VALUES.PROFILE_ACADEMIC)} />
                             <EditableField label="Location" value={profileData.academic?.intermediateCollegeLocation} onSave={(val) => onSaveField('academic.intermediateCollegeLocation', val, COIN_VALUES.PROFILE_ACADEMIC)} />
                             <EditableField label="Percentile" value={profileData.academic?.intermediatePercentile} onSave={(val) => onSaveField('academic.intermediatePercentile', val, COIN_VALUES.PROFILE_ACADEMIC)} />
                         </div>
 
-                        <hr className="border-slate-800" />
+                        <hr className="border-slate-200 dark:border-slate-800" />
 
                         <div className="space-y-4">
-                            <h4 className="font-semibold text-lg text-slate-300">School</h4>
+                            <h4 className="font-semibold text-lg text-slate-700 dark:text-slate-300">School</h4>
                             <EditableField label="School Name" value={profileData.academic?.schoolName} onSave={(val) => onSaveField('academic.schoolName', val, COIN_VALUES.PROFILE_ACADEMIC)} />
                             <EditableField label="School Location" value={profileData.academic?.schoolLocation} onSave={(val) => onSaveField('academic.schoolLocation', val, COIN_VALUES.PROFILE_ACADEMIC)} />
                             <EditableField label="School CGPA/GPA" value={profileData.academic?.schoolGpa} onSave={(val) => onSaveField('academic.schoolGpa', val, COIN_VALUES.PROFILE_ACADEMIC)} />
@@ -247,24 +247,24 @@ const ProfilePage = () => {
 
                     <div className={`${cardStyles} p-8 space-y-6`}>
                         <EditableList icon={Code} label="Projects" items={profileData.academic?.projects || []} onSave={(items) => onSaveField('academic.projects', items, COIN_VALUES.PROFILE_PROJECTS)} placeholder="e.g., https://github.com/user/repo" />
-                        <hr className="border-slate-800" />
+                        <hr className="border-slate-200 dark:border-slate-800" />
                         <EditableList icon={Award} label="Certificates" items={profileData.academic?.certificates || []} onSave={(items) => onSaveField('academic.certificates', items, COIN_VALUES.PROFILE_CERTIFICATES)} placeholder="e.g., Google Cloud Certified" />
-                        <hr className="border-slate-800" />
+                        <hr className="border-slate-200 dark:border-slate-800" />
                         <EditableList icon={Trophy} label="Achievements" items={profileData.personal?.achievements || []} onSave={(items) => onSaveField('personal.achievements', items, COIN_VALUES.PROFILE_ACHIEVEMENTS)} placeholder="e.g., Winner of Smart India Hackathon" />
                     </div>
 
                     <div className={`${cardStyles} p-8 space-y-6`}>
                         <EditableList icon={Briefcase} label="Internships & Experience" items={profileData.academic?.internships || []} onSave={(items) => onSaveField('academic.internships', items, COIN_VALUES.PROFILE_INTERNSHIPS)} placeholder="e.g., SDE Intern @ Google" />
-                        <hr className="border-slate-800" />
+                        <hr className="border-slate-200 dark:border-slate-800" />
                         <EditableResumeList
                             items={profileData.academic?.resumes || []}
                             onSave={(items) => onSaveField('academic.resumes', items, COIN_VALUES.PROFILE_RESUMES)}
                         />
-                        <hr className="border-slate-800" />
+                        <hr className="border-slate-200 dark:border-slate-800" />
                         <EditableList icon={LinkIcon} label="Social & Portfolio Links" items={profileData.social?.links || []} onSave={(items) => onSaveField('social.links', items, COIN_VALUES.PROFILE_SOCIAL)} placeholder="e.g., https://linkedin.com/in/..." />
                     </div>
                 </motion.div>
-            </motion.div>
+            </motion.div >
         </>
     );
 };

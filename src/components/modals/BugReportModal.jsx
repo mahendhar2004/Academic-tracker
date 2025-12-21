@@ -15,7 +15,7 @@ const BugReportModal = ({ isOpen, onClose }) => {
         // --- IMPORTANT ---
         // Replace this URL with your actual Google Form's response URL
         const googleFormUrl = "https://docs.google.com/forms/u/0/d/e/1FAIpQLScAazlToXCYHz82cAaUYPCy-oLgCUXQajvw6dZ_SEFItBtpEQ/formResponse";
-        
+
         // Replace these with the actual 'name' attributes from your Google Form's input fields
         const titleEntry = "entry.342898630";
         const descriptionEntry = "entry.2147275163";
@@ -51,25 +51,25 @@ const BugReportModal = ({ isOpen, onClose }) => {
                 ) : (
                     <>
                         <div>
-                            <label htmlFor="bugTitle" className="block text-sm font-medium text-slate-300 mb-2">Issue Title</label>
+                            <label htmlFor="bugTitle" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Issue Title</label>
                             <input
                                 id="bugTitle"
                                 type="text"
                                 value={title}
                                 onChange={(e) => setTitle(e.target.value)}
                                 placeholder="e.g., Page not loading"
-                                className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                                 required
                             />
                         </div>
                         <div>
-                            <label htmlFor="bugDescription" className="block text-sm font-medium text-slate-300 mb-2">Description</label>
+                            <label htmlFor="bugDescription" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description</label>
                             <textarea
                                 id="bugDescription"
                                 value={description}
                                 onChange={(e) => setDescription(e.target.value)}
                                 placeholder="Please describe the issue in detail, including the steps to reproduce it."
-                                className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 h-32 resize-none"
+                                className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 h-32 resize-none text-slate-900 dark:text-white"
                                 required
                             />
                         </div>

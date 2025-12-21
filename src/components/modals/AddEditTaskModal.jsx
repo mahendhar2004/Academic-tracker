@@ -46,67 +46,67 @@ const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit, defaultType }) 
         <GlassyModal isOpen={isOpen} onClose={onClose} title={isNew ? "Create a New Plan" : "Edit Plan"}>
             <form onSubmit={handleSubmit} className="space-y-4 w-80 md:w-96">
                 <div>
-                    <label htmlFor="taskTitle" className="block text-sm font-medium text-slate-300 mb-2">Task Title</label>
+                    <label htmlFor="taskTitle" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Task Title</label>
                     <input
                         id="taskTitle"
                         type="text"
                         value={task.title}
                         onChange={(e) => handleChange('title', e.target.value)}
                         placeholder="e.g., Revise Chapter 5"
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                         required
                     />
                 </div>
                 <div>
-                    <label htmlFor="taskDescription" className="block text-sm font-medium text-slate-300 mb-2">Description (Optional)</label>
+                    <label htmlFor="taskDescription" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Description (Optional)</label>
                     <textarea
                         id="taskDescription"
                         value={task.description}
                         onChange={(e) => handleChange('description', e.target.value)}
                         placeholder="e.g., Focus on key formulas and examples."
-                        className="w-full bg-black/20 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 h-24 resize-none"
+                        className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 h-24 resize-none text-slate-900 dark:text-white"
                     />
                 </div>
                 <div>
-                    <label htmlFor="taskType" className="block text-sm font-medium text-slate-300 mb-2">Plan Type</label>
+                    <label htmlFor="taskType" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Plan Type</label>
                     <select
                         id="taskType"
                         value={task.type}
                         onChange={(e) => handleChange('type', e.target.value)}
-                        className="w-full bg-slate-800/50 border border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                        className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                     >
-                        <option value="Short-term" className="bg-slate-800">Short-term</option>
-                        <option value="Long-term" className="bg-slate-800">Long-term</option>
+                        <option value="Short-term" className="bg-white dark:bg-slate-800">Short-term</option>
+                        <option value="Long-term" className="bg-white dark:bg-slate-800">Long-term</option>
                     </select>
                 </div>
-                
+
                 {/* UPDATED: Conditionally render separate date and time inputs */}
                 {task.type === 'Long-term' ? (
                     <div className="flex gap-4">
                         <div className="w-2/3">
-                            <label htmlFor="taskDate" className="block text-sm font-medium text-slate-300 mb-2">Due Date</label>
+                            <label htmlFor="taskDate" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Due Date</label>
                             <div className="relative">
-                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                                <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none" size={18} />
                                 <input
                                     id="taskDate"
                                     type="date"
                                     value={task.dueDate}
                                     onChange={(e) => handleChange('dueDate', e.target.value)}
-                                    className="w-full bg-black/20 border border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                                     required
                                 />
                             </div>
                         </div>
                         <div className="w-1/3">
-                            <label htmlFor="taskTime" className="block text-sm font-medium text-slate-300 mb-2">Time</label>
+                            <label htmlFor="taskTime" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Time</label>
                             <div className="relative">
-                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
+                                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none" size={18} />
                                 <input
                                     id="taskTime"
                                     type="time"
                                     value={task.dueTime}
                                     onChange={(e) => handleChange('dueTime', e.target.value)}
-                                    className="w-full bg-black/20 border border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                                    className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                                     required
                                 />
                             </div>
@@ -114,7 +114,7 @@ const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit, defaultType }) 
                     </div>
                 ) : (
                     <div>
-                        <label htmlFor="taskTimeShort" className="block text-sm font-medium text-slate-300 mb-2">Due Time</label>
+                        <label htmlFor="taskTimeShort" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Due Time</label>
                         <div className="relative">
                             <Clock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={18} />
                             <input

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './firebase/config';
 import { useStore } from './store/useStore';
@@ -7,6 +7,7 @@ import authService from './services/authService';
 import firebaseService from './services/firebaseService';
 import { COIN_VALUES } from './constants';
 import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import ToastNotification from './components/common/ToastNotification';
 
 // Lazy load pages
 const Dashboard = lazy(() => import('./pages/Dashboard'));
@@ -20,7 +21,11 @@ const CalendarPage = lazy(() => import('./pages/CalendarPage'));
 const PlannerPage = lazy(() => import('./pages/PlannerPage'));
 const ContactsPage = lazy(() => import('./pages/ContactsPage'));
 const ExpenditurePage = lazy(() => import('./pages/ExpenditurePage'));
+const PredictorPage = lazy(() => import('./pages/PredictorPage'));
 const ProfilePage = lazy(() => import('./pages/ProfilePage'));
+// ... existing lazy loads ...
+
+
 
 const LoadingSpinner = () => (
     <div className="bg-black min-h-screen flex justify-center items-center text-white">
@@ -32,10 +37,20 @@ export default function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     // Removed 'view' state, using Router
-    const { initializeListeners, cleanupListeners } = useStore();
+    const { initializeListeners, cleanupListeners, theme, toast, hideToast, setUser: setGlobalUser } = useStore();
     const [reward, setReward] = useState({ key: 0, amount: 0 });
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Theme Effect
+    useEffect(() => {
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [theme]);
 
     useEffect(() => {
         const session = JSON.parse(localStorage.getItem('user_session'));
@@ -76,7 +91,6 @@ export default function App() {
             // This means if acting as public viewer, we don't init listeners for "me"
             // But if I am logged in AND viewing a public profile?
             // Let's stick to original logic: if public profile, just show it.
-            // But wait, if I am logged in, I want to see "me" in header? public profile page might not have header.
             // Let's allow auth check to proceed in background or parallel?
             // Original code explicitly returned. I will replicate that behavior for safety.
             // return; 
@@ -84,50 +98,38 @@ export default function App() {
 
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
-                const session = JSON.parse(localStorage.getItem('user_session'));
-                if (!session || session.uid !== currentUser.uid) {
-                    localStorage.setItem('user_session', JSON.stringify({
+                // User is signed in
+                if (!user) {
+                    setUser(currentUser);
+                    setGlobalUser(currentUser); // Update global store
+                    initializeListeners(currentUser);
+
+                    // Save session
+                    const sessionData = {
                         uid: currentUser.uid,
                         loginTime: new Date().getTime()
-                    }));
-                }
+                    };
+                    localStorage.setItem('user_session', JSON.stringify(sessionData));
 
-                const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
-                const profileSnap = await getDoc(profileRef);
+                    await runDailyCheckIn(currentUser.uid);
 
-                if (!profileSnap.exists()) {
-                    await setDoc(profileRef, {
-                        name: currentUser.displayName || 'New User',
-                        email: currentUser.email || '',
-                        imageUrl: currentUser.photoURL || '',
-                        coins: 0,
-                        personal: {
-                            phone: currentUser.phoneNumber || '',
-                            isPhoneVerified: false,
-                            email: currentUser.email || ''
-                        },
-                        lastCheckIn: null,
-                        rewardedFields: {}
-                    });
-                }
-                setUser(currentUser);
-                initializeListeners(currentUser);
-                await runDailyCheckIn(currentUser.uid);
-
-                // Navigation logic
-                if (location.pathname === '/' || location.pathname === '/login') {
-                    navigate('/dashboard');
+                    // Navigation logic
+                    if (location.pathname === '/' || location.pathname === '/login') {
+                        navigate('/dashboard');
+                    }
                 }
             } else {
-                localStorage.removeItem('user_session');
+                // User is signed out
                 setUser(null);
+                setGlobalUser(null);
                 cleanupListeners();
-                // If on protected route, redirect to login is handled by Routes
+                localStorage.removeItem('user_session');
             }
             setLoading(false);
         });
+
         return () => unsubscribe();
-    }, [initializeListeners, cleanupListeners, runDailyCheckIn, navigate, location.pathname]);
+    }, [initializeListeners, cleanupListeners, runDailyCheckIn, navigate, location.pathname, setGlobalUser, user]);
 
     const handleLogin = (providerName) => {
         if (providerName === 'google') {
@@ -210,8 +212,17 @@ export default function App() {
                         <Route path="contacts" element={<ContactsPage />} />
                         <Route path="expenditure" element={<ExpenditurePage />} />
                         <Route path="profile" element={<ProfilePage />} />
+                        <Route path="predictor" element={<PredictorPage />} />
                     </Route>
                 </Routes>
+
+                {/* Global Toast Notification */}
+                <ToastNotification
+                    show={toast?.show}
+                    message={toast?.message}
+                    type={toast?.type}
+                    onHide={hideToast}
+                />
             </Suspense>
         </>
     );

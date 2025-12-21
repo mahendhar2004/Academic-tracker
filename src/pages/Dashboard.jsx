@@ -1,6 +1,6 @@
 import React, { useState, useMemo, Suspense, useEffect } from 'react';
 import { increment } from 'firebase/firestore';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { useModalStore } from '../store/useModalStore';
 import firestoreService from '../services/firebaseService';
@@ -188,6 +188,7 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const handleDeleteAccountClick = () => openModal('deleteAccount');
 
     const handleAddNewCourse = () => openModal('addCourse');
+    const handleEditCourseClick = (course) => openModal('addCourse', { courseToEdit: course });
     const handleEditGradeClick = (course) => openModal('addGrade', { courseToGrade: course });
     const handleAddGradeClick = () => openModal('addGrade');
     const handleAddDeadlineClick = () => openModal('addDeadline');
@@ -205,10 +206,18 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const handleEditContactClick = (contact) => openModal('addContact', { contactToEdit: contact });
     const handleAddExpenditureClick = () => openModal('addExpenditure');
     const handleEditExpenditureClick = (expenditure) => openModal('addExpenditure', { expenditureToEdit: expenditure });
-    const handleOpenWhatIf = (scenario) => openModal('whatIf', { scenarioToLoad: scenario });
+    const navigate = useNavigate(); // Hook added
+
+    const handleOpenWhatIf = (scenario) => {
+        // If scenarios can be passed via state, great. Or store?
+        // Simple navigation for now. If passing scenario, we might need state.
+        // PredictorPage should read scenario from Location State or Store.
+        // Let's pass via state.
+        navigate('/dashboard/predictor', { state: { initialData: scenario } });
+    };
 
     if (!isDataLoaded) {
-        return <div className="bg-black min-h-screen flex justify-center items-center text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-cyan-400"></div></div>;
+        return <div className="bg-white dark:bg-black min-h-screen flex justify-center items-center text-slate-900 dark:text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-secondary dark:border-cyan-400"></div></div>;
     }
 
     const contextValue = {
@@ -228,6 +237,7 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
         currentSemesterSchedule,
         expenditureCategories,
         handleAddNewCourse,
+        handleEditCourseClick,
         handleSaveCourse,
         handleSaveGrade,
         handleDeleteGrade,
@@ -278,7 +288,7 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
 
     return (
         <>
-            <div className="min-h-screen bg-black text-white font-sans flex">
+            <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-white font-sans flex transition-colors duration-300">
                 <SideNav />
                 <div className="flex-1 md:pl-28 overflow-hidden">
                     <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 md:pb-10">

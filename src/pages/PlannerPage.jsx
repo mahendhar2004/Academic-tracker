@@ -25,19 +25,19 @@ const PlannerPage = () => {
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
 
-            <div className="flex justify-between items-center border-b border-white/10 mb-8">
+            <div className="flex justify-between items-center border-b border-slate-200 dark:border-white/10 mb-8">
                 <div className="flex">
                     {['Short-term', 'Long-term'].map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
-                            className={`relative px-4 py-3 text-sm font-semibold transition-colors ${activeTab === tab ? 'text-white' : 'text-slate-400 hover:text-white'
+                            className={`relative px-4 py-3 text-sm font-semibold transition-colors ${activeTab === tab ? 'text-brand-primary dark:text-white' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                 }`}
                         >
                             {tab}
                             {activeTab === tab && (
                                 <motion.div
-                                    className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-cyan-400"
+                                    className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-brand-primary dark:bg-cyan-400"
                                     layoutId="planner-tab-underline"
                                 />
                             )}
@@ -48,7 +48,7 @@ const PlannerPage = () => {
                 <motion.button
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onAddTask(activeTab)}
-                    className="flex-shrink-0 flex items-center gap-2 bg-white/15 backdrop-blur-xl border border-white/25 text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-white/25"
+                    className="flex-shrink-0 flex items-center gap-2 bg-white dark:bg-white/15 backdrop-blur-xl border border-slate-200 dark:border-white/25 text-brand-primary dark:text-white font-bold py-2 px-4 rounded-lg transition-colors hover:bg-slate-50 dark:hover:bg-white/25 shadow-sm dark:shadow-none"
                 >
                     <Plus size={18} />
                     <span className="hidden sm:inline">Add Plan</span>
@@ -67,22 +67,22 @@ const PlannerPage = () => {
                             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             className="text-center py-24"
                         >
-                            <Feather size={64} className="mx-auto text-slate-600" />
-                            <h3 className="mt-4 text-xl font-bold text-white">All Clear!</h3>
-                            <p className="mt-2 text-slate-400">You have no active {activeTab.toLowerCase()} plans. Click 'Add Plan' to create one.</p>
+                            <Feather size={64} className="mx-auto text-slate-300 dark:text-slate-600" />
+                            <h3 className="mt-4 text-xl font-bold text-slate-900 dark:text-white">All Clear!</h3>
+                            <p className="mt-2 text-slate-500 dark:text-slate-400">You have no active {activeTab.toLowerCase()} plans. Click 'Add Plan' to create one.</p>
                         </motion.div>
                     )}
                 </AnimatePresence>
             </div>
 
             {completedTasks.length > 0 && (
-                <div className="pt-4 mt-8 border-t border-white/10">
+                <div className="pt-4 mt-8 border-t border-slate-200 dark:border-white/10">
                     <button
                         onClick={() => setCompletedVisible(!completedVisible)}
-                        className="w-full flex justify-between items-center hover:bg-black/20 p-2 rounded-lg transition-colors"
+                        className="w-full flex justify-between items-center hover:bg-slate-100 dark:hover:bg-black/20 p-2 rounded-lg transition-colors"
                     >
-                        <h4 className="font-semibold text-white">Completed ({completedTasks.length})</h4>
-                        <ChevronDown size={20} className={`text-slate-300 transition-transform duration-300 ${completedVisible ? 'rotate-180' : ''}`} />
+                        <h4 className="font-semibold text-slate-900 dark:text-white">Completed ({completedTasks.length})</h4>
+                        <ChevronDown size={20} className={`text-slate-400 dark:text-slate-300 transition-transform duration-300 ${completedVisible ? 'rotate-180' : ''}`} />
                     </button>
                     <AnimatePresence>
                         {completedVisible && (

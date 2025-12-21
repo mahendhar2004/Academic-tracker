@@ -1,12 +1,13 @@
 import React from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useStore } from '../../store/useStore';
 
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-black/50 backdrop-blur-md border border-white/20 p-3 rounded-lg">
-                <p className="label text-sm text-slate-300">{`Semester ${label}`}</p>
-                <p className="intro text-white font-bold">{`SPI : ${payload[0].value}`}</p>
+            <div className="bg-white/90 dark:bg-black/50 backdrop-blur-md border border-slate-200 dark:border-white/20 p-3 rounded-lg shadow-lg">
+                <p className="label text-sm text-slate-500 dark:text-slate-300">{`Semester ${label}`}</p>
+                <p className="intro text-slate-900 dark:text-white font-bold">{`SPI : ${payload[0].value}`}</p>
             </div>
         );
     }
@@ -14,20 +15,33 @@ const CustomTooltip = ({ active, payload, label }) => {
 };
 
 const SpiGraph = ({ data }) => {
+    const { theme } = useStore();
+    const isDark = theme !== 'light';
+
     return (
-        <div className="bg-gradient-to-br from-white/15 to-white/0 bg-white/10 saturate-150 backdrop-blur-2xl border border-white/25 p-6 rounded-xl shadow-lg h-[400px] flex flex-col">
-            <h3 className="text-xl font-bold text-white mb-4">SPI Trend</h3>
+        <div className="bg-white/60 dark:bg-gradient-to-br dark:from-white/15 dark:to-white/0 dark:bg-white/10 saturate-150 backdrop-blur-2xl border border-slate-200 dark:border-white/25 p-6 rounded-xl shadow-xl dark:shadow-lg h-[400px] flex flex-col">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-4">SPI Trend</h3>
             <div className="flex-grow">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={data}
                         margin={{ top: 5, right: 20, left: -10, bottom: 5 }}
                     >
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                        <XAxis dataKey="semester" stroke="#94a3b8" />
-                        <YAxis domain={[0, 10]} stroke="#94a3b8" />
-                        <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(255, 255, 255, 0.2)', strokeWidth: 1 }} />
-                        <Line type="monotone" dataKey="spi" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 4, fill: '#8b5cf6' }} activeDot={{ r: 8 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"} />
+                        <XAxis dataKey="semester" stroke={isDark ? "#94a3b8" : "#64748b"} />
+                        <YAxis domain={[0, 10]} stroke={isDark ? "#94a3b8" : "#64748b"} />
+                        <Tooltip
+                            content={<CustomTooltip />}
+                            cursor={{ stroke: isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0,0,0,0.1)', strokeWidth: 1 }}
+                        />
+                        <Line
+                            type="monotone"
+                            dataKey="spi"
+                            stroke={isDark ? "#8b5cf6" : "#7c3aed"} // violet-500 : violet-600
+                            strokeWidth={3}
+                            dot={{ r: 4, fill: isDark ? '#8b5cf6' : '#7c3aed' }}
+                            activeDot={{ r: 8 }}
+                        />
                     </LineChart>
                 </ResponsiveContainer>
             </div>

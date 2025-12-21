@@ -8,9 +8,9 @@ const CustomChartTooltip = ({ active, payload }) => {
         const data = payload[0];
         const formattedValue = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(data.value);
         return (
-            <div className="bg-slate-900/80 backdrop-blur-md border border-white/20 p-3 rounded-lg shadow-lg">
-                <p className="label text-sm text-slate-300">{data.name}</p>
-                <p className="intro text-white font-bold">{formattedValue}</p>
+            <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-white/20 p-3 rounded-lg shadow-lg">
+                <p className="label text-sm text-slate-500 dark:text-slate-300">{data.name}</p>
+                <p className="intro text-slate-900 dark:text-white font-bold">{formattedValue}</p>
             </div>
         );
     }
@@ -24,7 +24,7 @@ const CustomLegend = (props) => {
             {payload.map((entry, index) => (
                 <div key={`item-${index}`} className="flex items-center text-sm">
                     <div className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: entry.color }} />
-                    <span className="text-slate-300">{entry.value}</span>
+                    <span className="text-slate-600 dark:text-slate-300">{entry.value}</span>
                 </div>
             ))}
         </div>
@@ -38,17 +38,17 @@ const ExpenditureChart = ({ data, total }) => {
         }
         return `₹${amount}`;
     };
-    
+
     // UPDATED: The main container is now a relative parent for perfect centering.
     // The previous background styles have also been removed as requested.
     return (
         <div className="relative w-full h-full">
             <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                    <Tooltip 
-                        content={<CustomChartTooltip />} 
+                    <Tooltip
+                        content={<CustomChartTooltip />}
                         cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-                        isAnimationActive={false} 
+                        isAnimationActive={false}
                     />
                     <Pie
                         data={data}
@@ -65,13 +65,13 @@ const ExpenditureChart = ({ data, total }) => {
                             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                     </Pie>
-                    <Legend content={<CustomLegend />} verticalAlign="bottom" height={36}/>
+                    <Legend content={<CustomLegend />} verticalAlign="bottom" height={36} />
                 </PieChart>
             </ResponsiveContainer>
             {/* UPDATED: This div is now perfectly centered inside the relative parent. */}
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-                <p className="text-5xl font-bold text-white">{formatCurrency(total)}</p>
-                <p className="text-slate-400">Total Spent</p>
+                <p className="text-5xl font-bold text-slate-900 dark:text-white">{formatCurrency(total)}</p>
+                <p className="text-slate-500 dark:text-slate-400">Total Spent</p>
             </div>
         </div>
     );

@@ -8,12 +8,12 @@ const CustomChartTooltip = ({ active, payload }) => {
         const data = payload[0];
         const formattedValue = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(data.value);
         return (
-            <div 
-                className="bg-slate-900/80 backdrop-blur-md border border-white/20 p-3 rounded-lg shadow-lg"
+            <div
+                className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-white/20 p-3 rounded-lg shadow-lg"
                 style={{ transition: 'opacity 0.2s ease-in-out' }}
             >
-                <p className="label text-sm text-slate-300">{data.payload.name}</p>
-                <p className="intro text-white font-bold">{formattedValue}</p>
+                <p className="label text-sm text-slate-500 dark:text-slate-300">{data.payload.name}</p>
+                <p className="intro text-slate-900 dark:text-white font-bold">{formattedValue}</p>
             </div>
         );
     }
@@ -26,6 +26,10 @@ const RoundedBar = (props) => {
 };
 
 const MiniExpenditureBarChart = ({ data }) => {
+    // Access theme - assume passed or context (here we can't easily access store without importing, but YAxis stroke needs it)
+    // For simplicity, let's use a neutralized slate-400 which works on both
+    const axisStroke = "#94a3b8";
+
     return (
         <div className="w-full h-48">
             <ResponsiveContainer width="100%" height="100%">
@@ -36,19 +40,19 @@ const MiniExpenditureBarChart = ({ data }) => {
                     margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
                 >
                     <XAxis type="number" hide />
-                    <YAxis 
-                        type="category" 
-                        dataKey="name" 
-                        stroke="#94a3b8" 
-                        fontSize={12} 
-                        tickLine={false} 
+                    <YAxis
+                        type="category"
+                        dataKey="name"
+                        stroke={axisStroke}
+                        fontSize={12}
+                        tickLine={false}
                         axisLine={false}
-                        width={100} 
+                        width={100}
                         tick={{ transform: 'translate(-10, 0)' }}
                     />
-                    <Tooltip 
+                    <Tooltip
                         cursor={{ fill: 'rgba(255, 255, 255, 0.1)' }}
-                        content={<CustomChartTooltip />} 
+                        content={<CustomChartTooltip />}
                         isAnimationActive={false}
                     />
                     <Bar dataKey="value" barSize={12} shape={<RoundedBar />}>

@@ -121,9 +121,9 @@ const GlobalSearch = ({ isOpen, onClose, allCourses = [], tasks = [], contacts =
                         initial={{ opacity: 0, scale: 0.95, y: -20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -20 }}
-                        className="relative w-full max-w-2xl bg-slate-900 border border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[60vh]"
+                        className="relative w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/20 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[60vh]"
                     >
-                        <div className="flex items-center gap-4 px-6 py-4 border-b border-white/10">
+                        <div className="flex items-center gap-4 px-6 py-4 border-b border-slate-200 dark:border-white/10">
                             <Search className="text-slate-400" size={20} />
                             <input
                                 ref={inputRef}
@@ -132,10 +132,10 @@ const GlobalSearch = ({ isOpen, onClose, allCourses = [], tasks = [], contacts =
                                 onChange={(e) => setQuery(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 placeholder="Type 'Task', 'Timer', or search..."
-                                className="flex-1 bg-transparent text-white text-lg placeholder-slate-500 focus:outline-none"
+                                className="flex-1 bg-transparent text-slate-900 dark:text-white text-lg placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none"
                             />
                             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-500">
-                                <span className="bg-white/10 px-2 py-1 rounded">esc</span> to close
+                                <span className="bg-slate-100 dark:bg-white/10 px-2 py-1 rounded">esc</span> to close
                             </div>
                         </div>
 
@@ -150,22 +150,22 @@ const GlobalSearch = ({ isOpen, onClose, allCourses = [], tasks = [], contacts =
                                                 key={item.id}
                                                 onClick={() => handleSelect(item)}
                                                 onMouseEnter={() => setSelectedIndex(index)}
-                                                className={`flex items-center gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-cyan-500/20' : 'hover:bg-white/5'}`}
+                                                className={`flex items-center gap-4 px-4 py-3 rounded-lg cursor-pointer transition-colors ${isSelected ? 'bg-slate-100 dark:bg-cyan-500/20' : 'hover:bg-slate-50 dark:hover:bg-white/5'}`}
                                             >
-                                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-cyan-500/20 text-cyan-300' : 'bg-white/5 text-slate-400'}`}>
+                                                <div className={`p-2 rounded-lg ${isSelected ? 'bg-white dark:bg-cyan-500/20 text-brand-secondary dark:text-cyan-300' : 'bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400'}`}>
                                                     <Icon size={18} />
                                                 </div>
                                                 <div className="flex-1">
                                                     <div className="flex items-center gap-2">
-                                                        <p className={`font-semibold ${isSelected ? 'text-white' : 'text-slate-200'}`}>{item.title}</p>
+                                                        <p className={`font-semibold ${isSelected ? 'text-slate-900 dark:text-white' : 'text-slate-700 dark:text-slate-200'}`}>{item.title}</p>
                                                         {item.type === 'Action' && (
-                                                            <span className="text-[10px] bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded border border-cyan-500/30 uppercase tracking-wider font-bold">Action</span>
+                                                            <span className="text-[10px] bg-brand-primary/10 dark:bg-cyan-500/20 text-brand-primary dark:text-cyan-400 px-1.5 py-0.5 rounded border border-brand-primary/30 dark:border-cyan-500/30 uppercase tracking-wider font-bold">Action</span>
                                                         )}
                                                     </div>
                                                     <p className="text-xs text-slate-500">{item.type}</p>
                                                 </div>
                                                 {isSelected && (
-                                                    <ArrowRight size={18} className="text-cyan-400" />
+                                                    <ArrowRight size={18} className="text-brand-secondary dark:text-cyan-400" />
                                                 )}
                                             </motion.div>
                                         );
@@ -183,9 +183,9 @@ const GlobalSearch = ({ isOpen, onClose, allCourses = [], tasks = [], contacts =
                                 <div className="py-8 text-center text-slate-500">
                                     <p>Type to search or perform actions...</p>
                                     <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                        <span className="px-2 py-1 bg-white/5 rounded text-xs">New Task</span>
-                                        <span className="px-2 py-1 bg-white/5 rounded text-xs">Timer</span>
-                                        <span className="px-2 py-1 bg-white/5 rounded text-xs">Add Grade</span>
+                                        <span className="px-2 py-1 bg-slate-100 dark:bg-white/5 rounded text-xs">New Task</span>
+                                        <span className="px-2 py-1 bg-slate-100 dark:bg-white/5 rounded text-xs">Timer</span>
+                                        <span className="px-2 py-1 bg-slate-100 dark:bg-white/5 rounded text-xs">Add Grade</span>
                                     </div>
                                 </div>
                             )}
