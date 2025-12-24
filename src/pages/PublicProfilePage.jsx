@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
 import { db, appId } from '../firebase/config';
 import { motion } from 'framer-motion';
@@ -101,15 +102,17 @@ const DisplayResumeList = ({ items }) => {
 };
 
 
-const PublicProfilePage = ({ shareId }) => {
+const PublicProfilePage = () => {
+    const { profileId } = useParams();
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchProfile = async () => {
+            if (!profileId) return;
             try {
-                const profileRef = doc(db, `artifacts/${appId}/publicProfiles/${shareId}`);
+                const profileRef = doc(db, `artifacts/${appId}/publicProfiles/${profileId}`);
                 const profileSnap = await getDoc(profileRef);
                 if (profileSnap.exists()) {
                     setProfile(profileSnap.data());
@@ -124,7 +127,7 @@ const PublicProfilePage = ({ shareId }) => {
             }
         };
         fetchProfile();
-    }, [shareId]);
+    }, [profileId]);
 
     if (loading) {
         return <div className="bg-slate-50 dark:bg-black min-h-screen flex justify-center items-center text-slate-900 dark:text-white"><div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-brand-primary dark:border-cyan-400"></div></div>;

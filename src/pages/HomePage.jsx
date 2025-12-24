@@ -157,7 +157,7 @@ const DailyFocus = ({ schedule, deadlines, tasks, cardStyles }) => {
 
 // ... (imports remain the same)
 
-const HeroSection = ({ profileData, todaysSchedule, tasks }) => {
+const HeroSection = ({ profileData, todaysSchedule, tasks, courses }) => {
     const hours = new Date().getHours();
     const greeting = hours < 12 ? 'Good Morning' : hours < 18 ? 'Good Afternoon' : 'Good Evening';
     const name = profileData?.name?.split(' ')[0] || 'Scholar';
@@ -179,12 +179,17 @@ const HeroSection = ({ profileData, todaysSchedule, tasks }) => {
     let StatusIcon = Sparkles;
     let statusColor = "text-green-400";
 
+    const getCourseName = (id) => {
+        const c = courses?.find(course => course.id === id);
+        return c ? c.name : id;
+    };
+
     if (currentClass) {
-        statusMessage = `You should be in ${currentClass.courseId} right now.`;
+        statusMessage = `You should be in ${getCourseName(currentClass.courseId)} right now.`;
         StatusIcon = Clock;
         statusColor = "text-yellow-400";
     } else if (nextClass) {
-        statusMessage = `Next up: ${nextClass.courseId} at ${nextClass.startTime}.`;
+        statusMessage = `Next up: ${getCourseName(nextClass.courseId)} at ${nextClass.startTime}.`;
         StatusIcon = Calendar;
         statusColor = "text-cyan-400";
     } else if (tasks.length > 0) {
@@ -263,7 +268,7 @@ const HomePage = () => {
             transition={{ duration: 0.4 }}
             className="relative"
         >
-            <HeroSection profileData={useOutletContext().profileData} todaysSchedule={todaysSchedule} tasks={tasks} />
+            <HeroSection profileData={useOutletContext().profileData} todaysSchedule={todaysSchedule} tasks={tasks} courses={courses} />
 
             <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-start gap-8 pb-20">
                 <div className="lg:col-span-3">

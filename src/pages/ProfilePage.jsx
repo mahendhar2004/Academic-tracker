@@ -76,7 +76,7 @@ const ProfilePage = () => {
             const publicProfileRef = doc(db, `artifacts/${appId}/publicProfiles/${shareId}`);
             await setDoc(publicProfileRef, publicProfileData);
 
-            const url = `${window.location.origin}?profile=${shareId}`;
+            const url = `${window.location.origin}/public/${shareId}`;
             await navigator.clipboard.writeText(url);
 
             setToast({ show: true, message: 'Link copied to clipboard!' });
