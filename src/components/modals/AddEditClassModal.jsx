@@ -13,6 +13,7 @@ const timeToMinutes = (timeStr) => {
 const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdit, schedule, allCourses }) => {
     const [scheduleState, setScheduleState] = useState({ courseId: '', day: '', startTime: '', endTime: '', venue: '' });
     const [conflictWarning, setConflictWarning] = useState('');
+    const [timeError, setTimeError] = useState('');
     const isNew = !classToEdit;
 
     const sortedCourses = useMemo(() => {
@@ -77,23 +78,39 @@ const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdi
 
     const handleChange = (field, value) => {
         if (field === 'startTime') {
+            // Preserve whatever duration was already set (defaulting to 1hr only if the
+            // existing start/end weren't valid yet) instead of always resetting to 1 hour.
+            const oldStart = new Date(scheduleState.startTime);
+            const oldEnd = new Date(scheduleState.endTime);
+            const durationMs = (!isNaN(oldStart.getTime()) && !isNaN(oldEnd.getTime()) && oldEnd > oldStart)
+                ? oldEnd.getTime() - oldStart.getTime()
+                : 60 * 60 * 1000;
             const startDate = new Date(value);
-            const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
+            const endDate = new Date(startDate.getTime() + durationMs);
             setScheduleState(prev => ({ ...prev, startTime: value, endTime: endDate.toISOString() }));
         } else {
             setScheduleState(prev => ({ ...prev, [field]: value }));
         }
+        setTimeError('');
     };
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (scheduleState.courseId && scheduleState.day && scheduleState.startTime && scheduleState.endTime) {
             const formatTime = (isoString) => new Date(isoString).toTimeString().slice(0, 5);
+            const startTime = formatTime(scheduleState.startTime);
+            const endTime = formatTime(scheduleState.endTime);
+
+            if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+                setTimeError('End time must be after start time.');
+                return;
+            }
+
             onSave({
                 courseId: scheduleState.courseId,
                 day: scheduleState.day,
-                startTime: formatTime(scheduleState.startTime),
-                endTime: formatTime(scheduleState.endTime),
+                startTime,
+                endTime,
                 venue: scheduleState.venue.trim() // Add venue to the saved data
             }, classToEdit?.id || null);
             onClose();
@@ -141,6 +158,10 @@ const AddEditClassModal = ({ isOpen, onClose, onSave, currentCourses, classToEdi
                     <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">End Time</label>
                     <DateTimePicker type="time" value={scheduleState.endTime} onChange={(val) => handleChange('endTime', val)} />
                 </div>
+
+                {timeError && (
+                    <p className="text-red-400 text-sm text-center -my-2">{timeError}</p>
+                )}
 
                 <AnimatePresence>
                     {conflictWarning && (

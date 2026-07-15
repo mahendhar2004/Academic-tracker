@@ -59,7 +59,7 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
 
     // --- Handlers ---
     const handleNextStep = () => {
-        if ((mode === 'select' && selectedCourseId) || (mode === 'create' && newCourseName.trim() && newCourseCredits > 0 && selectedSemester >= 1)) {
+        if ((mode === 'select' && selectedCourseId) || (mode === 'create' && newCourseName.trim() && newCourseCredits > 0 && newCourseCredits <= 30 && selectedSemester >= 1)) {
             setStep(2);
         }
     };
@@ -91,7 +91,7 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
     // UPDATED: Validation logic now checks if semester is 1 or greater
     const isNextDisabled = mode === 'select'
         ? !selectedCourseId
-        : !(newCourseName.trim() && newCourseCredits > 0 && selectedSemester >= 1);
+        : !(newCourseName.trim() && newCourseCredits > 0 && newCourseCredits <= 30 && selectedSemester >= 1);
 
     return (
         <GlassyModal
@@ -148,7 +148,7 @@ const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, c
                                         className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
                                     />
                                     <input type="text" placeholder="New Subject Name" value={newCourseName} onChange={(e) => setNewCourseName(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white" />
-                                    <input type="number" placeholder="Credits (e.g., 4)" value={newCourseCredits} onChange={(e) => setNewCourseCredits(e.target.value)} className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white" />
+                                    <input type="number" placeholder="Credits (e.g., 4)" value={newCourseCredits} onChange={(e) => setNewCourseCredits(e.target.value)} min="0.5" max="30" step="0.5" className="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white" />
                                 </div>
                             )}
 

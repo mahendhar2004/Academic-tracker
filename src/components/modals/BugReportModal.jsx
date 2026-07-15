@@ -25,6 +25,10 @@ const BugReportModal = ({ isOpen, onClose }) => {
         formData.append(descriptionEntry, description);
 
         try {
+            // 'no-cors' makes the response opaque -- this can only ever catch a network-level
+            // failure (DNS/connection), never a rejected/misconfigured form submission on
+            // Google's end. Keep the success copy honest about that instead of claiming
+            // confirmed delivery.
             await fetch(googleFormUrl, {
                 method: 'POST',
                 mode: 'no-cors', // Important for sending to Google Forms
@@ -46,7 +50,7 @@ const BugReportModal = ({ isOpen, onClose }) => {
                 {status === 'success' ? (
                     <div className="text-center py-8">
                         <h3 className="text-xl font-bold text-green-400">Thank You!</h3>
-                        <p className="text-slate-300 mt-2">Your feedback has been submitted.</p>
+                        <p className="text-slate-300 mt-2">Your feedback is on its way.</p>
                     </div>
                 ) : (
                     <>

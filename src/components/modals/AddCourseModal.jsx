@@ -48,12 +48,17 @@ const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester, initialData 
         const attendedNum = parseInt(course.attended, 10) || 0;
         const totalNum = parseInt(course.total, 10) || 0;
 
+        if (attendedNum < 0 || totalNum < 0) {
+            setError("Attended and total classes cannot be negative.");
+            return;
+        }
+
         if (totalNum < attendedNum) {
             setError("Total classes cannot be less than attended classes.");
             return;
         }
 
-        if (course.name.trim() && !isNaN(creditsNum) && creditsNum > 0 && !isNaN(semesterNum) && semesterNum > 0) {
+        if (course.name.trim() && !isNaN(creditsNum) && creditsNum > 0 && creditsNum <= 30 && !isNaN(semesterNum) && semesterNum > 0) {
             const courseToSave = {
                 name: course.name,
                 credits: creditsNum,
@@ -103,7 +108,7 @@ const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester, initialData 
                     </div>
                     <div className="w-1/2">
                         <label htmlFor="credits" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Credits</label>
-                        <input id="credits" type="number" value={course.credits} onChange={(e) => handleChange('credits', e.target.value)} placeholder="e.g., 4" className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400 text-slate-900 dark:text-white" required min="0.5" step="0.5" />
+                        <input id="credits" type="number" value={course.credits} onChange={(e) => handleChange('credits', e.target.value)} placeholder="e.g., 4" className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 placeholder-slate-400 text-slate-900 dark:text-white" required min="0.5" max="30" step="0.5" />
                     </div>
                 </div>
 

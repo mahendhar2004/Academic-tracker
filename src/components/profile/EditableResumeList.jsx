@@ -6,7 +6,8 @@ const EditableResumeList = ({ items = [], onSave }) => {
     const [isAdding, setIsAdding] = useState(false);
     const [newItem, setNewItem] = useState({ title: '', link: '' });
 
-    const handleAddItem = () => {
+    const handleAddItem = (e) => {
+        e.preventDefault();
         if (newItem.title.trim() && newItem.link.trim()) {
             const updatedItems = [...items, { ...newItem, id: Date.now() }];
             onSave(updatedItems);
@@ -63,7 +64,8 @@ const EditableResumeList = ({ items = [], onSave }) => {
                 </AnimatePresence>
 
                 {isAdding && (
-                    <motion.div
+                    <motion.form
+                        onSubmit={handleAddItem}
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         className="space-y-3 bg-slate-100 dark:bg-black/20 p-3 rounded-lg"
@@ -75,6 +77,7 @@ const EditableResumeList = ({ items = [], onSave }) => {
                             placeholder="Role Title (e.g., Software Engineer)"
                             className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary dark:focus:ring-cyan-400 text-slate-900 dark:text-white"
                             autoFocus
+                            required
                         />
                         <input
                             type="url"
@@ -82,12 +85,13 @@ const EditableResumeList = ({ items = [], onSave }) => {
                             onChange={(e) => setNewItem(prev => ({ ...prev, link: e.target.value }))}
                             placeholder="https://link-to-your-resume.pdf"
                             className="w-full bg-white dark:bg-slate-700/50 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary dark:focus:ring-cyan-400 text-slate-900 dark:text-white"
+                            required
                         />
                         <div className="flex justify-end gap-2 pt-2">
-                            <button onClick={() => setIsAdding(false)} className="p-2 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400"><X size={18} /></button>
-                            <button onClick={handleAddItem} className="p-2 rounded-lg text-slate-400 hover:text-green-500 dark:hover:text-green-400"><Check size={18} /></button>
+                            <button type="button" onClick={() => setIsAdding(false)} className="p-2 rounded-lg text-slate-400 hover:text-red-500 dark:hover:text-red-400"><X size={18} /></button>
+                            <button type="submit" className="p-2 rounded-lg text-slate-400 hover:text-green-500 dark:hover:text-green-400"><Check size={18} /></button>
                         </div>
-                    </motion.div>
+                    </motion.form>
                 )}
             </div>
         </div>

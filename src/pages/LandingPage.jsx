@@ -235,12 +235,16 @@ const LandingPage = ({ onNavigate }) => {
         googleFormData.append(MESSAGE_ENTRY, formData.get('message'));
 
         try {
+            // 'no-cors' makes the response opaque -- this can only ever catch a network-level
+            // failure (DNS/connection), never a rejected/misconfigured form submission on
+            // Google's end. Keep the success copy honest about that instead of claiming
+            // confirmed delivery.
             await fetch(GOOGLE_FORM_URL, {
                 method: 'POST',
                 body: googleFormData,
                 mode: 'no-cors'
             });
-            setFormStatus({ state: 'success', message: 'Thank you! Your message has been sent.' });
+            setFormStatus({ state: 'success', message: "Thanks! Your message is on its way." });
             e.target.reset();
         } catch (error) {
             console.error("Form submission error:", error);

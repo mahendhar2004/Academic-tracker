@@ -79,12 +79,12 @@ const PredictorPage = () => {
             setStrategyResult(null);
 
         } else if (activeTab === 'target') {
-            if (!targetCGPA) {
+            const target = parseFloat(targetCGPA);
+            if (!targetCGPA || isNaN(target) || target <= 0 || target > 10) {
                 setRequiredSPI(null);
                 setStrategyResult(null);
                 return;
             }
-            const target = parseFloat(targetCGPA);
             const totalFinalCredits = existingData.cumulativeCredits + hypoCredits;
             const requiredTotalPoints = target * totalFinalCredits;
 
@@ -103,13 +103,13 @@ const PredictorPage = () => {
             setPredictedCPI('0.0');
             setRequiredSPI(null);
 
-            if (!targetCGPA) {
+            const target = parseFloat(targetCGPA);
+            if (!targetCGPA || isNaN(target) || target <= 0 || target > 10) {
                 setStrategyResult(null);
                 return;
             }
 
-            const target = parseFloat(targetCGPA);
-            const futureCreds = parseFloat(futureCredits) || 0;
+            const futureCreds = Math.max(0, parseFloat(futureCredits) || 0);
 
             let adjustedCurrentPoints = existingData.cumulativeWeightedPoints;
             let retakeCredits = 0;
@@ -146,7 +146,7 @@ const PredictorPage = () => {
 
     const handleAddCourse = (e) => {
         e.preventDefault();
-        if (newCourse.name && newCourse.credits > 0) {
+        if (newCourse.name && newCourse.credits > 0 && newCourse.credits <= 30) {
             setHypotheticalCourses([...hypotheticalCourses, { ...newCourse, id: Date.now() }]);
             setNewCourse({ name: '', credits: '', grade: 'A+' });
         }
@@ -329,6 +329,7 @@ const PredictorPage = () => {
                                             onChange={(e) => setTargetCGPA(e.target.value)}
                                             className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 text-2xl font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500/50 outline-none transition-all"
                                             placeholder="9.0"
+                                            min="0.1" max="10" step="0.01"
                                         />
                                     </div>
                                     <div className="space-y-2">
@@ -339,6 +340,7 @@ const PredictorPage = () => {
                                             onChange={(e) => setFutureCredits(e.target.value)}
                                             className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 text-2xl font-bold text-slate-900 dark:text-white focus:ring-2 focus:ring-amber-500/50 outline-none transition-all"
                                             placeholder="22"
+                                            min="0" max="60"
                                         />
                                     </div>
                                 </div>
@@ -351,6 +353,7 @@ const PredictorPage = () => {
                                         onChange={(e) => setTargetCGPA(e.target.value)}
                                         className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl px-5 py-4 text-4xl font-black text-center text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/50 outline-none transition-all placeholder-slate-300 dark:placeholder-slate-700"
                                         placeholder="8.5"
+                                        min="0.1" max="10" step="0.01"
                                     />
                                     <p className="text-center text-slate-400 text-sm font-medium">Enter your goal to calculate the required SPI.</p>
                                 </div>
@@ -383,7 +386,7 @@ const PredictorPage = () => {
                                             onChange={(e) => setNewCourse({ ...newCourse, credits: e.target.value })}
                                             placeholder="Cr"
                                             className="w-24 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-primary/50 dark:focus:ring-cyan-500/50 transition-all font-medium placeholder-slate-400"
-                                            required min="1" step="0.5"
+                                            required min="1" max="30" step="0.5"
                                         />
                                         {activeTab === 'predict' && (
                                             <div className="relative flex-1">

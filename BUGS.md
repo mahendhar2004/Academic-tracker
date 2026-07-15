@@ -164,29 +164,38 @@ to make every read site UTC-aware.
 
 ---
 
-## Phase 6 — Validation gaps
+## Phase 6 — Validation gaps — DONE
 
-- [ ] **`src/components/modals/AddCourseModal.jsx`** — no non-negative check on
-  attended/total classes; negative attendance counts can be saved.
-- [ ] **`src/components/modals/AddGradeModal.jsx` / `AddCourseModal.jsx` / `WhatIfModal.jsx` /
-  `PredictorPage.jsx`** — `credits > 0` is the only guard; no upper bound, and
-  `PredictorPage.jsx`'s `targetCGPA`/`futureCredits` accept negative or out-of-range values
-  with only a cosmetic post-hoc warning.
-- [ ] **`src/components/modals/AddEditTaskModal.jsx`** — title isn't `.trim()`'d; whitespace-
-  only titles are accepted.
-- [ ] **`src/components/modals/AddEditClassModal.jsx`** — no check that `endTime` is after
-  `startTime` (negative-duration classes break `TimetableModal`'s height calc); also silently
-  resets duration to a fixed 1 hour whenever `startTime` is nudged, discarding a custom
-  duration.
-- [ ] **`src/components/modals/EditProfileModal.jsx`, `EditableResumeList.jsx`** — no
-  `<form>` wrapper, so native `type="email"`/`type="url"` HTML5 validation never fires.
-- [ ] **`src/components/modals/PomodoroModal.jsx`** — clearing the duration input produces
-  `NaN`, and "Begin Focus" silently no-ops with no user-facing feedback.
-- [ ] **`src/pages/LandingPage.jsx` + `src/components/modals/BugReportModal.jsx`** — both
+- [x] **`src/components/modals/AddCourseModal.jsx`** — no non-negative check on
+  attended/total classes; negative attendance counts could be saved. Fixed with an explicit
+  `attendedNum < 0 || totalNum < 0` check.
+- [x] **`src/components/modals/AddGradeModal.jsx` / `AddCourseModal.jsx` / `PredictorPage.jsx`**
+  — `credits > 0` was the only guard, no upper bound. Added a `<= 30` credit ceiling (HTML
+  `max` + JS check) everywhere a credits field is entered. `PredictorPage.jsx`'s `targetCGPA`
+  now rejects non-`(0, 10]` values instead of silently computing nonsense, and `futureCredits`
+  is clamped to non-negative. (`WhatIfModal.jsx` has the same gap but is dead code — see
+  Phase 7, deleting it rather than fixing validation in unreachable code.)
+- [x] **`src/components/modals/AddEditTaskModal.jsx`** — title wasn't `.trim()`'d; fixed to
+  validate and save the trimmed title.
+- [x] **`src/components/modals/AddEditClassModal.jsx`** — no check that `endTime` is after
+  `startTime`; fixed with an explicit check + error message on submit. Also fixed: nudging
+  `startTime` silently reset the class duration to a fixed 1 hour — it now preserves whatever
+  duration was already set.
+- [x] **`src/components/profile/EditableResumeList.jsx`** — no `<form>` wrapper, so native
+  `type="url"` HTML5 validation never fired; wrapped the add-item inputs in a real `<form>`
+  with `required` attributes. (`EditProfileModal.jsx` has the same gap but is dead/unreachable
+  code — see Phase 7, deleting it rather than fixing validation in unreachable code.)
+- [x] **`src/components/modals/PomodoroModal.jsx`** — **verified already fixed by the
+  `main` merge**: the free-text duration input that could go `NaN` no longer exists; duration
+  is now chosen via fixed preset buttons (15/25/45/60 min), which can't produce an invalid
+  value.
+- [x] **`src/pages/LandingPage.jsx` + `src/components/modals/BugReportModal.jsx`** — both
   POST to Google Forms with `fetch(..., { mode: 'no-cors' })`, which always resolves as an
-  opaque response — the code cannot detect a rejected/misconfigured submission and always
-  shows "success." Decide on an approach (honest copy vs. a small relay that can observe a
-  real response) before fixing.
+  opaque response — the code cannot detect a rejected/misconfigured submission. Standing up a
+  server-side relay to get a real response is out of scope for a client-only app without
+  discussing hosting for it, so fixed the honest way: softened the success copy ("is on its
+  way" instead of "has been sent"/"has been submitted") and documented the `no-cors` limitation
+  inline so it isn't mistaken for a solved problem later.
 
 ---
 

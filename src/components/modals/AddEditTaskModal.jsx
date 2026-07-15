@@ -33,9 +33,10 @@ const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit, defaultType }) 
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (task.title && task.type) {
+        if (task.title.trim() && task.type) {
             onSave({
                 ...task,
+                title: task.title.trim(),
                 dueDate: task.type === 'Long-term' ? task.dueDate : null,
                 dueTime: task.dueTime || '23:59'
             }, taskToEdit?.id || null);
