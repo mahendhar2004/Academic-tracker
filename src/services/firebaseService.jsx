@@ -9,6 +9,11 @@ import {
     getPerformanceTargetPath, COLLECTIONS
 } from '../constants/dbPaths';
 
+// Resolves a dotted path (e.g. "academic.projects") against a nested object,
+// mirroring how Firestore interprets dotted field names on writes.
+const getNestedValue = (obj, path) =>
+    path.split('.').reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
+
 const firestoreService = {
 
     // === PROFILE & COINS ===
@@ -48,7 +53,8 @@ const firestoreService = {
                 const rewardedFields = profileData.rewardedFields || {};
 
                 const isList = Array.isArray(value);
-                const oldListLength = Array.isArray(profileData[field]) ? profileData[field].length : 0;
+                const oldValue = getNestedValue(profileData, field);
+                const oldListLength = Array.isArray(oldValue) ? oldValue.length : 0;
 
                 let coinsToAward = 0;
 

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { useStore } from '../../store/useStore';
 import { useModalStore } from '../../store/useModalStore';
@@ -25,7 +25,7 @@ import DeleteAccountModal from '../modals/DeleteAccountModal';
 import ReauthModal from '../modals/ReauthModal';
 import BugReportModal from '../modals/BugReportModal';
 
-const ModalManager = ({ user, onSignOut, triggerReward, onStartPomodoro }) => {
+const ModalManager = ({ user, triggerReward, onStartPomodoro }) => {
     const {
         allCourses, profileData, schedule, expenditures
     } = useStore();
@@ -88,30 +88,42 @@ const ModalManager = ({ user, onSignOut, triggerReward, onStartPomodoro }) => {
     };
 
     // Account Deletion Logic
-    // Note: We expose a way to open this from the context, but the logic lives here.
-    // Dashboard passed handleDeleteAccountClick via context. 
-    // We might need to listen to a global 'deleteAccount' modal state if we want to remove the local state here.
-    // For now, let's keep it consistent with the existing 'modal' store approach where possible.
-    // But DeleteAccount was using local state in Dashboard. Let's move it to "modal === 'deleteAccount'" later.
-    // For this refactor, we will rely on this component rendering it if the logic is triggered.
-    // However, the trigger comes from ProfilePage -> context -> Dashboard. 
-    // We should move `isDeleteAccountModalOpen` to useModalStore eventually. 
-    // For now, I will add a `useEffect` or similar if I need to trigger it, 
-    // OR we just accept that we need to migrate DeleteAccount to `useModalStore` NOW to make this work.
-    // Let's migrate DeleteAccount to usage of `useModalStore` ('deleteAccount') to clean this up.
+    // Firestore data is wiped before the auth user is deleted (client-side security rules
+    // require an authenticated match on uid, so data deletion must happen while the user's
+    // token is still valid). If Firebase then requires a recent login to finish deleting the
+    // auth user, we DON'T re-wipe data on retry -- we just re-authenticate and finish deleting
+    // the now-already-emptied account.
+    const [reauthState, setReauthState] = useState({ isSubmitting: false, error: '' });
 
     const confirmDeleteAccount = async () => {
         try {
             await firestoreService.resetAllData(user.uid, user);
             await authService.deleteCurrentUser();
-            // Modal closing handled by unmount or store
+            closeModal();
         } catch (error) {
-            closeModal(); // using global assume
             if (error.code === 'auth/requires-recent-login') {
-                openModal('reauth'); // Migrating reauth to store too
+                setReauthState({ isSubmitting: false, error: '' });
+                openModal('reauth');
             } else {
+                closeModal();
                 alert(`Failed to delete account: ${error.message}`);
             }
+        }
+    };
+
+    const handleReauthenticateAndDelete = async (password) => {
+        setReauthState({ isSubmitting: true, error: '' });
+        try {
+            const providerId = authService.getAuthProviderId();
+            if (providerId === 'google.com') {
+                await authService.reauthenticateWithGoogle();
+            } else {
+                await authService.reauthenticateWithPassword(password);
+            }
+            await authService.deleteCurrentUser();
+            closeModal();
+        } catch (error) {
+            setReauthState({ isSubmitting: false, error: error.message || 'Re-authentication failed. Please try again.' });
         }
     };
 
@@ -194,7 +206,10 @@ const ModalManager = ({ user, onSignOut, triggerReward, onStartPomodoro }) => {
             <ReauthModal
                 isOpen={modal === 'reauth'}
                 onClose={closeModal}
-                onConfirm={onSignOut}
+                onReauthenticate={handleReauthenticateAndDelete}
+                provider={user?.providerData?.[0]?.providerId || 'password'}
+                isSubmitting={reauthState.isSubmitting}
+                errorMessage={reauthState.error}
             />
         </>
     );

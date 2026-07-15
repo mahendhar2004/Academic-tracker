@@ -1,8 +1,8 @@
-import { 
-    signInWithPopup, 
-    GoogleAuthProvider, 
-    createUserWithEmailAndPassword, 
-    signInWithEmailAndPassword, 
+import {
+    signInWithPopup,
+    GoogleAuthProvider,
+    createUserWithEmailAndPassword,
+    signInWithEmailAndPassword,
     signOut,
     sendPasswordResetEmail,
     updateProfile,
@@ -10,7 +10,10 @@ import {
     sendEmailVerification,
     // ADDED: Imports for session persistence
     setPersistence,
-    browserLocalPersistence
+    browserLocalPersistence,
+    EmailAuthProvider,
+    reauthenticateWithCredential,
+    reauthenticateWithPopup
 } from 'firebase/auth';
 import { auth } from '../firebase/config';
 
@@ -58,6 +61,28 @@ const authService = {
             return deleteUser(user);
         }
         return Promise.reject(new Error("No user is currently signed in."));
+    },
+
+    getAuthProviderId: () => {
+        const user = auth.currentUser;
+        return user?.providerData?.[0]?.providerId || 'password';
+    },
+
+    reauthenticateWithPassword: (password) => {
+        const user = auth.currentUser;
+        if (!user || !user.email) {
+            return Promise.reject(new Error("No signed-in user."));
+        }
+        const credential = EmailAuthProvider.credential(user.email, password);
+        return reauthenticateWithCredential(user, credential);
+    },
+
+    reauthenticateWithGoogle: () => {
+        const user = auth.currentUser;
+        if (!user) {
+            return Promise.reject(new Error("No signed-in user."));
+        }
+        return reauthenticateWithPopup(user, new GoogleAuthProvider());
     },
 
     sendVerificationEmail: () => {

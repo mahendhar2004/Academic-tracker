@@ -13,6 +13,7 @@ import { SiLeetcode, SiCodeforces } from 'react-icons/si';
 import EditableField from '../components/profile/EditableField';
 import EditableList from '../components/profile/EditableList';
 import EditableResumeList from '../components/profile/EditableResumeList';
+import ShareProfileModal from '../components/modals/ShareProfileModal';
 import authService from '../services/authService';
 import { COIN_VALUES } from '../constants';
 import { useModalStore } from '../store/useModalStore';
@@ -55,8 +56,11 @@ const ProfilePage = () => {
     const onResetData = () => openModal('resetConfirmation');
     const cardStyles = "bg-white/60 dark:bg-slate-900/50 backdrop-blur-2xl border border-slate-200 dark:border-white/10 rounded-2xl shadow-xl dark:shadow-2xl";
     const [toast, setToast] = useState({ show: false, message: '' });
+    const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+    const [isSharing, setIsSharing] = useState(false);
 
-    const handleShareProfile = async () => {
+    const handleShareProfile = async ({ includeEmail, includePhone }) => {
+        setIsSharing(true);
         try {
             let shareId = profileData.shareId;
             if (!shareId) {
@@ -64,12 +68,19 @@ const ProfilePage = () => {
                 await onSaveField('shareId', shareId, 0);
             }
 
+            // Only the fields the user explicitly opts into are copied here --
+            // never spread `profileData.personal` wholesale into the public doc.
             const publicProfileData = {
                 name: profileData.name || 'Anonymous User',
                 imageUrl: profileData.imageUrl || '',
                 branch: profileData.academic?.branch || 'Branch not specified',
                 socialLinks: profileData.social?.links || [],
-                personal: profileData.personal || {},
+                personal: {
+                    location: profileData.personal?.location || '',
+                    achievements: profileData.personal?.achievements || [],
+                    ...(includeEmail ? { email: profileData.personal?.email || '' } : {}),
+                    ...(includePhone ? { phone: profileData.personal?.phone || '' } : {}),
+                },
                 academic: profileData.academic || {},
             };
 
@@ -79,11 +90,14 @@ const ProfilePage = () => {
             const url = `${window.location.origin}/public/${shareId}`;
             await navigator.clipboard.writeText(url);
 
+            setIsShareModalOpen(false);
             setToast({ show: true, message: 'Link copied to clipboard!' });
 
         } catch (error) {
             console.error("Failed to share profile:", error);
             setToast({ show: true, message: 'Could not create public profile.' });
+        } finally {
+            setIsSharing(false);
         }
     };
 
@@ -122,6 +136,12 @@ const ProfilePage = () => {
                 show={toast.show}
                 onHide={() => setToast({ show: false, message: '' })}
             />
+            <ShareProfileModal
+                isOpen={isShareModalOpen}
+                onClose={() => setIsShareModalOpen(false)}
+                onConfirm={handleShareProfile}
+                isSubmitting={isSharing}
+            />
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -154,7 +174,7 @@ const ProfilePage = () => {
                         </div>
                         <motion.button
                             whileTap={{ scale: 0.95 }}
-                            onClick={handleShareProfile}
+                            onClick={() => setIsShareModalOpen(true)}
                             className="w-full flex items-center justify-center gap-2 bg-cyan-500/20 hover:bg-cyan-500/40 border border-cyan-500/50 text-cyan-300 font-bold py-2 px-4 rounded-lg transition-colors mt-4"
                         >
                             <Share2 size={18} /> Share Public Profile
