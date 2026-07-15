@@ -1,34 +1,23 @@
 import { useMemo } from 'react';
 import { startOfDay } from 'date-fns';
-
-const normalizeDate = (dateValue) => {
-    if (!dateValue) return null;
-    if (typeof dateValue.toDate === 'function') return dateValue.toDate();
-    return new Date(dateValue);
-};
+import { toDateSafe, getLocalDateString } from '../utils/date';
 
 export const useDashboardSummary = ({ schedule, deadlines, tasks, courses, expenditures }) => {
     return useMemo(() => {
         const now = new Date();
         const todayWeekday = now.toLocaleDateString('en-US', { weekday: 'long' });
         const startOfToday = startOfDay(now);
-
-        // UPDATED: This now correctly gets today's date in YYYY-MM-DD format
-        // without being affected by timezones.
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const todayDateString = `${year}-${month}-${day}`;
+        const todayDateString = getLocalDateString(now);
 
         const todaysSchedule = schedule?.filter(s => s.day === todayWeekday)
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
-        
+
         const upcomingDeadlines = deadlines
             ?.filter(d => {
-                const deadlineDate = normalizeDate(d.date);
+                const deadlineDate = toDateSafe(d.date);
                 return deadlineDate && deadlineDate >= startOfToday;
             })
-            .sort((a, b) => normalizeDate(a.date) - normalizeDate(b.date));
+            .sort((a, b) => toDateSafe(a.date) - toDateSafe(b.date));
 
         const todaysTasks = tasks
             ?.filter(t => 

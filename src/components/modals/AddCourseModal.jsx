@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
-import { COURSE_THEMES } from '../../constants';
-
-const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
-const GRADES = Object.keys(GRADE_POINTS);
+import { COURSE_THEMES, GRADE_POINTS, GRADES } from '../../constants';
 
 const AddCourseModal = ({ isOpen, onClose, onSave, currentSemester, initialData = null }) => {
     // Default to 'Rose' if nothing selected, or just the first one

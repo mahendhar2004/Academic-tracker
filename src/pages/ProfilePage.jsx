@@ -18,7 +18,8 @@ import authService from '../services/authService';
 import { COIN_VALUES } from '../constants';
 import { useModalStore } from '../store/useModalStore';
 import { doc, setDoc, collection } from 'firebase/firestore';
-import { db, appId } from '../firebase/config';
+import { db } from '../firebase/config';
+import { getPublicProfilesCollectionPath, getPublicProfilePath } from '../constants/dbPaths';
 import ToastNotification from '../components/common/ToastNotification';
 
 const getSocialIcon = (url) => {
@@ -64,7 +65,7 @@ const ProfilePage = () => {
         try {
             let shareId = profileData.shareId;
             if (!shareId) {
-                shareId = doc(collection(db, `artifacts/${appId}/publicProfiles`)).id;
+                shareId = doc(collection(db, getPublicProfilesCollectionPath())).id;
                 await onSaveField('shareId', shareId, 0);
             }
 
@@ -84,7 +85,7 @@ const ProfilePage = () => {
                 academic: profileData.academic || {},
             };
 
-            const publicProfileRef = doc(db, `artifacts/${appId}/publicProfiles/${shareId}`);
+            const publicProfileRef = doc(db, getPublicProfilePath(shareId));
             await setDoc(publicProfileRef, publicProfileData);
 
             const url = `${window.location.origin}/public/${shareId}`;

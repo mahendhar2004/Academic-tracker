@@ -2,9 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 import { ChevronLeft } from 'lucide-react';
-
-const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
-const GRADES = Object.keys(GRADE_POINTS);
+import { GRADES } from '../../constants';
 
 const AddGradeModal = ({ isOpen, onClose, onSave, onSaveNewCourse, allCourses, courseToEdit, currentSemester }) => {
     // --- State Management ---

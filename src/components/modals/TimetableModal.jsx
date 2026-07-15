@@ -7,7 +7,19 @@ import { getColorForCourse } from '../../constants';
 // MOVED: Defined daysOfWeek outside the component to prevent re-creation on every render.
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
+// Returns null (not 0) for a malformed time so a bad entry can be skipped instead of
+// silently anchoring the whole grid to midnight. Defined outside the component (pure,
+// no closure over props/state) so it's a stable reference for the useMemo below.
+const timeToMinutes = (timeStr) => {
+    if (!timeStr || !timeStr.includes(':')) return null;
+    const [hours, minutes] = timeStr.split(':').map(Number);
+    if (isNaN(hours) || isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+};
+
+const hasValidTimes = (item) => timeToMinutes(item.startTime) !== null && timeToMinutes(item.endTime) !== null;
+
+const TimetableModal = ({ isOpen, onClose, schedule = [], courses }) => {
     const [now, setNow] = useState(new Date());
     const scrollContainerRef = useRef(null);
     const currentDayRef = useRef(null);
@@ -30,14 +42,9 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
         return { name: course.name, color };
     };
 
-    const timeToMinutes = (timeStr) => {
-        if (!timeStr || !timeStr.includes(':')) return 0;
-        const [hours, minutes] = timeStr.split(':').map(Number);
-        return hours * 60 + minutes;
-    };
-
     const { timeSlots, minHour, maxHour, scheduleByDay } = useMemo(() => {
-        if (schedule.length === 0) {
+        const validSchedule = schedule.filter(hasValidTimes);
+        if (validSchedule.length === 0) {
             const defaultSlots = Array.from({ length: 10 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
             return { timeSlots: defaultSlots, minHour: 8, maxHour: 18, scheduleByDay: {} };
         }
@@ -45,12 +52,12 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
         const byDay = {};
 
         daysOfWeek.forEach(day => {
-            byDay[day] = schedule
+            byDay[day] = validSchedule
                 .filter(item => item.day === day)
                 .sort((a, b) => timeToMinutes(a.startTime) - timeToMinutes(b.startTime));
         });
 
-        schedule.forEach(item => {
+        validSchedule.forEach(item => {
             min = Math.min(min, timeToMinutes(item.startTime));
             max = Math.max(max, timeToMinutes(item.endTime));
         });
@@ -100,7 +107,7 @@ const TimetableModal = ({ isOpen, onClose, schedule, courses }) => {
                                 {timeSlots.map((_, index) => (
                                     <div key={index} style={{ height: `${pixelsPerHour}px` }} className="border-t border-slate-800"></div>
                                 ))}
-                                {schedule.filter(s => s.day === day).map(item => {
+                                {schedule.filter(s => s.day === day && hasValidTimes(s)).map(item => {
                                     const startMinutes = timeToMinutes(item.startTime) - minHour * 60;
                                     const endMinutes = timeToMinutes(item.endTime) - minHour * 60;
                                     const top = startMinutes * pixelsPerMinute;

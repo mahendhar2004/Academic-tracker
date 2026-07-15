@@ -7,9 +7,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import firestoreService from '../services/firebaseService';
-
-const GRADE_POINTS = { 'A+': 10, 'A': 9, 'B+': 8, 'B': 7, 'C+': 6, 'C': 5, 'D+': 4, 'D': 3, 'F': 2 };
-const GRADES = Object.keys(GRADE_POINTS);
+import { GRADE_POINTS, GRADES } from '../constants';
 
 const PredictorPage = () => {
     const { allCourses, user, scenarios, showToast } = useStore();

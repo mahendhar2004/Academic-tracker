@@ -174,7 +174,6 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
     const handleSaveExpenditure = (expenditureData, expenditureId) => {
         firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId);
     };
-    const handleSaveScenario = (data) => firestoreService.saveScenario(user.uid, data);
     const handleDeleteScenario = (id) => firestoreService.deleteScenario(user.uid, id);
 
     const handleResetExpenditures = () => {
@@ -281,7 +280,6 @@ const Dashboard = ({ user, onSignOut, reward, setReward, triggerReward }) => {
         handleAddExpenditureClick,
         handleEditExpenditureClick,
         scenarios: scenarios || [],
-        handleSaveScenario,
         handleDeleteScenario,
         handleOpenWhatIf
     };

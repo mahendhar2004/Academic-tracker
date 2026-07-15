@@ -20,15 +20,13 @@ import AddEditContactModal from '../modals/AddEditContactModal';
 import AddEditExpenditureModal from '../modals/AddEditExpenditureModal';
 import TimetableModal from '../modals/TimetableModal';
 import PomodoroModal from '../modals/PomodoroModal';
-import WhatIfModal from '../modals/WhatIfModal';
-import EditProfileModal from '../modals/EditProfileModal';
 import DeleteAccountModal from '../modals/DeleteAccountModal';
 import ReauthModal from '../modals/ReauthModal';
 import BugReportModal from '../modals/BugReportModal';
 
 const ModalManager = ({ user, triggerReward, onStartPomodoro }) => {
     const {
-        allCourses, profileData, schedule, expenditures
+        allCourses, schedule, expenditures
     } = useStore();
 
     const { modal, props: modalProps, closeModal, openModal } = useModalStore();
@@ -78,10 +76,6 @@ const ModalManager = ({ user, triggerReward, onStartPomodoro }) => {
     const handleSaveContact = (data, id) => firestoreService.saveContact(user.uid, data, id);
     const handleSaveExpenditure = (expenditureData, expenditureId) => {
         firestoreService.saveExpenditure(user.uid, expenditureData, expenditureId);
-    };
-    const handleSaveScenario = async (data) => {
-        await firestoreService.saveScenario(user.uid, data);
-        closeModal();
     };
     const handleResetData = async () => {
         await firestoreService.resetAllData(user.uid, user);
@@ -174,14 +168,6 @@ const ModalManager = ({ user, triggerReward, onStartPomodoro }) => {
             />
             <TimetableModal isOpen={modal === 'timetable'} onClose={closeModal} schedule={schedule} courses={allCourses} />
             <PomodoroModal isOpen={modal === 'pomodoro'} onClose={closeModal} onStart={onStartPomodoro} />
-            <WhatIfModal
-                isOpen={modal === 'whatIf'}
-                onClose={closeModal}
-                allCourses={allCourses}
-                onSave={handleSaveScenario}
-                initialData={modalProps.scenarioToLoad}
-            />
-            <EditProfileModal isOpen={modal === 'editProfile'} onClose={closeModal} onSave={(data) => console.log(data)} profileData={profileData} />
             <BugReportModal isOpen={modal === 'bugReport'} onClose={closeModal} />
             <ConfirmationModal
                 isOpen={modal === 'confirmation'}

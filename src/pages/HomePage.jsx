@@ -7,6 +7,7 @@ import InfoCard from '../components/dashboard/InfoCard';
 import { quotes } from '../data/quotes';
 import { startOfDay } from 'date-fns';
 import { useDashboardSummary } from '../hooks/useDashboardSummary';
+import { toDateSafe } from '../utils/date';
 
 // --- Child Components defined within HomePage for clarity ---
 
@@ -31,12 +32,6 @@ const AtAGlance = ({
     };
 
     const oneDayInMs = 24 * 60 * 60 * 1000;
-
-    const normalizeDate = (dateValue) => {
-        if (!dateValue) return null;
-        if (typeof dateValue.toDate === 'function') return dateValue.toDate();
-        return new Date(dateValue);
-    };
 
     const sections = [
         {
@@ -72,7 +67,7 @@ const AtAGlance = ({
             icon: Bell,
             title: "Upcoming Deadlines",
             content: upcomingDeadlines.map(deadline => {
-                const deadlineDate = normalizeDate(deadline.date);
+                const deadlineDate = toDateSafe(deadline.date);
                 const isUrgent = (deadlineDate.getTime() - now.getTime()) < oneDayInMs;
                 return (
                     <div key={deadline.id} className="bg-slate-50 border border-slate-100 dark:bg-white/5 dark:border-transparent p-2 rounded-lg flex justify-between items-center text-sm">

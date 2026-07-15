@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db, appId } from '../firebase/config';
+import { db } from '../firebase/config';
+import { getPublicProfilePath } from '../constants/dbPaths';
 import { motion } from 'framer-motion';
 import {
     Link as LinkIcon, Briefcase, Trophy, Award, BookOpen,
@@ -112,7 +113,7 @@ const PublicProfilePage = () => {
         const fetchProfile = async () => {
             if (!profileId) return;
             try {
-                const profileRef = doc(db, `artifacts/${appId}/publicProfiles/${profileId}`);
+                const profileRef = doc(db, getPublicProfilePath(profileId));
                 const profileSnap = await getDoc(profileRef);
                 if (profileSnap.exists()) {
                     setProfile(profileSnap.data());

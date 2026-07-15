@@ -199,36 +199,51 @@ to make every read site UTC-aware.
 
 ---
 
-## Phase 7 — Dead code & duplication
+## Phase 7 — Dead code & duplication — DONE
 
-- [ ] **`GRADE_POINTS`/`GRADES` duplicated in 5 files** instead of importing the canonical
-  copy from `src/constants.js`: `AddGradeModal.jsx`, `WhatIfModal.jsx`, `AddCourseModal.jsx`,
-  `usePerformanceGraphs.jsx`, `PredictorPage.jsx`. (Value confirmed intentional — `F` stays at
-  2 grade points — only consolidate the imports, don't change the value.)
-- [ ] **`src/components/modals/WhatIfModal.jsx`** — entire 390-line modal is unreachable dead
-  code; superseded by `PredictorPage.jsx` but still wired into `ModalManager.jsx` behind a
-  `modal === 'whatIf'` case that nothing ever triggers.
-- [ ] **`src/components/modals/EditProfileModal.jsx`** — unreachable (nothing opens it) *and*
-  its `onSave` is a no-op `console.log` stub in `ModalManager.jsx`.
-- [ ] **`src/components/modals/ResetExpendituresModal.jsx`** — still unused; `Dashboard.jsx`
-  uses a generic confirmation modal instead.
-- [ ] **`src/pages/LoginPage.jsx`** — `onNavigateToLanding` prop passed but unused; a hard
-  `<a href="/">` causes a full page reload instead of an SPA view switch.
-- [ ] **`normalizeDate`** duplicated byte-for-byte between `useDashboardSummary.jsx` and
-  `AtAGlance.jsx` — fold into the shared date utility from Phase 4.
-- [ ] **`src/hooks/usePlannerTasks.jsx`** — sorts tasks only by time-of-day, ignoring
-  `dueDate`; wrong ordering for multi-day long-term tasks.
-- [ ] **`src/components/pomodoro/PomodoroTimer.jsx`** — recreates `setInterval` every tick
-  instead of once per session.
-- [ ] **`src/components/modals/TimetableModal.jsx`** — no guard for `schedule` being
-  `undefined`/`null`; `timeToMinutes` silently returns `0` for malformed times, distorting the
-  whole grid instead of skipping the bad entry.
-- [ ] **`src/firebase/config.js`** — `appId` hardcoded to `'default-app-id'` despite a comment
-  saying it should be env/config-driven.
-- [ ] **Firestore path centralization gap** — `App.jsx`, `ProfilePage.jsx`,
-  `PublicProfilePage.jsx` still hardcode `artifacts/${appId}/...` paths directly instead of
-  using the new `src/constants/dbPaths.js`; that file doesn't even define a public-profile
-  path helper yet.
+- [x] **`GRADE_POINTS`/`GRADES` duplicated in 5 files** instead of importing the canonical
+  copy from `src/constants.js`. Consolidated in `AddGradeModal.jsx`, `AddCourseModal.jsx`,
+  `usePerformanceGraphs.jsx`, `PredictorPage.jsx`; the 5th copy (`WhatIfModal.jsx`) was deleted
+  outright (see below). Value unchanged — `F` stays at 2 grade points.
+- [x] **`src/components/modals/WhatIfModal.jsx`** — deleted (390-line unreachable modal,
+  superseded by `PredictorPage.jsx`); removed its wiring, and the now-dead
+  `handleSaveScenario`, from `ModalManager.jsx`. Also found and removed a second dead copy of
+  `handleSaveScenario` in `Dashboard.jsx` that was put into outlet context but never read by
+  any page.
+- [x] **`src/components/modals/EditProfileModal.jsx`** — deleted (unreachable, no-op `onSave`
+  stub); removed its wiring from `ModalManager.jsx`, which also dropped `profileData` from
+  that component's store selector since nothing else there used it.
+- [x] **`src/components/modals/ResetExpendituresModal.jsx`** — deleted (confirmed unused).
+- [x] **`src/pages/LoginPage.jsx`** — "Back to Home" now uses `useNavigate()` for a real SPA
+  transition instead of `<a href="/">`'s full page reload; removed the unused
+  `onNavigateToLanding` prop plumbing from `App.jsx`.
+- [x] **`normalizeDate`** duplicated byte-for-byte between `useDashboardSummary.jsx` and
+  `HomePage.jsx`'s `AtAGlance` — both now import the shared `toDateSafe` from
+  `src/utils/date.js` (added in Phase 3); `useDashboardSummary.jsx`'s separate manual
+  "today as YYYY-MM-DD" computation was also folded into the shared `getLocalDateString`.
+- [x] **`src/hooks/usePlannerTasks.jsx`** — now sorts by `dueDate` first (when present) and
+  falls back to `dueTime`, fixing ordering for multi-day long-term tasks while leaving
+  short-term (no `dueDate`) ordering unchanged.
+- [x] **`src/components/pomodoro/PomodoroTimer.jsx`** — now creates one `setInterval` for the
+  whole session instead of tearing it down and recreating it every tick.
+- [x] **`src/components/modals/TimetableModal.jsx`** — `schedule` now defaults to `[]`
+  (guards every direct `.filter`/`.length` use, not just the memo); `timeToMinutes` now
+  returns `null` (not `0`) for a malformed time, and malformed entries are filtered out of
+  the min/max-hour calculation and rendering instead of anchoring the whole grid to midnight.
+- [x] **`src/components/calendar/DeadlineCard.jsx`** — deleted (confirmed dead during the
+  Phase 4 timezone-bug pass; had the same UTC/local bug but was never imported anywhere).
+- [x] **Firestore path centralization gap** — `App.jsx`, `ProfilePage.jsx`,
+  `PublicProfilePage.jsx` no longer hardcode `artifacts/${appId}/...` strings; added
+  `getPublicProfilesCollectionPath`/`getPublicProfilePath` to `src/constants/dbPaths.js` and
+  switched all three files (plus reused the existing `getProfilePath`) to the shared helpers.
+  Paths are byte-for-byte identical to before, so no data migration is involved.
+- [x] **`src/firebase/config.js`** — `appId` hardcoded to `'default-app-id'`. **Deliberately
+  left as-is**: this string is the namespace prefix for every single Firestore path in the
+  app (`artifacts/{appId}/...`). Making it env-configurable without also setting a matching
+  env var in the existing production deployment would silently point the live app at a
+  different (empty) path prefix for every user — effectively hiding all existing data. Not
+  worth that risk as an autonomous drive-by fix; flagging here for a deliberate, coordinated
+  change if it's ever needed (e.g. separating dev/staging/prod data), not fixing it now.
 
 ---
 

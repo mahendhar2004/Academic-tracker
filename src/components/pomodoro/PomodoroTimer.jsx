@@ -37,17 +37,19 @@ const PomodoroTimer = ({ duration, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
+    // One interval for the whole session instead of tearing down/recreating it every tick.
     useEffect(() => {
-        if (timeLeft <= 0) {
-            handleClose(true); // Timer finished successfully
-            return;
-        }
-
         timerRef.current = setInterval(() => {
-            setTimeLeft(prev => prev - 1);
+            setTimeLeft(prev => (prev > 0 ? prev - 1 : 0));
         }, 1000);
 
         return () => clearInterval(timerRef.current);
+    }, []);
+
+    useEffect(() => {
+        if (timeLeft <= 0) {
+            handleClose(true); // Timer finished successfully
+        }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [timeLeft]);
 

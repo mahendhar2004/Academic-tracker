@@ -10,6 +10,10 @@ export const getProfilePath = (userId) => `${getBaseUserPath(userId)}/profile/da
 
 export const getPerformanceTargetPath = (userId) => `${getBaseUserPath(userId)}/performanceTarget/target`;
 
+export const getPublicProfilesCollectionPath = () => `artifacts/${appId}/publicProfiles`;
+
+export const getPublicProfilePath = (shareId) => `${getPublicProfilesCollectionPath()}/${shareId}`;
+
 export const COLLECTIONS = {
     COURSES: 'courses',
     SCHEDULE: 'schedule',

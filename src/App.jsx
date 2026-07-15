@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
-import { auth, db, appId } from './firebase/config';
+import { auth, db } from './firebase/config';
+import { getProfilePath } from './constants/dbPaths';
 import { useStore } from './store/useStore';
 import authService from './services/authService';
 import firebaseService from './services/firebaseService';
@@ -134,7 +135,7 @@ export default function App() {
     }, [initializeListeners, cleanupListeners, runDailyCheckIn, navigate, location.pathname, setGlobalUser]);
 
     const ensureProfileDocument = async (currentUser) => {
-        const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
+        const profileRef = doc(db, getProfilePath(currentUser.uid));
         const profileSnap = await getDoc(profileRef);
         if (!profileSnap.exists()) {
             await setDoc(profileRef, {
@@ -173,7 +174,7 @@ export default function App() {
             const user = userCredential.user;
             await authService.updateUserProfile(user, { displayName: name });
 
-            const profileRef = doc(db, `artifacts/${appId}/users/${user.uid}/profile/data`);
+            const profileRef = doc(db, getProfilePath(user.uid));
             await setDoc(profileRef, {
                 name: name,
                 email: user.email,
@@ -214,7 +215,6 @@ export default function App() {
                                 onLogin={handleLogin}
                                 onLoginWithEmail={handleLoginWithEmail}
                                 onSignUpWithEmail={handleSignUpWithEmail}
-                                onNavigateToLanding={() => navigate('/')}
                             />
                     } />
                     <Route path="/public/:profileId" element={<PublicProfilePage />} />

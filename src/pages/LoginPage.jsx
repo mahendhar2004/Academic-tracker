@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 // UPDATED: Added ArrowLeft icon
 import { Mail, Lock, User, Phone, ClipboardList, GraduationCap, ListTodo, Calendar, Users, CreditCard, Loader2, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { FaGoogle } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 
 const NeumorphicInput = ({ icon: Icon, label, id, ...props }) => {
@@ -77,6 +78,7 @@ const FeatureTile = ({ icon: Icon, title, color, index }) => (
 );
 
 const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
+    const navigate = useNavigate();
     const [formState, setFormState] = useState('login');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
@@ -147,11 +149,14 @@ const LoginPage = ({ onLogin, onLoginWithEmail, onSignUpWithEmail }) => {
 
     return (
         <div className="min-h-screen bg-[#E0E5EC] dark:bg-black flex justify-center items-center p-4">
-            {/* ADDED: Back to landing page link */}
-            <a href="/" className="absolute top-6 left-6 flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors font-semibold z-10">
+            <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="absolute top-6 left-6 flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors font-semibold z-10"
+            >
                 <ArrowLeft size={18} />
                 Back to Home
-            </a>
+            </button>
             <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                 
                 <div className="space-y-8 hidden lg:block">
