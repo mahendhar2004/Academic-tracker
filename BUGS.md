@@ -247,43 +247,49 @@ to make every read site UTC-aware.
 
 ---
 
-## Phase 8 — Infra / config / repo hygiene
+## Phase 8 — Infra / config / repo hygiene — DONE
 
-- [ ] **Broken icon references.** `public/index.html` still links `apple-touch-icon` to
-  `logo192.png`, which doesn't exist in `public/`. `public/manifest.json` references
-  `maskable_icon_x512.png`, which also doesn't exist (only `file.svg`, `index.html`,
-  `manifest.json`, `robots.txt` are present in `public/`). Either add the real icon assets or
-  remove the dangling references.
-- [ ] **`public/index.html` meta description** is still literally `"Web site created using
-  create-react-app"` (manifest.json branding was already fixed in the merge — this one
-  wasn't).
-- [ ] **`cors.json`** only allow-lists `http://localhost:3000` and `http://localhost:5173`
-  (the latter a Vite port this CRA project doesn't use) — no production origin at all. Needs
-  the actual deployed domain to fix.
-- [ ] **Dead dependencies in `package.json`**: `@reduxjs/toolkit`, `react-redux`, `three` —
-  confirmed via grep, never imported anywhere in `src/` even after the store's slice refactor
-  (which uses Zustand, not Redux).
-- [ ] **Tailwind version mismatch** — `@tailwindcss/postcss@^4.1.11` is installed as a
-  devDependency but `postcss.config.js` uses the v3-style plain `tailwindcss: {}` plugin, and
-  the project is actually on `tailwindcss@^3.4.13`. Leftover from an abandoned v4 migration.
-- [ ] **`src/App.test.js`** is untouched CRA boilerplate (`getByText(/learn react/i)`) —
-  `npm test` fails immediately.
-- [ ] **`README.md`** is 100% CRA boilerplate — no Firebase/env setup instructions at all (a
-  new dev can't get the app running without knowing about the 6 required
-  `REACT_APP_FIREBASE_*` vars), and has UTF-16 mojibake corruption appended at the end
-  (`#   A t r a c k` — garbled from a bad shell redirect).
-- [ ] **No `.env.example`** despite `src/firebase/config.js` requiring 6 env vars.
-- [ ] **`.gitignore`** still missing `.DS_Store`, `.vscode/`/`.idea/`, `/coverage`, and a
+- [x] **Broken icon references.** Removed the dangling `apple-touch-icon` → `logo192.png`
+  link from `public/index.html` and the `maskable_icon_x512.png` entry from
+  `public/manifest.json` (neither file existed in `public/`). Both now only reference the
+  real `file.svg`. (Adding real PNG icon assets instead was an option, but there's no source
+  artwork to generate them from here — removing the dangling references is the honest fix;
+  add real icons later if you want a proper PWA install icon.)
+- [x] **`public/index.html` meta description** rewritten to describe the actual app instead
+  of the CRA boilerplate string.
+- [x] **`cors.json`** now allow-lists `http://localhost:3000` and the real production origin
+  (`https://academictracker.vercel.app`, provided by the user), dropping the irrelevant Vite
+  port. **Note**: editing this file doesn't change the live Storage bucket's CORS policy by
+  itself — it still needs to be applied via `gsutil cors set cors.json gs://<bucket>` (now
+  documented in the README).
+- [x] **Dead dependencies removed from `package.json`**: `@reduxjs/toolkit`, `react-redux`,
+  `three` — confirmed unused via grep, `package-lock.json` resynced (`npm install`, 18
+  packages removed).
+- [x] **Tailwind version mismatch** — removed the unused `@tailwindcss/postcss@^4` dev
+  dependency; the project stays on `tailwindcss@^3.4.13` with its existing v3-style
+  `postcss.config.js` (no actual v4 migration attempted — this only removes the confusing,
+  unused leftover package).
+- [x] **`src/App.test.js`** — deleted the untouched CRA boilerplate test
+  (`getByText(/learn react/i)`, which no longer matches anything in this app) rather than
+  patch it into rendering the full Firebase-dependent app tree (fragile without mocking
+  Firebase). Replaced with real unit tests for two of the pure utilities introduced by this
+  bug-fix pass: `src/utils/date.test.js` (the local-date parse/format round-trip from Phase 4)
+  and `src/utils/courses.test.js` (the `getMaxSemester` NaN-guard from Phase 3). `npm test`
+  now passes.
+- [x] **`README.md`** rewritten with the actual tech stack, Firebase env-var setup via
+  `.env.example`, and the `cors.json`/`gsutil` step; the UTF-16 mojibake corruption at the end
+  is gone (full rewrite).
+- [x] **Added `.env.example`** listing the 6 `REACT_APP_FIREBASE_*` vars
+  `src/firebase/config.js` requires.
+- [x] **`.gitignore`** now also covers `.DS_Store`, `.vscode/`, `.idea/`, `/coverage`, and a
   generic `*.log` rule.
-- [ ] **A 4.9 MB screen recording (`Recording 2025-08-14 163900.mp4`) is committed at repo
-  root** and still tracked post-merge — remove from the working tree; consider bundling into
-  the same history-rewrite as the leaked secret if it should also be purged from history.
-- [ ] **`eslint.json` (124 KB, UTF-16, newly added in this merge)** is an accidentally
-  committed raw ESLint JSON report (`eslint --format json -o eslint.json`), containing
-  absolute Windows filesystem paths from the author's machine. Pure accidental commit with no
-  value to the repo — delete it.
-- [ ] **`package.json` `"name": "semester-tracker"`** vs. the actual product name "Atrack"
-  used everywhere else; no `engines` field constraining Node version.
+- [x] **A 4.9 MB screen recording (`Recording 2025-08-14 163900.mp4`)** removed from the
+  working tree/tracking. Still present in git history — bundled into the Phase 9
+  history-rewrite decision alongside the leaked secret.
+- [x] **`eslint.json` (124 KB, UTF-16)** — an accidentally committed raw ESLint JSON report
+  containing absolute Windows filesystem paths from the author's machine. Deleted.
+- [x] **`package.json`** — renamed `"semester-tracker"` → `"atrack"` to match the actual
+  product name used everywhere else; added an `engines.node >= 18` constraint.
 
 ---
 
