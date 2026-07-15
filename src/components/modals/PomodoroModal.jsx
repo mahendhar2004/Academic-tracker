@@ -4,7 +4,7 @@ import { Play, Pause, RotateCcw } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 
 const PomodoroModal = ({ isOpen, onClose, onStart }) => {
-    const { toast } = useStore();
+    const { showToast } = useStore();
     const [duration, setDuration] = useState(25);
     const [timeLeft, setTimeLeft] = useState(25 * 60);
     const [isActive, setIsActive] = useState(false);
@@ -70,7 +70,7 @@ const PomodoroModal = ({ isOpen, onClose, onStart }) => {
         setIsActive(true);
         setIsPaused(false);
         enterFullScreen();
-        toast.info('Press ESC to cancel focus mode');
+        showToast('Press ESC to cancel focus mode', 'info');
     };
 
     const handleDurationSelect = (mins) => {

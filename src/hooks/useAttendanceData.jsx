@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getMaxSemester } from '../utils/courses';
 
 export const useAttendanceData = (allCourses) => {
   return useMemo(() => {
@@ -6,7 +7,7 @@ export const useAttendanceData = (allCourses) => {
       return { currentSemester: null, visibleCourses: [], hiddenCourses: [], previousSemesters: [] };
     }
 
-    const maxSemester = Math.max(...allCourses.map(c => c.semester).filter(Boolean), 0);
+    const maxSemester = getMaxSemester(allCourses, 0);
     const currentCourses = allCourses.filter(c => c.semester === maxSemester);
 
     const visible = currentCourses

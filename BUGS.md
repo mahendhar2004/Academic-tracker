@@ -10,9 +10,9 @@ Status legend: `[ ]` open, `[x]` fixed. Each phase below corresponds to a commit
 
 ---
 
-## Phase 2 — Critical (data loss / security / exploit)
+## Phase 2 — Critical (data loss / security / exploit) — DONE (`d0bc68a`)
 
-- [ ] **Account deletion destroys data with no recovery path.**
+- [x] **Account deletion destroys data with no recovery path.**
   `src/components/dashboard/ModalManager.jsx:103-116` (`confirmDeleteAccount`) calls
   `firestoreService.resetAllData(user.uid, user)` **before** `authService.deleteCurrentUser()`.
   Firebase's `deleteUser()` frequently throws `auth/requires-recent-login` unless the user
@@ -22,7 +22,7 @@ Status legend: `[ ]` open, `[x]` fixed. Each phase below corresponds to a commit
   tasks, contacts, expenditures, exam scenarios, profile) is permanently wiped, but the auth
   account survives with no way to finish or recover.
 
-- [ ] **Public profile leaks personal contact info with no consent.**
+- [x] **Public profile leaks personal contact info with no consent.**
   `src/pages/ProfilePage.jsx` (`handleShareProfile`, ~line 59-77) copies
   `profileData.personal` (which always contains `email`/`phone`) wholesale into the public,
   unauthenticated `artifacts/${appId}/publicProfiles/{shareId}` Firestore document.
@@ -30,7 +30,7 @@ Status legend: `[ ]` open, `[x]` fixed. Each phase below corresponds to a commit
   any visitor with the link. Fix: add per-field opt-in toggles ("include email", "include
   phone") to the share flow; only include what the user explicitly opts into.
 
-- [ ] **Coin-reward exploit — unlimited farming on any list-type profile field.**
+- [x] **Coin-reward exploit — unlimited farming on any list-type profile field.**
   `src/services/firebaseService.jsx:51` (`saveProfileFieldWithReward`):
   `profileData[field]` looks up a **dotted path** (e.g. `'academic.projects'`,
   `'academic.certificates'`, `'academic.internships'`, `'academic.resumes'`,
@@ -50,37 +50,59 @@ Status legend: `[ ]` open, `[x]` fixed. Each phase below corresponds to a commit
 
 ---
 
-## Phase 3 — Crashes
+## Phase 3 — Crashes — DONE
 
-- [ ] **`PomodoroModal.jsx:73`** — `toast.info('Press ESC to cancel focus mode')`. `toast` is
+- [x] **`PomodoroModal.jsx:73`** — `toast.info('Press ESC to cancel focus mode')`. `toast` is
   the Zustand **state object** (`{ show, message, type }`), not a function — only
   `showToast(message, type)` exists on `uiSlice.js`. Clicking "Start" throws
-  `TypeError: toast.info is not a function` synchronously in the click handler.
+  `TypeError: toast.info is not a function` synchronously in the click handler. Fixed by
+  destructuring `showToast` and calling it correctly.
 
-- [ ] **`src/components/common/GlobalSearch.jsx:56,60,64`** — `c.name.toLowerCase()`,
+- [x] **`src/components/common/GlobalSearch.jsx:56,60,64`** — `c.name.toLowerCase()`,
   `t.title.toLowerCase()` etc. with no null guard. Any course/task/contact document missing
-  `name`/`title` throws on every keystroke in the Cmd+K search box.
+  `name`/`title` throws on every keystroke in the Cmd+K search box. Fixed with `(x || '')`
+  guards.
 
-- [ ] **`src/pages/HomePage.jsx`** — `.getTime()` called on a `null` date when a deadline has
-  no `date` field, crashing the "Upcoming Deadlines"/"Today's Focus" card.
+- [x] **`src/pages/HomePage.jsx`** — `.getTime()` called on a `null` date when a deadline has
+  no `date` field. **Verified not reachable**: `useDashboardSummary.jsx`'s `upcomingDeadlines`
+  filter already excludes any deadline whose `normalizeDate(d.date)` is null/invalid before it
+  reaches `AtAGlance`, so `HomePage.jsx` never receives a deadline with an unparseable date.
+  No code change needed here.
 
-- [ ] **`src/hooks/useDashboardSummary.jsx:42`** — `expenditures.reduce(...)` with no
+- [x] **`src/hooks/useDashboardSummary.jsx:42`** — `expenditures.reduce(...)` with no
   optional-chaining (unlike every sibling input: `schedule?.`, `deadlines?.`, `tasks?.`) —
   crashes if `expenditures` is `undefined`/`null` before the Firestore listener resolves.
+  Fixed with `(expenditures || [])`, plus a `Number(item.amount) || 0` guard.
 
-- [ ] **`src/pages/PerformancePage.jsx` (~line 53)** — `Math.max(...courses.map(c =>
+- [x] **`src/pages/PerformancePage.jsx` (~line 53)** — `Math.max(...courses.map(c =>
   c.semester))` with no guard → `NaN` if any course document lacks a `semester` field,
-  silently blanking the whole Academic Journey timeline.
+  silently blanking the whole Academic Journey timeline. Fixed via the shared
+  `getMaxSemester` helper (see next item).
 
-- [ ] **`src/hooks/useAttendanceData.jsx` vs `PerformancePage.jsx`** — two independent,
-  diverging implementations of "compute max semester": one filters out semester `0`/falsy via
-  `.filter(Boolean)`, the other doesn't. Unify into one shared, null-safe helper.
+- [x] **`src/hooks/useAttendanceData.jsx` vs `PerformancePage.jsx`** — two independent,
+  diverging implementations of "compute max semester". Unified into
+  `src/utils/courses.js`'s `getMaxSemester`, also adopted by `ModalManager.jsx`'s third
+  independent copy of the same logic.
 
-- [ ] **`src/pages/CalendarPage.jsx` (~line 46)** — `.localeCompare` on `startTime` crashes if
-  a deadline has no `time` value.
+- [x] **`src/pages/CalendarPage.jsx` (~line 46)** — `.localeCompare` on `startTime` crashes if
+  a deadline has no `time` value. Fixed with `(a.startTime || '').localeCompare(b.startTime || '')`.
+  While in this file: also fixed `selectedDate` never being wired to the mini calendar (day
+  clicks now actually highlight, via a new `selectedDay` state distinct from the month-nav
+  state), and `eventsByDate` being limited to a 7-day window regardless of viewed month (now
+  computed per-viewed-month so "has events" dots are correct after navigating months).
 
-- [ ] **`src/pages/ExpenditurePage.jsx:46`** and **`useDashboardSummary.jsx:42`** — no guard
+- [x] **`src/pages/ExpenditurePage.jsx:46`** and **`useDashboardSummary.jsx:42`** — no guard
   against a document missing `amount`; one bad/legacy doc poisons the running total to `NaN`.
+  Fixed with `Number(item.amount) || 0` guards, plus a new `toDateSafe` helper
+  (`src/utils/date.js`) replacing unguarded `item.date.toDate()`/`.toMillis()` calls.
+
+- [x] **`src/services/firebaseService.jsx` `resetExpenditures`/`resetAllData`** — single
+  `writeBatch` deleting an entire collection could exceed Firestore's 500-op cap. Fixed with a
+  `deleteAllDocs` helper that chunks deletes across as many batches as needed.
+
+- [x] **Google Sign-In users never got a Firestore profile document created** — `App.jsx`'s
+  `handleLogin('google')` now calls a new `ensureProfileDocument` after sign-in, creating the
+  default profile doc if one doesn't already exist (mirroring what email sign-up already did).
 
 - [ ] **`src/pages/ExpenditurePage.jsx` (`TransactionItem`)** and similar list items — direct
   `.toDate()` calls on a Firestore field with no defensive fallback (contrast with

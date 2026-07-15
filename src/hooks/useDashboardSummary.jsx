@@ -39,9 +39,9 @@ export const useDashboardSummary = ({ schedule, deadlines, tasks, courses, expen
         
         const attendanceWarnings = courses?.filter(c => c.total > 0 && (c.attended / c.total) * 100 < 75);
 
-        const categoryMap = expenditures.reduce((acc, item) => {
+        const categoryMap = (expenditures || []).reduce((acc, item) => {
             const currentAmount = acc[item.category] || 0;
-            acc[item.category] = currentAmount + item.amount;
+            acc[item.category] = currentAmount + (Number(item.amount) || 0);
             return acc;
         }, {});
         const expenditureCategoryData = Object.entries(categoryMap).map(([name, value]) => ({

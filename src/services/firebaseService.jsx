@@ -14,6 +14,17 @@ import {
 const getNestedValue = (obj, path) =>
     path.split('.').reduce((acc, key) => (acc && typeof acc === 'object' ? acc[key] : undefined), obj);
 
+// Firestore caps a single batch at 500 writes -- chunk deletes across as many
+// batches as needed instead of assuming every collection stays under that limit.
+const FIRESTORE_BATCH_LIMIT = 500;
+const deleteAllDocs = async (docRefs) => {
+    for (let i = 0; i < docRefs.length; i += FIRESTORE_BATCH_LIMIT) {
+        const batch = writeBatch(db);
+        docRefs.slice(i, i + FIRESTORE_BATCH_LIMIT).forEach(ref => batch.delete(ref));
+        await batch.commit();
+    }
+};
+
 const firestoreService = {
 
     // === PROFILE & COINS ===
@@ -296,9 +307,7 @@ const firestoreService = {
     resetExpenditures: async (userId) => {
         const ref = collection(db, getCollectionPath(userId, COLLECTIONS.EXPENDITURES));
         const snapshot = await getDocs(ref);
-        const batch = writeBatch(db);
-        snapshot.forEach(doc => batch.delete(doc.ref));
-        await batch.commit();
+        await deleteAllDocs(snapshot.docs.map(doc => doc.ref));
     },
 
     // === GLOBAL ACTIONS ===
@@ -308,9 +317,7 @@ const firestoreService = {
         for (const coll of collectionsToDelete) {
             const ref = collection(db, getCollectionPath(userId, coll));
             const snapshot = await getDocs(ref);
-            const batch = writeBatch(db);
-            snapshot.forEach(doc => batch.delete(doc.ref));
-            await batch.commit();
+            await deleteAllDocs(snapshot.docs.map(doc => doc.ref));
         }
         const profileRef = doc(db, getProfilePath(userId));
         await setDoc(profileRef, {

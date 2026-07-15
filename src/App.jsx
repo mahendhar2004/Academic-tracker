@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './firebase/config';
 import { useStore } from './store/useStore';
@@ -131,9 +131,33 @@ export default function App() {
         return () => unsubscribe();
     }, [initializeListeners, cleanupListeners, runDailyCheckIn, navigate, location.pathname, setGlobalUser, user]);
 
-    const handleLogin = (providerName) => {
+    const ensureProfileDocument = async (currentUser) => {
+        const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
+        const profileSnap = await getDoc(profileRef);
+        if (!profileSnap.exists()) {
+            await setDoc(profileRef, {
+                name: currentUser.displayName || 'User',
+                email: currentUser.email || '',
+                imageUrl: currentUser.photoURL || '',
+                coins: 0,
+                personal: {
+                    phone: currentUser.phoneNumber || '',
+                    isPhoneVerified: false,
+                    email: currentUser.email || ''
+                },
+                lastCheckIn: null,
+                rewardedFields: {}
+            });
+        }
+    };
+
+    const handleLogin = async (providerName) => {
         if (providerName === 'google') {
-            return authService.signInWithGoogle();
+            const userCredential = await authService.signInWithGoogle();
+            // Google sign-in can be a brand-new account -- unlike email sign-up, there's no
+            // separate "create account" step, so the profile doc may not exist yet.
+            await ensureProfileDocument(userCredential.user);
+            return userCredential;
         }
     };
 

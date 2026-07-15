@@ -18,7 +18,8 @@ const CalendarPage = () => {
         handleDeleteDeadline: onDeleteDeadline,
         handleEditDeadlineClick: onEditDeadline
     } = useOutletContext();
-    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [viewedMonth, setViewedMonth] = useState(new Date());
+    const [selectedDay, setSelectedDay] = useState(new Date());
     const [isFutureWeekVisible, setIsFutureWeekVisible] = useState(false);
 
     const dayRefs = useRef({});
@@ -38,7 +39,7 @@ const CalendarPage = () => {
         return "Good Evening";
     };
 
-    const { todayAgenda, futureAgenda, eventsByDate } = useMemo(() => {
+    const { todayAgenda, futureAgenda } = useMemo(() => {
         const agenda = [];
         const today = startOfDay(new Date());
 
@@ -52,26 +53,45 @@ const CalendarPage = () => {
                 return isSameDay(deadlineDate, date);
             }).map(d => ({ ...d, type: 'deadline', startTime: d.time, date, courseDetails: getCourseDetails(d.courseId) }));
 
-            const events = [...classesToday, ...deadlinesToday].sort((a, b) => a.startTime.localeCompare(b.startTime));
+            const events = [...classesToday, ...deadlinesToday]
+                .sort((a, b) => (a.startTime || '').localeCompare(b.startTime || ''));
             agenda.push({ date, dayName, events });
         }
-
-        const eventsMap = agenda.reduce((acc, day) => {
-            if (day.events.length > 0) {
-                const key = `${day.date.getFullYear()}-${day.date.getMonth() + 1}-${day.date.getDate()}`;
-                acc[key] = true;
-            }
-            return acc;
-        }, {});
 
         return {
             todayAgenda: agenda[0],
             futureAgenda: agenda.slice(1),
-            eventsByDate: eventsMap
         };
     }, [schedule, deadlines, getCourseDetails]);
 
+    // Computed over the whole viewed month (not just the 7-day agenda window) so the
+    // "has events" dots stay correct when the user navigates to a different month.
+    const eventsByDate = useMemo(() => {
+        const year = viewedMonth.getFullYear();
+        const month = viewedMonth.getMonth();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const map = {};
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const date = new Date(year, month, day);
+            const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+            const hasClass = schedule.some(s => s.day === dayName);
+            const hasDeadline = deadlines.some(d => {
+                const deadlineDate = d.date?.toDate ? d.date.toDate() : new Date(d.date);
+                return isSameDay(deadlineDate, date);
+            });
+
+            if (hasClass || hasDeadline) {
+                map[`${year}-${month + 1}-${day}`] = true;
+            }
+        }
+
+        return map;
+    }, [schedule, deadlines, viewedMonth]);
+
     const handleDateClick = (day) => {
+        setSelectedDay(day);
         const dateKey = `${day.getFullYear()}-${day.getMonth() + 1}-${day.getDate()}`;
         const dayElement = dayRefs.current[dateKey];
 
@@ -188,12 +208,12 @@ const CalendarPage = () => {
                 </div>
                 <div className="lg:col-span-1 sticky top-28">
                     <CalendarComponent
-                        currentDate={selectedDate}
+                        currentDate={viewedMonth}
                         onDateClick={handleDateClick}
                         eventsByDate={eventsByDate}
-                        onPrevMonth={() => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                        onNextMonth={() => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                        selectedDate={new Date()}
+                        onPrevMonth={() => setViewedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                        onNextMonth={() => setViewedMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                        selectedDate={selectedDay}
                     />
                 </div>
             </div>

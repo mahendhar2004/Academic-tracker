@@ -53,15 +53,15 @@ const GlobalSearch = ({ isOpen, onClose, allCourses = [], tasks = [], contacts =
 
         // 3. Data Items
         const matchedCourses = allCourses
-            .filter(c => c.name.toLowerCase().includes(lowerQuery))
+            .filter(c => (c.name || '').toLowerCase().includes(lowerQuery))
             .map(c => ({ id: `course-${c.id}`, type: 'Course', title: c.name, path: '/dashboard/performance', icon: BookOpen }));
 
         const matchedTasks = tasks
-            .filter(t => t.title.toLowerCase().includes(lowerQuery))
+            .filter(t => (t.title || '').toLowerCase().includes(lowerQuery))
             .map(t => ({ id: `task-${t.id}`, type: 'Task', title: t.title, path: '/dashboard/planner', icon: CheckSquare }));
 
         const matchedContacts = contacts
-            .filter(c => c.name.toLowerCase().includes(lowerQuery))
+            .filter(c => (c.name || '').toLowerCase().includes(lowerQuery))
             .map(c => ({ id: `contact-${c.id}`, type: 'Contact', title: c.name, path: '/dashboard/contacts', icon: Users }));
 
         // Priority Order: Actions -> Pages -> Current Data

@@ -3,8 +3,10 @@ import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, ArrowDownUp, Edit, RefreshCw, Trash2 } from 'lucide-react';
 import ExpenditureChart from '../components/expenditure/ExpenditureChart';
+import { toDateSafe } from '../utils/date';
 
 const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
+    const itemDate = toDateSafe(item.date);
     return (
         <motion.div
             layout
@@ -21,7 +23,7 @@ const TransactionItem = ({ item, onEdit, onDelete, formatCurrency }) => {
             <div className="flex items-center gap-4">
                 <div className="text-right">
                     <p className="font-bold text-red-500 dark:text-red-400">{formatCurrency(item.amount)}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-500">{item.date.toDate().toLocaleDateString('en-GB')}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-500">{itemDate ? itemDate.toLocaleDateString('en-GB') : 'Unknown date'}</p>
                 </div>
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button onClick={onEdit} className="p-1.5 rounded-md text-slate-400 hover:text-brand-secondary dark:hover:text-cyan-300"><Edit size={16} /></button>
@@ -43,23 +45,25 @@ const ExpenditurePage = () => {
     const [sortBy, setSortBy] = useState('date_desc');
 
     const { total, byCategory, sortedTransactions } = useMemo(() => {
-        const totalAmount = expenditures.reduce((sum, item) => sum + item.amount, 0);
+        const totalAmount = expenditures.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
         const categoryMap = expenditures.reduce((acc, item) => {
             const existing = acc[item.category] || { value: 0 };
-            acc[item.category] = { value: existing.value + item.amount };
+            acc[item.category] = { value: existing.value + (Number(item.amount) || 0) };
             return acc;
         }, {});
 
         const categoryData = Object.entries(categoryMap).map(([name, data]) => ({ name, value: data.value }))
             .sort((a, b) => b.value - a.value);
 
+        const getMillis = (item) => toDateSafe(item.date)?.getTime() ?? 0;
+
         const allSorted = [...expenditures].sort((a, b) => {
             switch (sortBy) {
-                case 'date_asc': return a.date.toMillis() - b.date.toMillis();
-                case 'amount_desc': return b.amount - a.amount;
-                case 'amount_asc': return a.amount - b.amount;
-                default: return b.date.toMillis() - a.date.toMillis();
+                case 'date_asc': return getMillis(a) - getMillis(b);
+                case 'amount_desc': return (Number(b.amount) || 0) - (Number(a.amount) || 0);
+                case 'amount_asc': return (Number(a.amount) || 0) - (Number(b.amount) || 0);
+                default: return getMillis(b) - getMillis(a);
             }
         });
 

@@ -4,6 +4,7 @@ import { useStore } from '../../store/useStore';
 import { useModalStore } from '../../store/useModalStore';
 import firestoreService from '../../services/firebaseService';
 import authService from '../../services/authService';
+import { getMaxSemester } from '../../utils/courses';
 
 
 // Import all modals
@@ -38,7 +39,7 @@ const ModalManager = ({ user, triggerReward, onStartPomodoro }) => {
     // Derived State (Copied from Dashboard to ensure modals have correct context)
     const currentSemester = useMemo(() => {
         if (allCourses.length === 0) return 1;
-        return Math.max(...allCourses.map(c => c.semester).filter(Boolean), 1);
+        return Math.max(getMaxSemester(allCourses, 0), 1);
     }, [allCourses]);
 
     const currentSemesterCourses = useMemo(() => {

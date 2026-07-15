@@ -7,6 +7,7 @@ import SpiGraph from '../components/performance/SpiGraph';
 
 import { useStore } from '../store/useStore';
 import { usePerformanceGraphs } from '../hooks/usePerformanceGraphs';
+import { getMaxSemester } from '../utils/courses';
 
 const ExamMarkCard = ({ mark, onEdit, onDelete }) => {
     return (
@@ -60,7 +61,7 @@ const PerformancePage = () => {
     const { cpiGraphData, spiGraphData } = usePerformanceGraphs(semesters);
 
     const maxSemester = useMemo(() => {
-        const highestCourseSem = allCourses.length > 0 ? Math.max(...allCourses.map(c => c.semester)) : 0;
+        const highestCourseSem = getMaxSemester(allCourses, 0);
         const profileSem = profileData.academic?.currentSemester || 0;
         return Math.max(highestCourseSem, profileSem, 1);
     }, [allCourses, profileData]);
