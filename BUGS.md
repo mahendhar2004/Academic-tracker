@@ -40,13 +40,17 @@ Status legend: `[ ]` open, `[x]` fixed. Each phase below corresponds to a commit
   indefinitely. Fix: resolve the dotted path against the nested object before comparing
   lengths.
 
-- [ ] **Historical leaked Firebase project config in git history, on a public repo.**
+- [x] **Historical leaked Firebase project config in git history, on a public repo.**
   A real `apiKey`/`projectId`/etc. was committed in `8298fa4` and replaced with env vars in
   `4482e58`, but is still recoverable via `git log`/`git show` — and this repo
-  (`github.com/mahendhar2004/Academic-tracker`) is **public**. Fix: scrub with
-  `git-filter-repo` (destructive — rewrites every commit hash, requires a force-push;
-  re-confirm immediately before doing this), and rotate/restrict the Firebase API key via
-  the console regardless, since a public leak can't be un-leaked by a later history purge.
+  (`github.com/mahendhar2004/Academic-tracker`) is **public**. **Decision: not scrubbing
+  history.** Because `development` was fast-forwarded from `origin/main` earlier in this
+  pass, the leaked commit exists on *both* branches — a real fix means rewriting and
+  force-pushing both `development` and `main`, which the user explicitly declined (asked to
+  stop the rewrite entirely). **Action still needed, outside of what code changes can fix:
+  rotate/restrict the Firebase API key via the Firebase console.** A public leak can't be
+  un-leaked by a history purge anyway (GitHub caches, forks, and archive services may already
+  have it) — key rotation is the actual mitigation regardless of whether history is rewritten.
 
 ---
 
@@ -284,12 +288,28 @@ to make every read site UTC-aware.
 - [x] **`.gitignore`** now also covers `.DS_Store`, `.vscode/`, `.idea/`, `/coverage`, and a
   generic `*.log` rule.
 - [x] **A 4.9 MB screen recording (`Recording 2025-08-14 163900.mp4`)** removed from the
-  working tree/tracking. Still present in git history — bundled into the Phase 9
-  history-rewrite decision alongside the leaked secret.
+  working tree/tracking. **Decision: left in git history** (user declined the history
+  rewrite for the leaked secret below, and separately declined bundling the video purge into
+  it) — it's harmless repo bloat in old commits, not a live concern.
 - [x] **`eslint.json` (124 KB, UTF-16)** — an accidentally committed raw ESLint JSON report
   containing absolute Windows filesystem paths from the author's machine. Deleted.
 - [x] **`package.json`** — renamed `"semester-tracker"` → `"atrack"` to match the actual
   product name used everywhere else; added an `engines.node >= 18` constraint.
+
+---
+
+## Phase 9 — Git history scrub for leaked secret — DECIDED: SKIPPED
+
+Scrubbing the leaked Firebase config from history would have required rewriting and
+force-pushing **both** `development` and `main` (since `development` was fast-forwarded from
+`origin/main` earlier in this pass, the leaked commit is on both). The user declined the
+rewrite entirely rather than do a partial (development-only) scrub. No history was rewritten;
+no force-push occurred.
+
+**Outstanding action for the user, outside of what a code change can fix:** rotate/restrict
+the Firebase API key via the Firebase console. This is the actual mitigation for a public
+leak regardless of the history-rewrite decision — GitHub, forks, and archive services may
+already have cached the old commit.
 
 ---
 
