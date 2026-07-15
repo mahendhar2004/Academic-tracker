@@ -104,49 +104,38 @@ Status legend: `[ ]` open, `[x]` fixed. Each phase below corresponds to a commit
   `handleLogin('google')` now calls a new `ensureProfileDocument` after sign-in, creating the
   default profile doc if one doesn't already exist (mirroring what email sign-up already did).
 
-- [ ] **`src/pages/ExpenditurePage.jsx` (`TransactionItem`)** and similar list items — direct
-  `.toDate()` calls on a Firestore field with no defensive fallback (contrast with
-  `HomePage.jsx`'s careful `normalizeDate` helper); a malformed/legacy doc without a proper
-  Timestamp crashes the page.
-
-- [ ] **`src/services/firebaseService.jsx` `resetExpenditures`/`resetAllData`** — build a
-  single `writeBatch` deleting every doc in a collection before one `commit()`. Firestore caps
-  batches at 500 ops; any user with 500+ expenditures/courses/etc. throws at `commit()`
-  uncaught (no try/catch here or in any caller).
-
-- [ ] **Google Sign-In users never get a Firestore profile document created.**
-  `src/App.jsx` (`handleSignUpWithEmail`) explicitly creates a profile doc on email signup,
-  but `handleLogin('google')` never does. `useStore.jsx`'s `getProfileListener` synthesizes a
-  local-only fallback when the doc is missing but never persists it — so the first
-  `updateCoins()`/`saveProfileFieldWithReward()` call (plain `updateDoc`, no existence check)
-  throws for Google-only users, silently failing every coin award and profile-field save.
-
 ---
 
-## Phase 4 — Timezone off-by-one (one root cause, multiple sites)
+## Phase 4 — Timezone off-by-one (one root cause, multiple sites) — DONE
 
 Plain `"YYYY-MM-DD"` date-input strings are parsed via `new Date("YYYY-MM-DD")`, which the
 spec defines as **UTC midnight**, then re-displayed/compared using **local-time** getters
 (`getFullYear`/`getMonth`/`getDate`, `toLocaleDateString`). For any user west of UTC, this
-shows/compares dates one day earlier than what was actually saved.
+shows/compares dates one day earlier than what was actually saved. Fixed by adding
+`parseLocalDateString`/`getLocalDateString` to `src/utils/date.js` and anchoring storage to
+local midnight (matching how the rest of the app already reads dates back) instead of trying
+to make every read site UTC-aware.
 
-- [ ] `src/services/firebaseService.jsx` `saveDeadline` — `Timestamp.fromDate(new
-  Date(deadlineData.date))` on a plain date string (root cause; read side in
-  `AddEditDeadlineModal.jsx` already uses local getters correctly, which is what surfaces the
-  mismatch).
-- [ ] `src/pages/HomePage.jsx` (`AtAGlance`) — `deadlineDate.toLocaleDateString('en-GB')`.
-- [ ] `src/pages/CalendarPage.jsx` — `isSameDay(deadlineDate, date)` comparison.
-- [ ] `src/components/planner/TaskCard.jsx` — `new Date(task.dueDate).toLocaleDateString('en-GB')`.
-- [ ] `src/components/modals/AddEditTaskModal.jsx` (~line 12) — `new
-  Date().toISOString().split('T')[0]` computes "today" in UTC instead of local time; for
-  users ahead of UTC (e.g. IST) between local midnight and the UTC offset boundary, this
-  yields yesterday's date as the default.
-- [ ] `src/pages/ExpenditurePage.jsx` (`TransactionItem`) — `item.date.toDate()
-  .toLocaleDateString('en-GB')` displayed in local time, while `AddEditExpenditureModal.jsx`
-  writes/reads the date consistently in UTC — the display layer is the mismatched piece.
-
-Fix: introduce one shared date utility (`src/utils/date.js` — parse local, format local) and
-replace all ad-hoc call sites with it.
+- [x] `src/services/firebaseService.jsx` `saveDeadline` — root cause; now anchors via
+  `parseLocalDateString` before wrapping in a `Timestamp`, so `.toDate()` + local getters
+  everywhere else (`AddEditDeadlineModal.jsx`, `HomePage.jsx`, `CalendarPage.jsx`) read back
+  the same calendar day the user picked, in any timezone.
+- [x] `src/components/modals/AddEditTaskModal.jsx` — "today" default now uses
+  `getLocalDateString()` instead of `new Date().toISOString().split('T')[0]` (which computed
+  the UTC calendar date).
+- [x] `src/components/planner/TaskCard.jsx` — due-date display now parses via
+  `parseLocalDateString` instead of `new Date(task.dueDate)` before formatting.
+- [x] `src/components/modals/AddEditExpenditureModal.jsx` — the date `<input>`'s prefill and
+  onChange now both anchor to local midnight (`getLocalDateString`/`parseLocalDateString`)
+  instead of mixing a UTC-anchored write with a local-anchored read.
+- [x] **Verified not reachable / no behavior change needed**: `src/components/modals/AddEditClassModal.jsx`'s
+  `new Date().toISOString().split('T')[0]` "today" scratch value — it's only used to attach a
+  throwaway date onto a `DateTimePicker` so a `HH:MM` time-of-day can be extracted back out via
+  `toTimeString()` (local); the date portion is discarded before saving, so the UTC-vs-local
+  choice here has no observable effect.
+- Left alone (dead code, not reachable): `src/components/calendar/DeadlineCard.jsx` has the
+  same bug pattern but is never imported anywhere — flagged for deletion in Phase 7 instead of
+  fixing dead code.
 
 ---
 

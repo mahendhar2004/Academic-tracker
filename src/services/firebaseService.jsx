@@ -8,6 +8,7 @@ import {
     getProfilePath, getCollectionPath, getDocPath,
     getPerformanceTargetPath, COLLECTIONS
 } from '../constants/dbPaths';
+import { parseLocalDateString } from '../utils/date';
 
 // Resolves a dotted path (e.g. "academic.projects") against a nested object,
 // mirroring how Firestore interprets dotted field names on writes.
@@ -218,7 +219,7 @@ const firestoreService = {
     saveDeadline: async (userId, deadlineData, deadlineId) => {
         const dataToSave = {
             ...deadlineData,
-            date: Timestamp.fromDate(new Date(deadlineData.date))
+            date: Timestamp.fromDate(parseLocalDateString(deadlineData.date))
         };
         const path = getCollectionPath(userId, COLLECTIONS.DEADLINES);
         if (deadlineId) {

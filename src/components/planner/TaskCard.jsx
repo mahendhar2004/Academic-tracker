@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trash2, Edit, Check, Calendar } from 'lucide-react';
+import { parseLocalDateString } from '../../utils/date';
 
 const TaskCard = ({ task, onToggleComplete, onEdit, onDelete }) => {
     const cardVariants = {
@@ -59,7 +60,7 @@ const TaskCard = ({ task, onToggleComplete, onEdit, onDelete }) => {
                     {task.type === 'Long-term' && task.dueDate && (
                         <span className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/30 px-2 py-1 rounded-full">
                             <Calendar size={12} />
-                            {new Date(task.dueDate).toLocaleDateString('en-GB')}
+                            {parseLocalDateString(task.dueDate).toLocaleDateString('en-GB')}
                         </span>
                     )}
                 </div>

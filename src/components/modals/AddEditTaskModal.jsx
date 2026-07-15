@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 import { Calendar, Clock } from 'lucide-react';
+import { getLocalDateString } from '../../utils/date';
 
 const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit, defaultType }) => {
     const [task, setTask] = useState({ title: '', description: '', dueDate: '', dueTime: '', type: 'Short-term' });
@@ -9,7 +10,7 @@ const AddEditTaskModal = ({ isOpen, onClose, onSave, taskToEdit, defaultType }) 
 
     useEffect(() => {
         if (isOpen) {
-            const today = new Date().toISOString().split('T')[0];
+            const today = getLocalDateString();
             if (taskToEdit) {
                 setTask({
                     ...taskToEdit,

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import GlassyModal from '../common/GlassyModal';
 import { Timestamp } from 'firebase/firestore';
 import { X } from 'lucide-react';
+import { parseLocalDateString, getLocalDateString } from '../../utils/date';
 
 const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, categories = [] }) => {
     const [expense, setExpense] = useState({ title: '', amount: '', category: 'Other', date: new Date().toISOString(), reason: '' });
@@ -124,12 +125,11 @@ const AddEditExpenditureModal = ({ isOpen, onClose, onSave, expenditureToEdit, c
                     <input
                         id="expenseDate"
                         type="date"
-                        value={new Date(expense.date).toISOString().split('T')[0]}
+                        value={getLocalDateString(new Date(expense.date))}
                         onChange={(e) => {
-                            // Create a new date object from the input value (YYYY-MM-DD)
-                            // This ensures the time is set to the beginning of the day in UTC
-                            const [year, month, day] = e.target.value.split('-').map(Number);
-                            const newDate = new Date(Date.UTC(year, month - 1, day));
+                            // Anchor to LOCAL midnight (not UTC) so it round-trips correctly
+                            // with the local-timezone display used elsewhere (ExpenditurePage).
+                            const newDate = parseLocalDateString(e.target.value);
                             handleChange('date', newDate.toISOString());
                         }}
                         className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/20 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-cyan-400 text-slate-900 dark:text-white"
