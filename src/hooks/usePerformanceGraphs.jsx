@@ -7,7 +7,7 @@ export const usePerformanceGraphs = (semesters) => {
     const cpiGraphData = useMemo(() => {
         let cumulativeWeightedPoints = 0;
         let cumulativeCredits = 0;
-        return semesters
+        return [...semesters]
             .sort((a, b) => a.semester - b.semester)
             .map(sem => {
                 let semWeightedPoints = 0;

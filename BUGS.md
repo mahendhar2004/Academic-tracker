@@ -139,23 +139,28 @@ to make every read site UTC-aware.
 
 ---
 
-## Phase 5 — State-mutation / React anti-patterns
+## Phase 5 — State-mutation / React anti-patterns — DONE
 
-- [ ] **`src/hooks/usePerformanceGraphs.jsx:11`** — `semesters.sort((a, b) => a.semester -
+- [x] **`src/hooks/usePerformanceGraphs.jsx:11`** — `semesters.sort((a, b) => a.semester -
   b.semester)` mutates the array in place. `semesters` is the same reference as
   `Dashboard.jsx`'s memoized `performanceData.semesters` (deliberately sorted **descending**
   there); this hook silently flips it to ascending as a side effect, without the source memo
-  re-running. Fix: `[...semesters].sort(...)`.
-- [ ] **`src/components/common/DateTimePicker.jsx`** — `currentMonth.setMonth(...)` mutates
-  the state `Date` object directly before wrapping in `new Date(...)`.
-- [ ] **`src/components/common/DateTimePicker.jsx`** — selected-day highlight compares
-  month/day but never checks the year.
-- [ ] **`src/App.jsx`** — `onAuthStateChanged` effect lists `user` in its own dependency
+  re-running. Fixed with `[...semesters].sort(...)`.
+- [x] **`src/components/common/DateTimePicker.jsx`** — `currentMonth.setMonth(...)` mutated
+  the state `Date` object directly before wrapping in `new Date(...)`. Fixed by deriving the
+  new month via `new Date(prev.getFullYear(), prev.getMonth() ± 1, 1)` without touching `prev`.
+- [x] **`src/components/common/DateTimePicker.jsx`** — selected-day highlight compared
+  month/day but never checked the year. Fixed by adding a `getFullYear()` comparison.
+- [x] **`src/App.jsx`** — `onAuthStateChanged` effect listed `user` in its own dependency
   array while also calling `setUser(user)` inside the callback, causing the listener to tear
-  down and resubscribe on every auth transition.
-- [ ] **`src/App.jsx` (~lines 87-97)** — dead/half-finished commented-out code deciding
-  whether to early-return for `/public/:id` routes; the actual `return` is commented out,
-  leaving the decision unresolved in the shipped code.
+  down and resubscribe on every auth transition. Fixed by tracking the initialized uid in a
+  `useRef` instead of depending on `user` state.
+- [x] **`src/App.jsx` (~lines 87-97)** — dead/half-finished commented-out code deciding
+  whether to early-return for `/public/:id` routes. Resolved: the auth listener always
+  subscribes (kept, since it's needed to keep a logged-in user's session alive even while
+  viewing a public profile link); the early `setLoading(false)` for `/public/*` routes was
+  split out into its own small effect; the indecisive comments were replaced with a plain
+  statement of the actual, intended behavior.
 
 ---
 

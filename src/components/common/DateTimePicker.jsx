@@ -108,9 +108,9 @@ const DateTimePicker = ({ value, onChange, type = 'datetime' }) => {
                         {type !== 'time' && (
                             <div>
                                 <div className="flex justify-between items-center mb-2">
-                                    <button type="button" onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() - 1)))} className="p-1.5 rounded-full hover:bg-white/10"><ChevronLeft size={18} /></button>
+                                    <button type="button" onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))} className="p-1.5 rounded-full hover:bg-white/10"><ChevronLeft size={18} /></button>
                                     <span className="font-bold">{currentMonth.toLocaleString('default', { month: 'long', year: 'numeric' })}</span>
-                                    <button type="button" onClick={() => setCurrentMonth(new Date(currentMonth.setMonth(currentMonth.getMonth() + 1)))} className="p-1.5 rounded-full hover:bg-white/10"><ChevronRight size={18} /></button>
+                                    <button type="button" onClick={() => setCurrentMonth(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))} className="p-1.5 rounded-full hover:bg-white/10"><ChevronRight size={18} /></button>
                                 </div>
                                 <div className="grid grid-cols-7 gap-1 text-center text-xs text-slate-400 mb-2">
                                     {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => <div key={d}>{d}</div>)}
@@ -121,7 +121,7 @@ const DateTimePicker = ({ value, onChange, type = 'datetime' }) => {
                                             key={i} 
                                             type="button"
                                             onClick={() => day && handleDateChange(day)}
-                                            className={`h-8 rounded-full text-sm transition-colors ${!day ? 'cursor-default' : 'hover:bg-white/10'} ${day === selectedDate.getDate() && currentMonth.getMonth() === selectedDate.getMonth() ? 'bg-cyan-500 text-white font-bold' : ''}`}
+                                            className={`h-8 rounded-full text-sm transition-colors ${!day ? 'cursor-default' : 'hover:bg-white/10'} ${day === selectedDate.getDate() && currentMonth.getMonth() === selectedDate.getMonth() && currentMonth.getFullYear() === selectedDate.getFullYear() ? 'bg-cyan-500 text-white font-bold' : ''}`}
                                         >
                                             {day}
                                         </button>

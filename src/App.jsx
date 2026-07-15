@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense, lazy } from 'react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth, db, appId } from './firebase/config';
@@ -79,27 +79,28 @@ export default function App() {
         }
     }, [triggerReward]);
 
-    // Handle Auth State Changes
+    // /public/:id renders PublicProfilePage standalone -- don't leave it stuck behind the
+    // global loading spinner while the (irrelevant to it) auth check below resolves.
     useEffect(() => {
-        // If viewing a public profile, we might skip full auth flow logic or handle it differently
-        // But the original code handled publicProfileId separately.
-        // With router, /public/:id is a route.
         if (location.pathname.startsWith('/public/')) {
             setLoading(false);
-            // We still want to check auth if user is logged in, but not block rendering?
-            // Original code: if publicProfileId -> setLoading(false) and return.
-            // This means if acting as public viewer, we don't init listeners for "me"
-            // But if I am logged in AND viewing a public profile?
-            // Let's stick to original logic: if public profile, just show it.
-            // Let's allow auth check to proceed in background or parallel?
-            // Original code explicitly returned. I will replicate that behavior for safety.
-            // return; 
         }
+    }, [location.pathname]);
 
+    // Handle Auth State Changes. The auth listener still sets up in the background even on
+    // /public/:id routes, so a logged-in user's session/listeners stay initialized while
+    // viewing a public profile link.
+
+    // Tracks which uid we've already initialized listeners for, so the effect doesn't need
+    // `user` as a dependency (which would make it tear down and resubscribe on every auth
+    // transition, since the callback itself calls setUser).
+    const initializedUidRef = useRef(null);
+
+    useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             if (currentUser) {
-                // User is signed in
-                if (!user) {
+                if (initializedUidRef.current !== currentUser.uid) {
+                    initializedUidRef.current = currentUser.uid;
                     setUser(currentUser);
                     setGlobalUser(currentUser); // Update global store
                     initializeListeners(currentUser);
@@ -120,6 +121,7 @@ export default function App() {
                 }
             } else {
                 // User is signed out
+                initializedUidRef.current = null;
                 setUser(null);
                 setGlobalUser(null);
                 cleanupListeners();
@@ -129,7 +131,7 @@ export default function App() {
         });
 
         return () => unsubscribe();
-    }, [initializeListeners, cleanupListeners, runDailyCheckIn, navigate, location.pathname, setGlobalUser, user]);
+    }, [initializeListeners, cleanupListeners, runDailyCheckIn, navigate, location.pathname, setGlobalUser]);
 
     const ensureProfileDocument = async (currentUser) => {
         const profileRef = doc(db, `artifacts/${appId}/users/${currentUser.uid}/profile/data`);
