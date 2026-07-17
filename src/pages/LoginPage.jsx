@@ -23,7 +23,7 @@ const NeumorphicInput = ({ icon: Icon, label, id, ...props }) => {
                     id={id}
                     {...props}
                     type={isPasswordField ? (isPasswordVisible ? 'text' : 'password') : props.type}
-                    className="w-full bg-[#F0F2F5] dark:bg-[#1A1A1A] border-none text-slate-800 dark:text-white placeholder-slate-500 pl-12 pr-12 py-4 rounded-xl shadow-neumorphic-inset focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300"
+                    className="w-full bg-[#F0F2F5] dark:bg-[#1A1A1A] border-none text-slate-800 dark:text-white placeholder-slate-500 pl-12 pr-12 py-4 rounded-xl shadow-neumorphic-inset dark:shadow-neumorphic-inset-dark focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all duration-300"
                 />
                 {isPasswordField && (
                     <button 
